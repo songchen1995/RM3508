@@ -1,9 +1,0 @@
-.\obj\misc.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\src\misc.c
-.\obj\misc.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\misc.h
-.\obj\misc.o: ..\Libraries\CMSIS\stm32f4xx.h
-.\obj\misc.o: ..\Libraries\CMSIS\core_cm4.h
-.\obj\misc.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
-.\obj\misc.o: ..\Libraries\dsplib\Include\core_cmInstr.h
-.\obj\misc.o: ..\Libraries\dsplib\Include\core_cmFunc.h
-.\obj\misc.o: ..\Libraries\dsplib\Include\core_cm4_simd.h
-.\obj\misc.o: ..\Libraries\CMSIS\system_stm32f4xx.h
