@@ -1,0 +1,13 @@
+.\obj\lis3mdl.o: ..\MAA\MAA_Driver\lis3mdl.c
+.\obj\lis3mdl.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\obj\lis3mdl.o: ..\MAA\MAA_Driver\lis3mdl.h
+.\obj\lis3mdl.o: ..\MAA\maa_config.h
+.\obj\lis3mdl.o: ..\Action_User\spi.h
+.\obj\lis3mdl.o: ..\Libraries\CMSIS\stm32f4xx.h
+.\obj\lis3mdl.o: ..\Libraries\CMSIS\core_cm4.h
+.\obj\lis3mdl.o: ..\Libraries\dsplib\Include\core_cmInstr.h
+.\obj\lis3mdl.o: ..\Libraries\dsplib\Include\core_cmFunc.h
+.\obj\lis3mdl.o: ..\Libraries\dsplib\Include\core_cm4_simd.h
+.\obj\lis3mdl.o: ..\Libraries\CMSIS\system_stm32f4xx.h
+.\obj\lis3mdl.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_gpio.h
+.\obj\lis3mdl.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h

@@ -1,0 +1,14 @@
+.\szw_stm32f407\spi.o: ..\Action_User\spi.cpp
+.\szw_stm32f407\spi.o: ..\Action_User\spi.h
+.\szw_stm32f407\spi.o: ..\Libraries\CMSIS\stm32f4xx.h
+.\szw_stm32f407\spi.o: ..\Libraries\CMSIS\core_cm4.h
+.\szw_stm32f407\spi.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\szw_stm32f407\spi.o: ..\Libraries\CMSIS\core_cmInstr.h
+.\szw_stm32f407\spi.o: ..\Libraries\CMSIS\core_cmFunc.h
+.\szw_stm32f407\spi.o: ..\Libraries\CMSIS\core_cm4_simd.h
+.\szw_stm32f407\spi.o: ..\Libraries\CMSIS\system_stm32f4xx.h
+.\szw_stm32f407\spi.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_gpio.h
+.\szw_stm32f407\spi.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_spi.h
+.\szw_stm32f407\spi.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_rcc.h
+.\szw_stm32f407\spi.o: ..\Action_User\timer.h
+.\szw_stm32f407\spi.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_tim.h
