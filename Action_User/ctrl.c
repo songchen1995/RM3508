@@ -77,7 +77,7 @@ void MotorCtrl(void)
 
 	PerCur[0] = Driver.VoltageOutput;
 //	PerCur[0] = 0.0f;
-	SetCur(PerCur);
+//	SetCur(PerCur);
 	
 //	DMA_Send_Data((int)(Motor[0].Vel) ,(int)(Driver.VoltageOutput*100.0f));
 //	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VelCtrl.TemI*100.0f));
