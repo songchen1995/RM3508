@@ -29,7 +29,7 @@ void init(void)
 
 	DriverInit();
 	
-	Driver.UnitMode = POSITION_CONTROL_MODE;
+	Driver.UnitMode = SPEED_CONTROL_MODE;
 	Driver.VelCtrl.Acc = 0.3f;
 	Driver.VelCtrl.Dec = 0.3f;
 	Driver.VelCtrl.DesiredVel = 200.0f;

@@ -5,8 +5,10 @@
 #include "stm32f4xx_rcc.h"
 #include "stdarg.h"
 #include "stdio.h"
+#include <string.h>
 #include "stm32f4xx_usart.h"
 #include "stm32f4xx_dma.h"
+#include "ctrl.h"
 
 #define LENGTH 3
 
@@ -213,12 +215,12 @@ void USART3_DMA_Init(uint32_t BaudRate)
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;//一个停止位
 	USART_InitStructure.USART_Parity = USART_Parity_No;//无奇偶校验位
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;//无硬件数据流控制
-	USART_InitStructure.USART_Mode = USART_Mode_Tx;	//收发模式
+	USART_InitStructure.USART_Mode = USART_Mode_Tx|USART_Mode_Rx;	//收发模式
   USART_Init(USART3, &USART_InitStructure); //初始化串口3
   USART_Cmd(USART3, ENABLE);  //使能串口3 	
 	USART_DMACmd(USART3,USART_DMAReq_Tx,ENABLE);
 	
-//	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);//开启相关中断
+	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);//开启相关中断
 
 	DMA_InitStructure.DMA_Channel = DMA_Channel_4;     
 	DMA_InitStructure.DMA_PeripheralBaseAddr =(uint32_t)&(USART3->DR); 				// peripheral address, = & USART3->DR;
@@ -247,11 +249,11 @@ void USART3_DMA_Init(uint32_t BaudRate)
 	NVIC_Init(&NVIC_InitStructure);	//根据指定的参数初始化NVIC寄存器
 
 	//Usart1 NVIC 配置
-//  NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;//串口1中断通道
-//	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0;//抢占优先级0
-//	NVIC_InitStructure.NVIC_IRQChannelSubPriority =1;		//子优先级1
-//	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQ通道使能
-//	NVIC_Init(&NVIC_InitStructure);	//根据指定的参数初始化VIC寄存器
+  NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;//串口1中断通道
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0;//抢占优先级0
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority =1;		//子优先级1
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQ通道使能
+	NVIC_Init(&NVIC_InitStructure);	//根据指定的参数初始化VIC寄存器
 
 }
 
@@ -354,14 +356,12 @@ void USART_OUT(USART_TypeDef* USARTx,const uint8_t *Data,...){
 			switch (*++Data){
 				case 'r':							          //回车符
 					USART_SendData(USARTx, 0x0d);	   
-
 					Data++;
 					break;
 				case 'n':							          //换行符
 					USART_SendData(USARTx, 0x0a);	
 					Data++;
 					break;
-				
 				default:
 					Data++;
 				    break;
@@ -437,7 +437,7 @@ char *itoa(int value, char *string, int radix)
         value *= -1;
     }
 
-    for (i = 10000; i > 0; i /= 10)
+    for (i = 1000000; i > 0; i /= 10)
     {
         d = value / i;
 
@@ -456,6 +456,110 @@ char *itoa(int value, char *string, int radix)
 
 } 
 
+extern DriverType Driver;
+
+void USART_CMD_Hander(USART_TypeDef* USARTx,uint8_t data)
+{
+	static char buffer[20] = {0};
+	static int bufferI = 0,reValue = 0,reFlag = 1;
+	//去掉空格
+	if(data != 0x20)
+	{		
+		buffer[bufferI] = data;
+		bufferI++;
+	}
+	
+	if((buffer[bufferI-1]=='\n')||(buffer[bufferI-1]=='\r')||(buffer[bufferI-1]==';'))//是否一条指令结束
+	{
+		if(bufferI == 1)
+		{
+			bufferI = 0;
+		}
+		else if(buffer[2]=='=')	//赋值命令语句
+		{
+			if(buffer[3] == '-')		//负数
+			{
+				reFlag = -1;
+				for(int i=4;i<(bufferI-1);i++)
+				{
+					reValue = reValue*10 + buffer[i] - '0';
+				}
+				reValue = reFlag * reValue;
+			}
+			else					//非负数
+			{
+				for(int i=3;i<(bufferI-1);i++)
+				{
+					reValue = reValue*10 + buffer[i] - '0';
+				}			
+			}
+			
+			if(strncmp(buffer,"JV", 2)==0)
+			{
+				Driver.VelCtrl.DesiredVel = (float)reValue*0.001f;
+				USART_OUT(USARTx,(uint8_t*)"JV=%d;\r\n",(int)(Driver.VelCtrl.DesiredVel*1000.0f));
+			}
+			else if(strncmp(buffer,"AC", 2)==0)
+			{
+				Driver.VelCtrl.Acc = (float)(reValue)/1000000.0f;
+				USART_OUT(USARTx,(uint8_t*)"AC=%d;\r\n",(int)(Driver.VelCtrl.Acc*1000000.0f));
+			}
+			else if(strncmp(buffer,"DC", 2)==0)
+			{
+				Driver.VelCtrl.Dec = (float)(reValue)/1000000.0f;
+				USART_OUT(USARTx,(uint8_t*)"DC=%d;\r\n",(int)(Driver.VelCtrl.Dec*1000000.0f));
+			}
+			else if(strncmp(buffer,"SP", 2)==0)
+			{
+				Driver.VelCtrl.DesiredVel = (float)(reValue)*0.001f;
+				USART_OUT(USARTx,(uint8_t*)"SP=%d;\r\n",(int)(Driver.VelCtrl.DesiredVel*1000.0f));
+			}
+			else if(strncmp(buffer,"PA", 2)==0)
+			{
+				Driver.PosCtrl.DesiredPos = (float)(reValue);
+				USART_OUT(USARTx,(uint8_t*)"PA=%d;\r\n",(int)(Driver.PosCtrl.DesiredPos));
+			}
+			else if(strncmp(buffer,"PR", 2)==0)
+			{
+				Driver.PosCtrl.DesiredPos = (float)(reValue)+Driver.PosCtrl.ActualPos;
+				USART_OUT(USARTx,(uint8_t*)"PA=%d;\r\n",(int)(reValue));
+			}
+			else
+			{
+				USART_OUT(USARTx,(uint8_t*)"INVALID WRITE CMD!!!\r\n");			
+			}
+		}
+		else
+		{
+			if(strncmp(buffer,"VX", 2)==0)
+			{
+				USART_OUT(USARTx,(uint8_t*)"VX%d;\r\n",(int)(Driver.VelCtrl.Speed*1000.0f));
+			}
+			else if(strncmp(buffer,"PX", 2)==0)
+			{
+				USART_OUT(USARTx,(uint8_t*)"PX%d;\r\n",(int)(Driver.PosCtrl.ActualPos));				
+			}
+			else if(strncmp(buffer,"IQ", 2)==0)
+			{
+				USART_OUT(USARTx,(uint8_t*)"IQ invalid\r\n");				
+			}
+			else
+			{
+				USART_OUT(USARTx,(uint8_t*)"INVALID READ CMD!!!\r\n");			
+			}
+
+		}
+		//清空初始变量
+		bufferI = 0;
+		reValue = 0;
+		reFlag = 1;
+  }
+	else
+	{
+//			bufferI = 0;
+//			USART_OUT(USARTx,"NOT START WITH 'A'\r\n");
+	}
+}
 
 
  

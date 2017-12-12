@@ -13,5 +13,7 @@ char *itoa(int value, char *string, int radix);
 void USART3_DMA_Init(uint32_t BaudRate);
 void DMA_Send_Data(int dat1,int dat2);
 
+void USART_CMD_Hander(USART_TypeDef* USARTx,uint8_t data);
+
 #endif
 

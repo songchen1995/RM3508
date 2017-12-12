@@ -175,13 +175,28 @@ void UART5_IRQHandler(void)
 }
 
 
+	uint8_t data = 0;
+uint8_t rvData[20] = {0};
 void USART3_IRQHandler(void)
 {
-//	uint8_t data = 0;
+	static int32_t i = 0;
 	if(USART_GetITStatus(USART3, USART_IT_RXNE)==SET)   
 	{
 		USART_ClearITPendingBit( USART3,USART_IT_RXNE);
-//		data=USART_ReceiveData(USART3);
+		data=USART_ReceiveData(USART3);
+		
+		USART_CMD_Hander(USART3,data);
+
+		
+//		rvData[i] = data;
+//		i++;
+//		if(i>=20)
+//			i = 0;
+//		if(data == 'M')
+//		{
+//			USART_OUT(USART3,"NOT START WITH 'A'\r\n");
+//		}
+		
 	}
 	 
 }
