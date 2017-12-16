@@ -63,7 +63,7 @@ void MotorCtrl(void)
 	{
 		case POSITION_CONTROL_MODE:
 //			Driver.VoltageOutput = PosCtrl();
-				Driver.VoltageOutput = VelCtrl(PosCtrl());
+			Driver.VoltageOutput = VelCtrl(PosCtrl());
 			break;
 		case SPEED_CONTROL_MODE:
 			Driver.VoltageOutput = VelCtrl(VelSlope(Driver.VelCtrl.DesiredVel));
@@ -119,8 +119,8 @@ float VelCtrl(float cmdVel)
 	
 	Driver.VelCtrl.Output = MaxMinLimit(velpidout,20.0f);
 	
-	if(fabsf(Driver.VelCtrl.TemI) > fabsf(Driver.VelCtrl.Output))
-		Driver.VelCtrl.TemI = Driver.VelCtrl.Output;
+//	if(fabsf(Driver.VelCtrl.TemI) > fabsf(Driver.VelCtrl.Output))
+//		Driver.VelCtrl.TemI = Driver.VelCtrl.Output;
 	
 	return Driver.VelCtrl.Output;
 }
@@ -274,7 +274,7 @@ float PosCtrl(void)
 	if(Tim>=TimEnd)	Tim = TimEnd;		
 	
 //	Driver.PosCtrl.Output = OutPutLim(pospidout);
-	Driver.PosCtrl.Output = MaxMinLimit(pospidout,1000.0f);
+	Driver.PosCtrl.Output = MaxMinLimit(pospidout,Driver.VelCtrl.DesiredVel);
 	
 //	Driver.PosCtrl.Output = pospidout;
 	
@@ -291,9 +291,12 @@ float PosCtrl(void)
 void HomingMode(void)
 {
 	static float posLast = 0.0f;
+	float output;
 
-	Driver.HomingMode.Output = VelCtrl(Driver.HomingMode.Vel);
-
+	output = VelCtrl(Driver.HomingMode.Vel);
+	
+	Driver.HomingMode.Output = MaxMinLimit(output,1.5f);//限制home模式时电流大小
+	
 	if(fabsf(Driver.PosCtrl.ActualPos - posLast) <=2){		//2
 		Driver.HomingMode.Cnt++;
 	}else{
@@ -305,6 +308,11 @@ void HomingMode(void)
 //		Driver.HomingMode.InitPos = GetIncPos();
 		Driver.PosCtrl.ActualPos=0.0f;				//
 		Driver.PosCtrl.DesiredPos = Driver.PosCtrl.ActualPos;
+		//清除输出
+		Driver.HomingMode.Output = 0.0f;
+		Driver.VelCtrl.Output = 0.0f;
+		Driver.VoltageOutput = 0.0f;
+		Driver.VelCtrl.TemI = 0.0f;
 		Sign = 0;
 		Driver.UnitMode = POSITION_CONTROL_MODE;
 	}
@@ -342,8 +350,8 @@ float GetPosPidOut(void)
   */
 void PosCtrlInit(void)
 {
-	Driver.PosCtrl.Kp = 0.031f;
-//	Driver.PosCtrl.Kp = 0.011f;//静态时
+//	Driver.PosCtrl.Kp = 0.031f;
+	Driver.PosCtrl.Kp = 0.011f;//静态时
 	
 	Driver.PosCtrl.Kd = 0.061f;
 	
@@ -367,12 +375,13 @@ float CalculSpeed(void)
 {
 	static int PosOld = 0;
 	int PosNow = 0;
-	float speed = 0.0f;
+	int speed = 0.0f;
 	PosNow = GetMotorPos(0);										//
-	speed = (float)(PosNow - PosOld);
+	speed = (PosNow - PosOld);
 	PosOld = PosNow;
-	if(speed > (0.5f*Driver.Encoder.Period)) speed -= Driver.Encoder.Period;
-	if(speed <-(0.5f*Driver.Encoder.Period)) speed += Driver.Encoder.Period;	
+	if(speed > (Driver.Encoder.Period/2)) speed -= Driver.Encoder.Period;
+	if(speed <-(Driver.Encoder.Period/2)) speed += Driver.Encoder.Period;
+	
 	Driver.PosCtrl.ActualPos += speed;
 
 //  T法测速	

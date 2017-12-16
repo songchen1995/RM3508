@@ -23,17 +23,21 @@ void init(void)
 	TIM_Init(TIM2,999,83,0,0);					//主周期定时1ms	
 	MOTOR_OFF;
 	USART3_DMA_Init(115200);
-
 	
 	CAN_Config(CAN1,1000,GPIOB,GPIO_Pin_8, GPIO_Pin_9);
+	CAN_Config(CAN2,500,GPIOB,GPIO_Pin_5, GPIO_Pin_6);
 
 	DriverInit();
 	
-	Driver.UnitMode = SPEED_CONTROL_MODE;
+	Driver.UnitMode = HOMING_MODE;
 	Driver.VelCtrl.Acc = 0.3f;
 	Driver.VelCtrl.Dec = 0.3f;
-	Driver.VelCtrl.DesiredVel = 200.0f;
+	Driver.VelCtrl.DesiredVel = 250.0f;
 	Driver.PosCtrl.DesiredPos = 3.0f*8192.0f;
+	
+	Driver.HomingMode.Vel = -160.0f;
+	
+//	TIM_Delayms(TIM3,1000);
 	
 	MOTOR_ON;
 }
@@ -42,10 +46,10 @@ int main(void)
 	init();
 	while(1)
 	{
-		Driver.PosCtrl.DesiredPos = 3.0f*8192.0f;
-		TIM_Delayms(TIM3,3000);
-		Driver.PosCtrl.DesiredPos = -3.0f*8192.0f;
-		TIM_Delayms(TIM3,3000);
+//		Driver.PosCtrl.DesiredPos = 3.0f*8192.0f;
+//		TIM_Delayms(TIM3,3000);
+//		Driver.PosCtrl.DesiredPos = -3.0f*8192.0f;
+//		TIM_Delayms(TIM3,3000);
 	}
 }
 

@@ -41,6 +41,7 @@
 /****************驱动器CAN1接口模块****start******************/
 
 extern MotorType Motor[8];
+extern DriverType Driver;
 
 union MSG
 {
@@ -49,15 +50,12 @@ union MSG
 	int data32[2];
 	float dataf[2];
 	
-}Msg;
-
-int16_t Pos = 0,Vel = 0,Cur = 0;
-int8_t Tem = 0;
+}Msg,Msg1;
 
 void CAN1_RX0_IRQHandler(void)
 {
-	static uint8_t buffer[8];
-	static uint32_t StdId=0;
+	uint8_t buffer[8];
+	uint32_t StdId=0;
 
 	CAN_RxMsg(CAN1, &StdId,buffer,8);
 	
@@ -68,15 +66,8 @@ void CAN1_RX0_IRQHandler(void)
 	{
 		Motor[0].Pos = (Msg.data8[0]<<8)+Msg.data8[1];
 		Motor[0].Vel = (int16_t)(Msg.data8[2]<<8)+Msg.data8[3];
-//		Motor[0].Vel = (int16_t)(((Msg.data8[2]<<8)&0xff00)|(Msg.data8[3]&0xff));
 		Motor[0].Cur = (Msg.data8[4]<<8)+Msg.data8[5];
 		Motor[0].Temp = Msg.data8[6];
-	}
-	if(StdId==0x282)
-	{
-	}
-	if(StdId==0x283)
-	{
 	}
 
 	CAN_ClearFlag(CAN1,CAN_FLAG_EWG);
@@ -92,6 +83,93 @@ void CAN1_RX0_IRQHandler(void)
 	CAN_ClearFlag(CAN1,CAN_FLAG_FOV1);
 } 
 
+int CAN_RecieveStatus = 0;
+
+void CAN2_RX0_IRQHandler(void)
+{
+	uint8_t buffer[8];
+	uint32_t StdId=0;
+
+	CAN_RxMsg(CAN2, &StdId,buffer,8);
+	
+	for(uint8_t i = 0; i < 8; i++)
+		Msg1.data8[i] = buffer[i];
+
+	if(StdId == (0x300+1))
+	{		
+		switch(Msg1.data32[0])
+		{
+			case 0x00004F4D:						//MO 
+				if(Msg1.data32[1] == 1){
+				}else{
+					Driver.VelCtrl.DesiredVel = 0;
+				}
+					break;
+			case 0x0000564A:						//JV
+				Driver.VelCtrl.DesiredVel = (float)(Msg1.data32[1])/1000.0f;
+				if(Driver.VelCtrl.DesiredVel > VEL_MAX) Driver.VelCtrl.DesiredVel = VEL_MAX;
+				if(Driver.VelCtrl.DesiredVel <-VEL_MAX) Driver.VelCtrl.DesiredVel =-VEL_MAX;
+				break;
+			case 0x00004341:						//AC
+				Driver.VelCtrl.Acc = (float)(Msg1.data32[1])/1000000.0f;
+				break;
+			case 0x00004344:						//DC
+				Driver.VelCtrl.Dec = (float)(Msg1.data32[1])/1000000.0f;
+				break;
+			case 0x00005053:						//SP
+				Driver.VelCtrl.DesiredVel  = (float)(Msg1.data32[1])/1000.0f;
+				break;
+			case 0x00004150:						//PA绝对位置
+				Driver.PosCtrl.DesiredPos = (float)(Msg1.data32[1]);
+				break;
+			case 0x00005250:						//PR相对位置
+				Driver.PosCtrl.DesiredPos = Driver.PosCtrl.ActualPos + (float)(Msg1.data32[1]);
+				break;
+			case 0x40005155:						//UQ  读取电压输出(mV)
+				CAN_RecieveStatus = 0x40005155;
+				break;
+			case 0x40005149:						//IQ	 读取电流
+				CAN_RecieveStatus = 0x40005149;					
+				break;
+			case 0x40005856:						//VX   读取速度
+				CAN_RecieveStatus = 0x40005856;
+				break;
+			case 0x40005850:						//PX   读取位置
+				CAN_RecieveStatus = 0x40005850;
+				break;
+			default:break;
+		}
+	}
+	else if(StdId == (0x300+0))
+	{
+		
+		switch(Msg1.data32[0])
+		{
+			case 0x40005149:						//IQ	 读取电流
+				CAN_RecieveStatus = 0x40005149;					
+				break;
+			case 0x40005856:						//VX   读取速度
+				CAN_RecieveStatus = 0x40005856;
+				break;
+			case 0x40005850:						//PX   读取位置
+				CAN_RecieveStatus = 0x40005850;
+				break;
+			default:break;
+		}
+	}	
+
+	CAN_ClearFlag(CAN2,CAN_FLAG_EWG);
+	CAN_ClearFlag(CAN2,CAN_FLAG_EPV);
+	CAN_ClearFlag(CAN2,CAN_FLAG_BOF);
+	CAN_ClearFlag(CAN2,CAN_FLAG_LEC);
+	
+	CAN_ClearFlag(CAN2,CAN_FLAG_FMP0);
+	CAN_ClearFlag(CAN2,CAN_FLAG_FF0);
+	CAN_ClearFlag(CAN2,CAN_FLAG_FOV0);
+	CAN_ClearFlag(CAN2,CAN_FLAG_FMP1);
+	CAN_ClearFlag(CAN2,CAN_FLAG_FF1);
+	CAN_ClearFlag(CAN2,CAN_FLAG_FOV1);
+}
 /****************驱动器CAN1接口模块****end******************/
 /************************************************************/
 
@@ -179,7 +257,7 @@ void UART5_IRQHandler(void)
 uint8_t rvData[20] = {0};
 void USART3_IRQHandler(void)
 {
-	static int32_t i = 0;
+//	static int32_t i = 0;
 	if(USART_GetITStatus(USART3, USART_IT_RXNE)==SET)   
 	{
 		USART_ClearITPendingBit( USART3,USART_IT_RXNE);

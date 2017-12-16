@@ -541,7 +541,7 @@ void USART_CMD_Hander(USART_TypeDef* USARTx,uint8_t data)
 			}
 			else if(strncmp(buffer,"IQ", 2)==0)
 			{
-				USART_OUT(USARTx,(uint8_t*)"IQ invalid\r\n");				
+				USART_OUT(USARTx,(uint8_t*)"IQ invalid\r\n");
 			}
 			else
 			{
@@ -553,8 +553,8 @@ void USART_CMD_Hander(USART_TypeDef* USARTx,uint8_t data)
 		bufferI = 0;
 		reValue = 0;
 		reFlag = 1;
-  }
-	else
+	}
+ 	else
 	{
 //			bufferI = 0;
 //			USART_OUT(USARTx,"NOT START WITH 'A'\r\n");
