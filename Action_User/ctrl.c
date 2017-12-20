@@ -295,7 +295,7 @@ void HomingMode(void)
 
 	output = VelCtrl(Driver.HomingMode.Vel);
 	
-	Driver.HomingMode.Output = MaxMinLimit(output,1.5f);//限制home模式时电流大小
+	Driver.HomingMode.Output = MaxMinLimit(output,1.5f);//限制home模式时电流值
 	
 	if(fabsf(Driver.PosCtrl.ActualPos - posLast) <=2){		//2
 		Driver.HomingMode.Cnt++;
