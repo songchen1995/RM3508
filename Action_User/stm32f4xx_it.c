@@ -95,7 +95,7 @@ void CAN2_RX0_IRQHandler(void)
 	for(uint8_t i = 0; i < 8; i++)
 		Msg1.data8[i] = buffer[i];
 
-	if(StdId == (0x300+1))
+	if(StdId == (0x300+6))
 	{		
 		switch(Msg1.data32[0])
 		{
@@ -104,7 +104,7 @@ void CAN2_RX0_IRQHandler(void)
 				}else{
 					Driver.VelCtrl.DesiredVel = 0;
 				}
-					break;
+					break; 
 			case 0x0000564A:						//JV
 				Driver.VelCtrl.DesiredVel = (float)(Msg1.data32[1])/1000.0f;
 				if(Driver.VelCtrl.DesiredVel > VEL_MAX) Driver.VelCtrl.DesiredVel = VEL_MAX;
