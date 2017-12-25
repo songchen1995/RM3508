@@ -215,7 +215,8 @@ typedef struct
 #define  BLDC_MODE			1
 #define  FOC_MODE				2
 
-#define  CAN_ID_NUM     5
+#define  CAN_ID_NUM     6
+//6号初始化速度为正  电流为2.5其余为1.5
 
 
 /* Exported functions ------------------------------------------------------- */

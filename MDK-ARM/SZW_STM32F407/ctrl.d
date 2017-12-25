@@ -1,7 +1,7 @@
 .\szw_stm32f407\ctrl.o: ..\Action_User\ctrl.c
 .\szw_stm32f407\ctrl.o: ..\Action_User\ctrl.h
-.\szw_stm32f407\ctrl.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
-.\szw_stm32f407\ctrl.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+.\szw_stm32f407\ctrl.o: C:\Keil\ARM\ARMCC\Bin\..\include\stdint.h
+.\szw_stm32f407\ctrl.o: C:\Keil\ARM\ARMCC\Bin\..\include\math.h
 .\szw_stm32f407\ctrl.o: ..\Action_User\rm_motor.h
 .\szw_stm32f407\ctrl.o: ..\Action_User\usart.h
 .\szw_stm32f407\ctrl.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_usart.h

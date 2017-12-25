@@ -2,7 +2,7 @@
 .\szw_stm32f407\elmo.o: ..\Action_User\elmo.h
 .\szw_stm32f407\elmo.o: ..\Libraries\CMSIS\stm32f4xx.h
 .\szw_stm32f407\elmo.o: ..\Libraries\CMSIS\core_cm4.h
-.\szw_stm32f407\elmo.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\szw_stm32f407\elmo.o: C:\Keil\ARM\ARMCC\Bin\..\include\stdint.h
 .\szw_stm32f407\elmo.o: ..\Libraries\CMSIS\core_cmInstr.h
 .\szw_stm32f407\elmo.o: ..\Libraries\CMSIS\core_cmFunc.h
 .\szw_stm32f407\elmo.o: ..\Libraries\CMSIS\core_cm4_simd.h
