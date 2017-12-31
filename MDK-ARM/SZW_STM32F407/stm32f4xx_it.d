@@ -22,4 +22,5 @@
 .\szw_stm32f407\stm32f4xx_it.o: ..\Action_User\elmo.h
 .\szw_stm32f407\stm32f4xx_it.o: ..\Action_User\rm_motor.h
 .\szw_stm32f407\stm32f4xx_it.o: ..\Action_User\ctrl.h
+.\szw_stm32f407\stm32f4xx_it.o: ..\Action_User\comm.h
 .\szw_stm32f407\stm32f4xx_it.o: ..\Action_User\can.h

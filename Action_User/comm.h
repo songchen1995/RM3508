@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    
+  * @file    comm.h
   * @author  Tmax Sco
   * @version 
   * @date   
@@ -12,15 +12,33 @@
   */ 
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __xxx_h
-#define __xxx_h
+#ifndef __comm_h
+#define __comm_h
 
 /* Includes ------------------------------------------------------------------*/
 #include "stdint.h"
 /* Exported types ------------------------------------------------------------*/
+/** 
+  * @brief  联合体、共用体数据类型  
+  * @note     
+  */
+typedef union
+{
+	
+	uint8_t data8[8];	
+	int16_t data16[4];	
+	int data32[2];
+	float dataf[2];
+	
+}UnionDataType;
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
+
+void SetCur(float* cur);
+void CanSendData(UnionDataType txData);
+void CANRespond(void);
 
 #endif
 

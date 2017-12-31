@@ -32,6 +32,7 @@
 #include "stm32f4xx.h"
 #include "rm_motor.h"
 #include "ctrl.h"
+#include "comm.h"
 #include "can.h"
 /******************************************************************************/
 /*            Cortex-M4 Processor Exceptions Handlers                         */
@@ -43,20 +44,18 @@
 extern MotorType Motor[8];
 extern DriverType Driver;
 
-union MSG
-{
-	uint8_t data8[8];
-	int16_t data16[4];
-	int data32[2];
-	float dataf[2];
-	
-}Msg,Msg1;
 
+/**
+  * @brief  CAN1接收中断，接收C620电调的反馈数据
+	* @param  None
+	* @retval None
+  */
 void CAN1_RX0_IRQHandler(void)
 {
 	uint8_t buffer[8];
 	uint32_t StdId=0;
-
+  UnionDataType Msg;
+	
 	CAN_RxMsg(CAN1, &StdId,buffer,8);
 	
 	for(uint8_t i = 0; i < 8; i++)
@@ -83,19 +82,19 @@ void CAN1_RX0_IRQHandler(void)
 	CAN_ClearFlag(CAN1,CAN_FLAG_FOV1);
 } 
 
-int CAN_RecieveStatus = 0;
-
+//CAN2接收控制命令
 void CAN2_RX0_IRQHandler(void)
 {
 	uint8_t buffer[8];
 	uint32_t StdId=0;
+	UnionDataType Msg1;
 
 	CAN_RxMsg(CAN2, &StdId,buffer,8);
 	
 	for(uint8_t i = 0; i < 8; i++)
 		Msg1.data8[i] = buffer[i];
 
-	if(StdId == (0x300+6))
+	if(StdId == (0x300+CAN_ID_NUM))
 	{		
 		switch(Msg1.data32[0])
 		{
@@ -104,7 +103,7 @@ void CAN2_RX0_IRQHandler(void)
 				}else{
 					Driver.VelCtrl.DesiredVel = 0;
 				}
-					break; 
+				break; 
 			case 0x0000564A:						//JV
 				Driver.VelCtrl.DesiredVel = (float)(Msg1.data32[1])/1000.0f;
 				if(Driver.VelCtrl.DesiredVel > VEL_MAX) Driver.VelCtrl.DesiredVel = VEL_MAX;
@@ -125,17 +124,14 @@ void CAN2_RX0_IRQHandler(void)
 			case 0x00005250:						//PR相对位置
 				Driver.PosCtrl.DesiredPos = Driver.PosCtrl.ActualPos + (float)(Msg1.data32[1]);
 				break;
-			case 0x40005155:						//UQ  读取电压输出(mV)
-				CAN_RecieveStatus = 0x40005155;
-				break;
 			case 0x40005149:						//IQ	 读取电流
-				CAN_RecieveStatus = 0x40005149;					
+				Driver.Command.CAN_status = 0x40005149;					
 				break;
 			case 0x40005856:						//VX   读取速度
-				CAN_RecieveStatus = 0x40005856;
+				Driver.Command.CAN_status = 0x40005856;
 				break;
 			case 0x40005850:						//PX   读取位置
-				CAN_RecieveStatus = 0x40005850;
+				Driver.Command.CAN_status = 0x40005850;
 				break;
 			default:break;
 		}
@@ -146,13 +142,13 @@ void CAN2_RX0_IRQHandler(void)
 		switch(Msg1.data32[0])
 		{
 			case 0x40005149:						//IQ	 读取电流
-				CAN_RecieveStatus = 0x40005149;					
+				Driver.Command.CAN_status = 0x40005149;					
 				break;
 			case 0x40005856:						//VX   读取速度
-				CAN_RecieveStatus = 0x40005856;
+				Driver.Command.CAN_status = 0x40005856;
 				break;
 			case 0x40005850:						//PX   读取位置
-				CAN_RecieveStatus = 0x40005850;
+				Driver.Command.CAN_status = 0x40005850;
 				break;
 			default:break;
 		}

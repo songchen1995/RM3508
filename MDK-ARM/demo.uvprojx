@@ -425,6 +425,11 @@
               <FileType>1</FileType>
               <FilePath>..\Action_User\rm_motor.c</FilePath>
             </File>
+            <File>
+              <FileName>comm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Action_User\comm.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

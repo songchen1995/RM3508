@@ -27,9 +27,6 @@ void ReadActualCurrent(uint8_t ElmoNum);
 void ReadActualVel(uint8_t ElmoNum);
 void velCrl(uint8_t DriverNum,int vel);
 
-
-void SetCur(float* cur);
-
 #endif 
 
 

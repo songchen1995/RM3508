@@ -19,7 +19,7 @@
 #include "rm_motor.h"
 #include "usart.h"
 #include "elmo.h"
-
+#include "comm.h"
 /* Private  typedef -----------------------------------------------------------*/
 /* Private  define ------------------------------------------------------------*/
 /* Private  macro -------------------------------------------------------------*/
@@ -41,6 +41,7 @@ void DriverInit(void)
 	Driver.VoltageOutput = 0.0f;
 	Driver.Commutation.Mode = FOC_MODE;
 	Driver.UnitMode = SPEED_CONTROL_MODE;
+	Driver.Command.CAN_status = 0;
 	Driver.Encoder.Period = 8192;
 	VelCtrlInit();
 	PosCtrlInit();

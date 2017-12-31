@@ -74,6 +74,16 @@ typedef struct
 }CommutationType;
 
 /** 
+  * @brief  Commutation type structure definition  
+  * @note     
+  */
+typedef struct
+{	
+	int32_t CAN_status;
+	
+}CommandType;
+
+/** 
   * @brief  VelCtrl type structure definition  
   * @note     
   */
@@ -154,6 +164,8 @@ typedef struct
 	
 	CommutationType Commutation;
 	
+	CommandType Command;
+	
 }DriverType;
 
 
@@ -170,6 +182,8 @@ typedef struct
 	float KI[4];
 
 }CtrlType;
+
+
 	
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -200,6 +214,8 @@ typedef struct
 //»»ÏàÄ£Ê½
 #define  BLDC_MODE			1
 #define  FOC_MODE				2
+
+#define  CAN_ID_NUM     5
 
 
 /* Exported functions ------------------------------------------------------- */

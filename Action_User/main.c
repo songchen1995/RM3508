@@ -13,6 +13,7 @@
 #include "stdio.h"
 #include "arm_math.h"
 #include "ctrl.h"
+#include "comm.h"
 
 extern DriverType Driver;
 
@@ -46,6 +47,7 @@ int main(void)
 	init();
 	while(1)
 	{
+		CANRespond();
 //		Driver.PosCtrl.DesiredPos = 3.0f*8192.0f;
 //		TIM_Delayms(TIM3,3000);
 //		Driver.PosCtrl.DesiredPos = -3.0f*8192.0f;

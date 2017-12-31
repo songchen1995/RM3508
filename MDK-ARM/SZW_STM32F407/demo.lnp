@@ -8,6 +8,7 @@
 ".\szw_stm32f407\usart.o"
 ".\szw_stm32f407\ctrl.o"
 ".\szw_stm32f407\rm_motor.o"
+".\szw_stm32f407\comm.o"
 ".\szw_stm32f407\misc.o"
 ".\szw_stm32f407\stm32f4xx_adc.o"
 ".\szw_stm32f407\stm32f4xx_can.o"

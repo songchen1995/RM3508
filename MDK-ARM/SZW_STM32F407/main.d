@@ -27,3 +27,4 @@
 .\szw_stm32f407\main.o: ..\Libraries\dsplib\Include\arm_math.h
 .\szw_stm32f407\main.o: ..\Libraries\dsplib\Include\core_cm4.h
 .\szw_stm32f407\main.o: ..\Action_User\ctrl.h
+.\szw_stm32f407\main.o: ..\Action_User\comm.h

@@ -12,3 +12,4 @@
 .\szw_stm32f407\ctrl.o: ..\Libraries\CMSIS\core_cm4_simd.h
 .\szw_stm32f407\ctrl.o: ..\Libraries\CMSIS\system_stm32f4xx.h
 .\szw_stm32f407\ctrl.o: ..\Action_User\elmo.h
+.\szw_stm32f407\ctrl.o: ..\Action_User\comm.h
