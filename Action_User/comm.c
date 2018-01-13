@@ -66,36 +66,37 @@ void CANRespond(void)
 
 	switch (Driver.Command.CAN_status)
 	{
-	case 0x40005155: //UQ   读取电压输出(V)
-		txData.data32[0] = 0x00005155;
-		txData.dataf[1]  = Driver.VoltageOutput;
-		CanSendData(txData);
-		Driver.Command.CAN_status = 0;
-		break;
+		case 0:
+			break;
+		case 0x40005155: //UQ   读取电压输出(V)
+			txData.data32[0] = 0x00005155;
+			txData.dataf[1]  = Driver.VoltageOutput;
+			CanSendData(txData);
+			Driver.Command.CAN_status = 0;
+			break;
 
-	case 0x40005856: //VX   读取速度
-		txData.data32[0] = 0x00005856;
-		txData.data32[1]  = (int32_t)(Driver.VelCtrl.Speed * 1000);
-		CanSendData(txData);
-		Driver.Command.CAN_status = 0;
-		break;
+		case 0x40005856: //VX   读取速度
+			txData.data32[0] = 0x00005856;
+			txData.data32[1]  = (int32_t)(Driver.VelCtrl.Speed * 1000);
+			CanSendData(txData);
+			Driver.Command.CAN_status = 0;
+			break;
 
-	case 0x40005149: //IQ	 读取电流
-		txData.data32[0] = 0x00005149;
-		//				data[1] = FloatToInt32_t(CurrentOutput);
-		CanSendData(txData);
-		Driver.Command.CAN_status = 0;
-		break;
+		case 0x40005149: //IQ	 读取电流
+			txData.data32[0] = 0x00005149;
+			//				data[1] = FloatToInt32_t(CurrentOutput);
+			CanSendData(txData);
+			Driver.Command.CAN_status = 0;
+			break;
 
-	case 0x40005850: //PX   读取位置
-		txData.data32[0] = 0x00005850;
-		txData.data32[1]  = (int32_t)(Driver.PosCtrl.ActualPos);
-		CanSendData(txData);
-		Driver.Command.CAN_status = 0;
-		break;
+		case 0x40005850: //PX   读取位置
+			txData.data32[0] = 0x00005850;
+			txData.data32[1]  = (int32_t)(Driver.PosCtrl.ActualPos);
+			CanSendData(txData);
+			Driver.Command.CAN_status = 0;
+			break;
 
-	default:
-		break;
+		default: break;
 	}
 }
 
