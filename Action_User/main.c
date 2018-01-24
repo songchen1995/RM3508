@@ -30,11 +30,11 @@ void init(void)
 
 	DriverInit();
 	
-	Driver.UnitMode = HOMING_MODE;
+	Driver.UnitMode = POSITION_CONTROL_MODE;
 	Driver.VelCtrl.Acc = 1.3f;
 	Driver.VelCtrl.Dec = 1.3f;
 	Driver.VelCtrl.DesiredVel = 250.0f;
-	Driver.PosCtrl.DesiredPos = 3.0f * 8192.0f;
+	Driver.PosCtrl.DesiredPos = 0.0f;
 	
 	Driver.HomingMode.Vel = 160.0f;
 	
