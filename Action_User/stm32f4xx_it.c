@@ -100,8 +100,9 @@ void CAN2_RX0_IRQHandler(void)
 		{
 			case 0x00004F4D:						//MO 
 				if(Msg1.data32[1] == 1){
+          MotorOn();
 				}else{
-					Driver.VelCtrl.DesiredVel = 0;
+          MotorOff();
 				}
 				break; 
 			case 0x0000564A:						//JV

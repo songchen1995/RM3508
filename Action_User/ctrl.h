@@ -17,6 +17,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stdint.h"
+#include "stm32f4xx.h"
+
 /* Exported types ------------------------------------------------------------*/
 
 /** 
@@ -152,6 +154,8 @@ typedef struct
 {
 	uint32_t UnitMode;
 	
+  FunctionalState Status;
+  
 	float VoltageOutput;
 	
 	VelCtrlType VelCtrl;
@@ -208,15 +212,12 @@ typedef struct
 #define  POSITION_CONTROL_MODE		5
 #define  HOMING_MODE							6
 
-//电机使能
-#define  MOTOR_ON   	TIM_Cmd(TIM2,ENABLE);
-#define  MOTOR_OFF   	TIM_Cmd(TIM2,DISABLE);
 //换相模式
 #define  BLDC_MODE			1
 #define  FOC_MODE				2
 
-#define  CAN_ID_NUM     7
-//6号初始化速度为正  电流为2.5其余为1.5
+#define  CAN_ID_NUM     6
+//自动6号初始化速度为正  电流为2.5其余为1.5
 
 
 /* Exported functions ------------------------------------------------------- */
@@ -235,6 +236,8 @@ void 		DriverInit(void);
 void    MotorCtrl(void);
 void 		HomingMode(void);
 void 		HomingModeInit(void);
+void    MotorOn(void);
+void    MotorOff(void);
 
 
 #endif

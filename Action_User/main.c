@@ -20,27 +20,22 @@ extern DriverType Driver;
 void init(void)
 {
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	
-	  
-	TIM_Init(TIM2,999,83,0,0);					//主周期定时1ms	
-	MOTOR_OFF;
+	    
 	USART3_DMA_Init(115200);
 	
 	CAN_Config(CAN1,1000,GPIOB,GPIO_Pin_8, GPIO_Pin_9);
 	CAN_Config(CAN2,500,GPIOB,GPIO_Pin_5, GPIO_Pin_6);
 
+	TIM_Init(TIM2,999,83,0,0);					//主周期定时1ms	
+  TIM_Cmd(TIM2,DISABLE);	
+  
 	DriverInit();
 	
-	Driver.UnitMode = HOMING_MODE;
-	Driver.VelCtrl.Acc = 1.3f;
-	Driver.VelCtrl.Dec = 1.3f;
-	Driver.VelCtrl.DesiredVel = 250.0f;
-	Driver.PosCtrl.DesiredPos = 0.0f;
-	
-	Driver.HomingMode.Vel = -160.0f;
-	
 //	TIM_Delayms(TIM3,1000);
+  TIM_Cmd(TIM2,ENABLE);	
 	
-	MOTOR_ON;
+	MotorOn();
+ 
 }
 int main(void)
 {

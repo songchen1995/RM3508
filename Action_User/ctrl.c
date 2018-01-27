@@ -38,15 +38,22 @@ extern MotorType Motor[8];
   */
 void DriverInit(void)
 {
+  Driver.Status = DISABLE;
 	Driver.VoltageOutput = 0.0f;
 	Driver.Commutation.Mode = FOC_MODE;
-	Driver.UnitMode = SPEED_CONTROL_MODE;
 	Driver.Command.CAN_status = 0;
 	Driver.Encoder.Period = 8192;
 	VelCtrlInit();
 	PosCtrlInit();
 	HomingModeInit();
-
+  //配置初始状态
+  Driver.UnitMode = HOMING_MODE;
+	Driver.VelCtrl.Acc = 1.3f;
+	Driver.VelCtrl.Dec = 1.3f;
+	Driver.VelCtrl.DesiredVel = 250.0f;
+	Driver.PosCtrl.DesiredPos = 0.0f;
+	
+	Driver.HomingMode.Vel = -160.0f;
 }
 
 /**
@@ -76,6 +83,9 @@ void MotorCtrl(void)
 		default:break;
 	}
 
+  if(Driver.Status != ENABLE)
+    Driver.VoltageOutput = 0.0f;
+  
 	PerCur[0] = Driver.VoltageOutput;
 //	PerCur[0] = 0.0f;
 	SetCur(PerCur);
@@ -435,8 +445,25 @@ float MaxMinLimit(float val,float limit)
 	return val;
 }
 
+/**
+  * @brief  电机使能
+	* @param  None
+	* @retval None
+  */
+void MotorOn(void)
+{
+  Driver.Status = ENABLE;
+}
 
-
+/**
+  * @brief  电机失能
+	* @param  None
+	* @retval None
+  */
+void MotorOff(void)
+{
+  Driver.Status = DISABLE;
+}
 
 
 
