@@ -452,6 +452,14 @@ float MaxMinLimit(float val,float limit)
   */
 void MotorOn(void)
 {
+  if(Driver.UnitMode == POSITION_CONTROL_MODE)
+    Driver.PosCtrl.DesiredPos = Driver.PosCtrl.ActualPos;
+  
+  if(Driver.UnitMode == SPEED_CONTROL_MODE)
+    Driver.VelCtrl.DesiredVel = Driver.VelCtrl.Speed;
+  
+  Driver.VelCtrl.TemI = 0.0f;
+  
   Driver.Status = ENABLE;
 }
 
