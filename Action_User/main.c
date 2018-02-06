@@ -31,9 +31,11 @@ void init(void)
   
 	DriverInit();
 	
-//	TIM_Delayms(TIM3,1000);
   TIM_Cmd(TIM2,ENABLE);	
-	
+  
+	TIM_Delayms(TIM3,200);
+  Driver.PosCtrl.ActualPos = 0.0f;
+  
 	MotorOn();
  
 }

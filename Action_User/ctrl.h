@@ -120,7 +120,7 @@ typedef struct
 	
 	float DesiredPos;
 	
-	float PosBasic;
+	float BasicPos;
 	
 	float Kp;
 	
@@ -153,6 +153,8 @@ typedef struct
 typedef struct
 {
 	uint32_t UnitMode;
+  
+  int32_t time;
 	
   FunctionalState Status;
   
