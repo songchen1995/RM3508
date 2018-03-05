@@ -46,8 +46,8 @@ int main(void)
 	{
 		CANRespond();
 //		Driver.PosCtrl.DesiredPos = 3.0f*8192.0f;
-//		TIM_Delayms(TIM3,3000);
-//		Driver.PosCtrl.DesiredPos = -3.0f*8192.0f;
+		TIM_Delayms(TIM3,3000);
+		Driver.PosCtrl.DesiredPos = -10.0f*8192.0f;
 //		TIM_Delayms(TIM3,3000);
 	}
 }
