@@ -203,7 +203,7 @@ typedef struct
 #define  VOL_MAX 					18.00f			//电压最大值
 #define  VOL_BLIND_AREA		0.80f				//输出盲区，电机不动的最大矢量电压值
 #define	 EMF_CONSTANT			0.020926f		//电动势常数，电机本身参数 = 电压矢量(V)/速度(pulse/ms)
-
+#define  CURRENT_MAX      3.0f
 
 #define  VEL_MAX					1280.0f			//最大速度
 #define  VEl_KP   				0.048f			//速度环Kp

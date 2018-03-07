@@ -23,7 +23,7 @@ void init(void)
 	    
 	USART3_DMA_Init(115200);
 	
-	CAN_Config(CAN1,1000,GPIOB,GPIO_Pin_8, GPIO_Pin_9);
+	CAN_Config(CAN1,1000,GPIOB,GPIO_Pin_8, GPIO_Pin_9); 
 	CAN_Config(CAN2,500,GPIOB,GPIO_Pin_5, GPIO_Pin_6);
 
 	TIM_Init(TIM2,999,83,0,0);					//主周期定时1ms	
@@ -42,13 +42,16 @@ void init(void)
 int main(void)
 {
 	init();
+	
+	
 	while(1)
 	{
 		CANRespond();
-//		Driver.PosCtrl.DesiredPos = 3.0f*8192.0f;
-		TIM_Delayms(TIM3,3000);
-		Driver.PosCtrl.DesiredPos = -10.0f*8192.0f;
-//		TIM_Delayms(TIM3,3000);
+//	Driver.VelCtrl.DesiredVel = 800.0f;
+		Driver.PosCtrl.DesiredPos = 9.0f*8192.0f;
+		TIM_Delayms(TIM3,2000);
+		Driver.PosCtrl.DesiredPos = -0.0f*8192.0f;
+		TIM_Delayms(TIM3,2000);
 	}
 }
 

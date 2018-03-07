@@ -47,9 +47,10 @@ void DriverInit(void)
 	PosCtrlInit();
 	HomingModeInit();
   //配置初始状态
-  Driver.UnitMode = POSITION_CONTROL_MODE;
-	Driver.VelCtrl.Acc = 2.3f;
-	Driver.VelCtrl.Dec = 2.3f;
+//  Driver.UnitMode = POSITION_CONTROL_MODE;
+  Driver.UnitMode = HOMING_MODE;
+	Driver.VelCtrl.Acc = 15.0f;
+	Driver.VelCtrl.Dec = 15.0f;
 	Driver.VelCtrl.DesiredVel = 1250.0f;
 	Driver.PosCtrl.DesiredPos = 0.0f;
 	
@@ -91,7 +92,7 @@ void MotorCtrl(void)
 	SetCur(PerCur);
 	
 //	DMA_Send_Data((int)(Motor[0].Vel) ,(int)(Driver.VoltageOutput*100.0f));
-//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VelCtrl.TemI*100.0f));
+	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.PosCtrl.ActualPos));
 //	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*100.0f));
 	
 }
@@ -125,10 +126,10 @@ float VelCtrl(float cmdVel)
 	/*****************速度环PID*****************/
 	velErr = cmdVel - Driver.VelCtrl.Speed;	
 	Driver.VelCtrl.TemI += Driver.VelCtrl.Ki*velErr;
-	Driver.VelCtrl.TemI = MaxMinLimit(Driver.VelCtrl.TemI,20.0f);
+	Driver.VelCtrl.TemI = MaxMinLimit(Driver.VelCtrl.TemI,CURRENT_MAX);
 	velpidout = Driver.VelCtrl.Kp * velErr + Driver.VelCtrl.TemI;
 	
-	Driver.VelCtrl.Output = MaxMinLimit(velpidout,20.0f);
+	Driver.VelCtrl.Output = MaxMinLimit(velpidout,CURRENT_MAX);
 	
 //	if(fabsf(Driver.VelCtrl.TemI) > fabsf(Driver.VelCtrl.Output))
 //		Driver.VelCtrl.TemI = Driver.VelCtrl.Output;
@@ -275,11 +276,14 @@ float PosCtrl(void)
 	/******************************计算位置环输出**************************************/
 	posErr=TemAimPos-Driver.PosCtrl.ActualPos;				
 //	pospidout=posErr*0.0090f+0.009f*(posErr-posErrLast)-0.00000f*Driver.VelCtrl.Speed;					//	
-	pospidout = posErr*Driver.PosCtrl.Kp + Driver.PosCtrl.Kd*(posErr-posErrLast) - 0.00000f*Driver.VelCtrl.Speed;					//	
+	pospidout = posErr*Driver.PosCtrl.Kp + Driver.PosCtrl.Kd*(posErr-posErrLast) - 0.00000f*Driver.VelCtrl.Speed;		
+	//	
 	posErrLast = posErr;
 	
-//	if(fabsf(posErr) <=2)
-//		pospidout = 0.0f;
+	if(fabsf(posErr) <=200.0f)
+		pospidout = 0.0f;
+	
+	
 	/*******************动态限幅，控制输出********************/	
 //	if((pospidout > VOL_MAX)||(pospidout < -VOL_MAX))		Tim-=1;			//运行时打开
 	if(Tim>=TimEnd)	Tim = TimEnd;		
@@ -306,7 +310,7 @@ void HomingMode(void)
 
 	output = VelCtrl(Driver.HomingMode.Vel);
 	
-	Driver.HomingMode.Output = MaxMinLimit(output,1.5f);//限制home模式时电流值
+	Driver.HomingMode.Output = MaxMinLimit(output,0.8f);//限制home模式时电流值
 	
 	if(fabsf(Driver.PosCtrl.ActualPos - posLast) <=2){		//2
 		Driver.HomingMode.Cnt++;
@@ -361,9 +365,10 @@ float GetPosPidOut(void)
 void PosCtrlInit(void)
 {
 //	Driver.PosCtrl.Kp = 0.031f;
-	Driver.PosCtrl.Kp = 0.011f;//静态时
-	
-	Driver.PosCtrl.Kd = 0.061f;
+//	Driver.PosCtrl.Kp = 0.011f;//静态时
+//	Driver.PosCtrl.Kd = 0.061f;
+	Driver.PosCtrl.Kp = 0.11f;//
+	Driver.PosCtrl.Kd = 4.51f; 
 	
 	Driver.VelCtrl.DesiredVel = 10.0f;
 	Driver.VelCtrl.Acc = 0.003f;
