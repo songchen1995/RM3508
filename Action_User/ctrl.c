@@ -20,6 +20,8 @@
 #include "usart.h"
 #include "elmo.h"
 #include "comm.h"
+#include "timer.h"
+
 /* Private  typedef -----------------------------------------------------------*/
 /* Private  define ------------------------------------------------------------*/
 /* Private  macro -------------------------------------------------------------*/
@@ -47,8 +49,9 @@ void DriverInit(void)
 	PosCtrlInit();
 	HomingModeInit();
   //配置初始状态
+//  Driver.UnitMode = HOMING_MODE;
 //  Driver.UnitMode = POSITION_CONTROL_MODE;
-  Driver.UnitMode = HOMING_MODE;
+  Driver.UnitMode = SPEED_CONTROL_MODE;
 	Driver.VelCtrl.Acc = 15.0f;
 	Driver.VelCtrl.Dec = 15.0f;
 	Driver.VelCtrl.DesiredVel = 1250.0f;
@@ -91,8 +94,8 @@ void MotorCtrl(void)
 //	PerCur[0] = 0.0f;
 	SetCur(PerCur);
 	
-//	DMA_Send_Data((int)(Motor[0].Vel) ,(int)(Driver.VoltageOutput*100.0f));
-	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.PosCtrl.ActualPos));
+	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*100.0f));
+//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.PosCtrl.ActualPos/10.0f));
 //	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*100.0f));
 	
 }
@@ -144,8 +147,8 @@ float VelCtrl(float cmdVel)
   */
 void VelCtrlInit(void)
 {
-	Driver.VelCtrl.Kp = 0.03f;
-	Driver.VelCtrl.Ki = 0.0030f;//0.0004f;
+	Driver.VelCtrl.Kp = 0.19f;
+	Driver.VelCtrl.Ki = 0.0010f;//0.0004f;
 
 	Driver.VelCtrl.TemI = 0.0f;
 	Driver.VelCtrl.DesiredVel = 0.0f;
@@ -477,6 +480,20 @@ void MotorOff(void)
   Driver.Status = DISABLE;
 }
 
+/**
+  * @brief  速度环测试
+	* @param  vel：测试用速度大小
+	* @param  tim：速度切换时间
+	* @retval None
+  */
+void VelCtrlTest(float vel,int tim)
+{
+	Driver.VelCtrl.DesiredVel = vel;
+	TIM_Delayms(TIM3,tim);
+	Driver.VelCtrl.DesiredVel = -vel;
+	TIM_Delayms(TIM3,tim);
+
+}
 
 
 /************************ (C) COPYRIGHT 2016 ACTION *****END OF FILE****/

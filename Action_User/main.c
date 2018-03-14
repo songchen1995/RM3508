@@ -21,7 +21,7 @@ void init(void)
 {
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	
 	    
-	USART3_DMA_Init(115200);
+	USART3_DMA_Init(921600);
 	
 	CAN_Config(CAN1,1000,GPIOB,GPIO_Pin_8, GPIO_Pin_9); 
 	CAN_Config(CAN2,500,GPIOB,GPIO_Pin_5, GPIO_Pin_6);
@@ -47,11 +47,12 @@ int main(void)
 	while(1)
 	{
 		CANRespond();
-//	Driver.VelCtrl.DesiredVel = 800.0f;
-		Driver.PosCtrl.DesiredPos = 9.0f*8192.0f;
-		TIM_Delayms(TIM3,2000);
-		Driver.PosCtrl.DesiredPos = -0.0f*8192.0f;
-		TIM_Delayms(TIM3,2000);
+//		VelCtrlTest(300.0f,200);
+	Driver.VelCtrl.DesiredVel = 0.0f;
+//		Driver.PosCtrl.DesiredPos = 9.0f*8192.0f;
+//		TIM_Delayms(TIM3,2000);
+//		Driver.PosCtrl.DesiredPos = -0.0f*8192.0f;
+//		TIM_Delayms(TIM3,2000);
 	}
 }
 
