@@ -50,8 +50,8 @@ void DriverInit(void)
 	HomingModeInit();
   //≈‰÷√≥ı º◊¥Ã¨
 //  Driver.UnitMode = HOMING_MODE;
-//  Driver.UnitMode = POSITION_CONTROL_MODE;
-  Driver.UnitMode = SPEED_CONTROL_MODE;
+  Driver.UnitMode = POSITION_CONTROL_MODE;
+//  Driver.UnitMode = SPEED_CONTROL_MODE;
 	Driver.VelCtrl.Acc = 15.0f;
 	Driver.VelCtrl.Dec = 15.0f;
 	Driver.VelCtrl.DesiredVel = 1250.0f;
@@ -94,8 +94,8 @@ void MotorCtrl(void)
 //	PerCur[0] = 0.0f;
 	SetCur(PerCur);
 	
-	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*100.0f));
-//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.PosCtrl.ActualPos/10.0f));
+//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*100.0f));
+	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.PosCtrl.ActualPos/10.0f));
 //	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*100.0f));
 	
 }
@@ -147,7 +147,7 @@ float VelCtrl(float cmdVel)
   */
 void VelCtrlInit(void)
 {
-	Driver.VelCtrl.Kp = 0.19f;
+	Driver.VelCtrl.Kp = 0.10f;
 	Driver.VelCtrl.Ki = 0.0010f;//0.0004f;
 
 	Driver.VelCtrl.TemI = 0.0f;
@@ -371,7 +371,7 @@ void PosCtrlInit(void)
 //	Driver.PosCtrl.Kp = 0.011f;//æ≤Ã¨ ±
 //	Driver.PosCtrl.Kd = 0.061f;
 	Driver.PosCtrl.Kp = 0.11f;//
-	Driver.PosCtrl.Kd = 4.51f; 
+	Driver.PosCtrl.Kd = 0.11f; 
 	
 	Driver.VelCtrl.DesiredVel = 10.0f;
 	Driver.VelCtrl.Acc = 0.003f;

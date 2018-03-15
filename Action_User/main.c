@@ -48,11 +48,11 @@ int main(void)
 	{
 		CANRespond();
 //		VelCtrlTest(300.0f,200);
-	Driver.VelCtrl.DesiredVel = 0.0f;
-//		Driver.PosCtrl.DesiredPos = 9.0f*8192.0f;
-//		TIM_Delayms(TIM3,2000);
-//		Driver.PosCtrl.DesiredPos = -0.0f*8192.0f;
-//		TIM_Delayms(TIM3,2000);
+//	Driver.VelCtrl.DesiredVel = 0.0f;
+		Driver.PosCtrl.DesiredPos = 12.0f*8192.0f;
+		TIM_Delayms(TIM3,1000);
+		Driver.PosCtrl.DesiredPos = -0.0f*8192.0f;
+		TIM_Delayms(TIM3,1000);
 	}
 }
 
