@@ -206,18 +206,34 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>91</LineNumber>
+          <LineNumber>52</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134223440</Address>
+          <Address>134229344</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\Action_User\ctrl.c</Filename>
+          <Filename>..\Action_User\main.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\demo\../Action_User/ctrl.c\91</Expression>
+          <Expression>\\demo\../Action_User/main.c\52</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>53</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134229354</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\Action_User\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\demo\../Action_User/main.c\53</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -280,6 +296,11 @@
           <count>11</count>
           <WinNumber>1</WinNumber>
           <ItemText>txData</ItemText>
+        </Ww>
+        <Ww>
+          <count>12</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>desiredVel</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>

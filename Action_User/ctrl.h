@@ -228,6 +228,7 @@ float 	VelSlope(float cmdVel);
 float 	VelCtrl(float cmdVel);
 void 		VelCtrlInit(void);
 float 	PosCtrl(void);
+float   PosCtrl_1(void);
 void		PosCtrlInit(void);
 float	 	CalculSpeed(void);
 float 	GetVelPidOut(void);

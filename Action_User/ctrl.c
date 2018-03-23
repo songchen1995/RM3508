@@ -42,7 +42,6 @@ void DriverInit(void)
 {
   Driver.Status = DISABLE;
 	Driver.VoltageOutput = 0.0f;
-	Driver.Commutation.Mode = FOC_MODE;
 	Driver.Command.CAN_status = 0;
 	Driver.Encoder.Period = 8192;
 	VelCtrlInit();
@@ -52,8 +51,8 @@ void DriverInit(void)
 //  Driver.UnitMode = HOMING_MODE;
   Driver.UnitMode = POSITION_CONTROL_MODE;
 //  Driver.UnitMode = SPEED_CONTROL_MODE;
-	Driver.VelCtrl.Acc = 15.0f;
-	Driver.VelCtrl.Dec = 15.0f;
+	Driver.VelCtrl.Acc = 18.0f;
+	Driver.VelCtrl.Dec = 18.0f;
 	Driver.VelCtrl.DesiredVel = 1250.0f;
 	Driver.PosCtrl.DesiredPos = 0.0f;
 	
@@ -74,8 +73,10 @@ void MotorCtrl(void)
 	switch(Driver.UnitMode)
 	{
 		case POSITION_CONTROL_MODE:
-//			Driver.VoltageOutput = PosCtrl();
-			Driver.VoltageOutput = VelCtrl(PosCtrl());
+			//不使用斜坡
+//			Driver.VoltageOutput = VelCtrl(PosCtrl());
+		  //新版本位置环计算，另外使用斜坡
+			Driver.VoltageOutput = VelCtrl(VelSlope(PosCtrl_1()));
 			break;
 		case SPEED_CONTROL_MODE:
 			Driver.VoltageOutput = VelCtrl(VelSlope(Driver.VelCtrl.DesiredVel));
@@ -96,7 +97,8 @@ void MotorCtrl(void)
 	
 //	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*100.0f));
 	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.PosCtrl.ActualPos/10.0f));
-//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*100.0f));
+//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.PosCtrl.Output));
+//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*10.0f));
 	
 }
 /**
@@ -301,6 +303,42 @@ float PosCtrl(void)
 	return Driver.PosCtrl.Output;
 }
 
+
+/**
+  * @brief  位置控制(新位置环程序)
+  * @param  None
+  * @retval 位置环PID的输出。
+  */
+float PosCtrl_1(void)
+{
+	float posErr = 0.0f,posPidOut = 0.0f;
+	float desiredVel = 0.0f,signVel = 1.0f;
+	static float posErrLast=0.0f;
+	
+	/******************************计算位置环输出**************************************/
+	posErr=Driver.PosCtrl.DesiredPos - Driver.PosCtrl.ActualPos;				
+//	pospidout=posErr*0.0090f+0.009f*(posErr-posErrLast)-0.00000f*Driver.VelCtrl.Speed;					//	
+	posPidOut = posErr*Driver.PosCtrl.Kp + Driver.PosCtrl.Kd*(posErr-posErrLast) - 0.00000f*Driver.VelCtrl.Speed;		
+	
+	posErrLast = posErr;
+	
+	if(posErr < 0.0f) signVel = -1.0f;
+	
+//	desiredVel = signVel*__sqrtf(2.0f*Driver.VelCtrl.Acc*signVel*posErr);
+	//乘以0.7是因为减速需要有调节量，有待优化（斜坡问题）
+	desiredVel = signVel*__sqrtf(2.0f*0.7f*Driver.VelCtrl.Acc*signVel*posErr);
+		
+	if(fabsf(desiredVel) < fabsf(posPidOut))
+		posPidOut = desiredVel;
+
+	//给一定大小的死区
+//	if(fabsf(posErr) <= 200.0f)		posPidOut = 0.0f;
+	
+	Driver.PosCtrl.Output = MaxMinLimit(posPidOut,Driver.VelCtrl.DesiredVel);
+	
+	return Driver.PosCtrl.Output;
+}
+
 /**
   * @brief  Homing mode
   * @param  None
@@ -369,9 +407,9 @@ void PosCtrlInit(void)
 {
 //	Driver.PosCtrl.Kp = 0.031f;
 //	Driver.PosCtrl.Kp = 0.011f;//静态时
-//	Driver.PosCtrl.Kd = 0.061f;
+	Driver.PosCtrl.Kd = 0.0f;
 	Driver.PosCtrl.Kp = 0.11f;//
-	Driver.PosCtrl.Kd = 0.11f; 
+//	Driver.PosCtrl.Kd = 0.11f; 
 	
 	Driver.VelCtrl.DesiredVel = 10.0f;
 	Driver.VelCtrl.Acc = 0.003f;
