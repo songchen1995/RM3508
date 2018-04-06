@@ -456,7 +456,7 @@ char *itoa(int value, char *string, int radix)
 
 } 
 
-extern DriverType Driver;
+extern DriverType Driver[8];
 
 void USART_CMD_Hander(USART_TypeDef* USARTx,uint8_t data)
 {
@@ -496,32 +496,32 @@ void USART_CMD_Hander(USART_TypeDef* USARTx,uint8_t data)
 			
 			if(strncmp(buffer,"JV", 2)==0)
 			{
-				Driver.VelCtrl.DesiredVel = (float)reValue*0.001f;
-				USART_OUT(USARTx,(uint8_t*)"JV=%d;\r\n",(int)(Driver.VelCtrl.DesiredVel*1000.0f));
+				Driver[0].velCtrl.desiredVel[CMD] = (float)reValue*0.001f;
+				USART_OUT(USARTx,(uint8_t*)"JV=%d;\r\n",(int)(Driver[0].velCtrl.desiredVel[CMD]*1000.0f));
 			}
 			else if(strncmp(buffer,"AC", 2)==0)
 			{
-				Driver.VelCtrl.Acc = (float)(reValue)/1000000.0f;
-				USART_OUT(USARTx,(uint8_t*)"AC=%d;\r\n",(int)(Driver.VelCtrl.Acc*1000000.0f));
+				Driver[0].velCtrl.acc = (float)(reValue)/1000000.0f;
+				USART_OUT(USARTx,(uint8_t*)"AC=%d;\r\n",(int)(Driver[0].velCtrl.acc*1000000.0f));
 			}
 			else if(strncmp(buffer,"DC", 2)==0)
 			{
-				Driver.VelCtrl.Dec = (float)(reValue)/1000000.0f;
-				USART_OUT(USARTx,(uint8_t*)"DC=%d;\r\n",(int)(Driver.VelCtrl.Dec*1000000.0f));
+				Driver[0].velCtrl.dec = (float)(reValue)/1000000.0f;
+				USART_OUT(USARTx,(uint8_t*)"DC=%d;\r\n",(int)(Driver[0].velCtrl.dec*1000000.0f));
 			}
 			else if(strncmp(buffer,"SP", 2)==0)
 			{
-				Driver.VelCtrl.DesiredVel = (float)(reValue)*0.001f;
-				USART_OUT(USARTx,(uint8_t*)"SP=%d;\r\n",(int)(Driver.VelCtrl.DesiredVel*1000.0f));
+				Driver[0].velCtrl.desiredVel[CMD] = (float)(reValue)*0.001f;
+				USART_OUT(USARTx,(uint8_t*)"SP=%d;\r\n",(int)(Driver[0].velCtrl.desiredVel[CMD]*1000.0f));
 			}
 			else if(strncmp(buffer,"PA", 2)==0)
 			{
-				Driver.PosCtrl.DesiredPos = (float)(reValue);
-				USART_OUT(USARTx,(uint8_t*)"PA=%d;\r\n",(int)(Driver.PosCtrl.DesiredPos));
+				Driver[0].posCtrl.desiredPos = (float)(reValue);
+				USART_OUT(USARTx,(uint8_t*)"PA=%d;\r\n",(int)(Driver[0].posCtrl.desiredPos));
 			}
 			else if(strncmp(buffer,"PR", 2)==0)
 			{
-				Driver.PosCtrl.DesiredPos = (float)(reValue)+Driver.PosCtrl.ActualPos;
+				Driver[0].posCtrl.desiredPos = (float)(reValue)+Driver[0].posCtrl.actualPos;
 				USART_OUT(USARTx,(uint8_t*)"PA=%d;\r\n",(int)(reValue));
 			}
 			else
@@ -533,11 +533,11 @@ void USART_CMD_Hander(USART_TypeDef* USARTx,uint8_t data)
 		{
 			if(strncmp(buffer,"VX", 2)==0)
 			{
-				USART_OUT(USARTx,(uint8_t*)"VX%d;\r\n",(int)(Driver.VelCtrl.Speed*1000.0f));
+				USART_OUT(USARTx,(uint8_t*)"VX%d;\r\n",(int)(Driver[0].velCtrl.speed*1000.0f));
 			}
 			else if(strncmp(buffer,"PX", 2)==0)
 			{
-				USART_OUT(USARTx,(uint8_t*)"PX%d;\r\n",(int)(Driver.PosCtrl.ActualPos));				
+				USART_OUT(USARTx,(uint8_t*)"PX%d;\r\n",(int)(Driver[0].posCtrl.actualPos));				
 			}
 			else if(strncmp(buffer,"IQ", 2)==0)
 			{

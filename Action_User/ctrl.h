@@ -18,7 +18,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stdint.h"
 #include "stm32f4xx.h"
-
+#include "rm_motor.h"
 /* Exported types ------------------------------------------------------------*/
 
 /** 
@@ -59,7 +59,7 @@ typedef struct
 	
 	PulseModeType  PulseMode;
 	
-	int32_t Period;
+	int32_t period;
 	
 	int32_t Direct;
 	
@@ -81,7 +81,9 @@ typedef struct
   */
 typedef struct
 {	
-	int32_t CAN_status;
+	int32_t can_status;
+	
+	int32_t canId;
 	
 }CommandType;
 
@@ -91,21 +93,25 @@ typedef struct
   */
 typedef struct
 {
-	float Speed;
+	float speed;
 	
-	float DesiredVel;
+	float desiredVel[3];
 	
-	float Acc;
+	float velErr;
 	
-	float Dec;
+	float acc;
 	
-	float Kp;
+	float dec;
 	
-	float Ki;
+	float kp;
 	
-	float TemI;
+	float ki;
 	
-	float Output;
+	float iOut;
+	
+	float output;
+	
+	float maxOutput;
 	
 }VelCtrlType;
 
@@ -116,17 +122,21 @@ typedef struct
   */
 typedef struct
 {
-	float ActualPos;
+	float actualPos;
 	
-	float DesiredPos;
+	float desiredPos;
 	
-	float BasicPos;
+	float posErr,posErrLast;
 	
-	float Kp;
+	float posVel,acc;
 	
-	float Kd;
+	float basicPos;
 	
-	float Output;
+	float kp;
+	
+	float kd;
+	
+	float output;
 	
 }PosCtrlType;
 
@@ -136,13 +146,15 @@ typedef struct
   */
 typedef struct
 {
-	float Vel;
+	float vel;
 	
-	float InitPos;
+	float current;
 	
-	int32_t Cnt;
+	float initPos;
 	
-	float Output;
+	int32_t cnt;
+	
+	float output;
 	
 }HomingModeType;
 
@@ -152,25 +164,25 @@ typedef struct
   */
 typedef struct
 {
-	uint32_t UnitMode;
+	uint32_t unitMode;
   
   int32_t time;
 	
-  FunctionalState Status;
+  FunctionalState status;
   
-	float VoltageOutput;
+	float output;
 	
-	VelCtrlType VelCtrl;
+	VelCtrlType velCtrl;
 	
-	PosCtrlType PosCtrl;
+	PosCtrlType posCtrl;
 	
-	HomingModeType HomingMode;
+	HomingModeType homingMode;
 	
-	EncoderType  Encoder;
+	EncoderType  encoder;
 	
-	CommutationType Commutation;
+	CommutationType commutation;
 	
-	CommandType Command;
+	CommandType command;
 	
 }DriverType;
 
@@ -193,26 +205,35 @@ typedef struct
 	
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
-/*********************方波换相参数******************************/
-//#define	 VOL_AMP					0.90f				//Voltage amplitude 作用于电流的电压幅值约0.8--13.6A
-//#define  VOL_MAX 					22.00f			//电压最大值
-//#define  VOL_BLIND_AREA		0.50f				//输出盲区，电机不动的最大矢量电压值
-//#define	 EMF_CONSTANT			0.022926f		//电动势常数，电机本身参数 = 电压矢量(V)/速度(pulse/ms)
 /********************FOC参数******************************/
 #define	 VOL_AMP					1.10f				//Voltage amplitude 作用于电流的电压幅值约0.8--13.6A
 #define  VOL_MAX 					18.00f			//电压最大值
 #define  VOL_BLIND_AREA		0.80f				//输出盲区，电机不动的最大矢量电压值
 #define	 EMF_CONSTANT			0.020926f		//电动势常数，电机本身参数 = 电压矢量(V)/速度(pulse/ms)
-#define  CURRENT_MAX      20.0f
 
-#define  VEL_MAX					1280.0f			//最大速度
-#define  VEl_KP   				0.048f			//速度环Kp
-#define  VEL_KI						0.004f			//速度环Ki
+#define  CURRENT_MAX_3508    20.0f
+#define  CURRENT_MAX_2006    3.0f
+
+#define  VEL_MAX_3508				 1280.0f			//最大速度
+#define  VEL_KP_3508   			 0.1f			  //速度环Kp
+#define  VEL_KI_3508				 0.001f			//速度环Ki
+#define  POS_KP_3508         0.11f
+#define  POS_KD_3508         0.0f
+
+#define  VEL_MAX_2006				 2400.0f			//最大速度
+#define  VEL_KP_2006   			 0.03f			//速度环Kp
+#define  VEL_KI_2006				 0.003f			//速度环Ki
+#define  POS_KP_2006         0.11f
+#define  POS_KD_2006         4.5f
 
 //驱动器工作模式
 #define  SPEED_CONTROL_MODE				2
 #define  POSITION_CONTROL_MODE		5
 #define  HOMING_MODE							6
+//区别使用斜坡前后的速度
+#define  CMD   0
+#define  SOFT  1
+#define  MAX_V 2
 
 //换相模式
 #define  BLDC_MODE			1
@@ -224,23 +245,24 @@ typedef struct
 
 /* Exported functions ------------------------------------------------------- */
 float 	OutPutLim(float val);
-float 	VelSlope(float cmdVel);
-float 	VelCtrl(float cmdVel);
+float   VelSlope(VelCtrlType *velPid);
+float   VelPidCtrl(VelCtrlType *velPid);
+float   PosCtrl(PosCtrlType *posPid);
+//float 	VelCtrl(float cmdVel);
 void 		VelCtrlInit(void);
-float 	PosCtrl(void);
-float   PosCtrl_1(void);
 void		PosCtrlInit(void);
-float	 	CalculSpeed(void);
+//float	 	CalculSpeed(void);
+float   CalculSpeed_Pos(DriverType *driver,MotorType *motor);
 float 	GetVelPidOut(void);
 float		GetSpeed(void);
 float 	GetPosPidOut(void);
 float 	MaxMinLimit(float val,float limit);
 void 		DriverInit(void);
 void    MotorCtrl(void);
-void 		HomingMode(void);
+void    HomingMode(DriverType *driver);
 void 		HomingModeInit(void);
-void    MotorOn(void);
-void    MotorOff(void);
+void    MotorOn(int n);
+void    MotorOff(int n);
 void    VelCtrlTest(float vel,int tim);
 
 

@@ -26,7 +26,7 @@
 /* Private  define ------------------------------------------------------------*/
 /* Private  macro -------------------------------------------------------------*/
 /* Private  variables ---------------------------------------------------------*/
-DriverType Driver = {0};
+DriverType Driver[8] = {0};
 /* Extern   variables ---------------------------------------------------------*/
 extern MotorType Motor[8];
 /* Extern   function prototypes -----------------------------------------------*/
@@ -40,23 +40,79 @@ extern MotorType Motor[8];
   */
 void DriverInit(void)
 {
-  Driver.Status = DISABLE;
-	Driver.VoltageOutput = 0.0f;
-	Driver.Command.CAN_status = 0;
-	Driver.Encoder.Period = 8192;
-	VelCtrlInit();
-	PosCtrlInit();
-	HomingModeInit();
-  //配置初始状态
-//  Driver.UnitMode = HOMING_MODE;
-  Driver.UnitMode = POSITION_CONTROL_MODE;
-//  Driver.UnitMode = SPEED_CONTROL_MODE;
-	Driver.VelCtrl.Acc = 18.0f;
-	Driver.VelCtrl.Dec = 18.0f;
-	Driver.VelCtrl.DesiredVel = 1250.0f;
-	Driver.PosCtrl.DesiredPos = 0.0f;
+	Motor[0].type = RM_3508;
+	Motor[1].type = RM_3508;
+	Motor[2].type = M_2006;
+	Motor[3].type = M_2006;
+	Motor[4].type = NONE;
+	Motor[5].type = RM_3508;
+	Motor[6].type = M_2006;
+	Motor[7].type = M_2006;
 	
-	Driver.HomingMode.Vel = -160.0f;
+	Driver[0].command.canId = 5;
+	Driver[1].command.canId = 6;
+	Driver[2].command.canId = 7;
+	Driver[3].command.canId = 8;
+	
+	for(int i = 0; i < 8; i++)
+	{
+		Driver[i].status = DISABLE;
+		Driver[i].encoder.period = 8192;		
+		
+	  if(Motor[i].type == RM_3508)
+		{
+			Driver[i].unitMode = HOMING_MODE;
+		//  Driver[i].unitMode = POSITION_CONTROL_MODE;
+		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
+			
+			Driver[i].velCtrl.kp = VEL_KP_3508;
+			Driver[i].velCtrl.ki = VEL_KI_3508;
+			Driver[i].velCtrl.maxOutput = CURRENT_MAX_3508;
+			Driver[i].velCtrl.desiredVel[MAX_V] = VEL_MAX_3508;
+			Driver[i].posCtrl.kd = POS_KD_3508;
+			Driver[i].posCtrl.kp = POS_KP_3508;
+			Driver[i].homingMode.current = 0.8f;
+			
+			Driver[i].velCtrl.acc = 18.0f;
+			Driver[i].velCtrl.dec = 18.0f;
+			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
+			Driver[i].posCtrl.desiredPos = 0.0f;
+			Driver[i].posCtrl.acc = 0.7f*Driver[i].velCtrl.dec;
+			Driver[i].posCtrl.posVel = 250.0f;
+			Driver[i].homingMode.vel = -160.0f;
+
+		}
+		else if(Motor[i].type == M_2006)  //M2006的参数
+		{
+			Driver[i].unitMode = HOMING_MODE;
+		//  Driver[i].unitMode = POSITION_CONTROL_MODE;
+		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
+			
+			Driver[i].velCtrl.kp = VEL_KP_2006;
+			Driver[i].velCtrl.ki = VEL_KI_2006;
+			Driver[i].velCtrl.maxOutput = CURRENT_MAX_2006;		
+			Driver[i].velCtrl.desiredVel[MAX_V] = VEL_MAX_2006;
+			Driver[i].posCtrl.kd = POS_KD_2006;
+			Driver[i].posCtrl.kp = POS_KP_2006;
+			Driver[i].homingMode.current = 1.5f;
+			
+			Driver[i].velCtrl.acc = 18.0f;
+			Driver[i].velCtrl.dec = 18.0f;
+			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
+			Driver[i].posCtrl.desiredPos = 0.0f;
+			Driver[i].posCtrl.acc = 0.7f*Driver[i].velCtrl.dec;
+			Driver[i].posCtrl.posVel = 250.0f;
+			Driver[i].homingMode.vel = -160.0f;
+		}
+		else
+		{
+			break;
+		}
+	}
+  //配置初始状态
+//	Driver[1].homingMode.vel = -60.0f;
+//	Driver[1].unitMode = SPEED_CONTROL_MODE;
+	
 }
 
 /**
@@ -68,37 +124,50 @@ float PerCur[4] = {0.0f};
 
 void MotorCtrl(void)
 {
-	CalculSpeed();
-	
-	switch(Driver.UnitMode)
+//	CalculSpeed();
+	for(int i = 0; i < 8; i++)
 	{
-		case POSITION_CONTROL_MODE:
-			//不使用斜坡
-//			Driver.VoltageOutput = VelCtrl(PosCtrl());
-		  //新版本位置环计算，另外使用斜坡
-			Driver.VoltageOutput = VelCtrl(VelSlope(PosCtrl_1()));
+		if(Motor[i].type == NONE)
 			break;
-		case SPEED_CONTROL_MODE:
-			Driver.VoltageOutput = VelCtrl(VelSlope(Driver.VelCtrl.DesiredVel));
-			break;
-		case HOMING_MODE:
-			HomingMode();
-			Driver.VoltageOutput = Driver.HomingMode.Output;
-			break;
-		default:break;
+		
+		CalculSpeed_Pos(&Driver[i],&Motor[i]);
+		switch(Driver[i].unitMode)
+		{
+			case POSITION_CONTROL_MODE:
+				//新版本位置环计算，使用斜坡
+				PosCtrl(&Driver[i].posCtrl);
+				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].posCtrl.output;
+				VelSlope(&Driver[i].velCtrl);
+				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);
+				break;
+			case SPEED_CONTROL_MODE:
+	//			Driver[i].output = VelCtrl(VelSlope(Driver[i].velCtrl.desiredVel[CMD]));
+				VelSlope(&Driver[i].velCtrl);
+				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);
+				break;
+			case HOMING_MODE:
+				HomingMode(&Driver[i]);
+				Driver[i].output = Driver[i].homingMode.output;
+				break;
+			default:break;
+		}
+		if(Driver[i].status != ENABLE)
+			Driver[i].output = 0.0f;	
 	}
 
-  if(Driver.Status != ENABLE)
-    Driver.VoltageOutput = 0.0f;
+
   
-	PerCur[0] = Driver.VoltageOutput;
+	PerCur[0] = Driver[0].output;
+	PerCur[1] = Driver[1].output;
+	PerCur[2] = Driver[2].output;
+	PerCur[3] = Driver[3].output;
 //	PerCur[0] = 0.0f;
 	SetCur(PerCur);
 	
-//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*100.0f));
-	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.PosCtrl.ActualPos/10.0f));
-//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.PosCtrl.Output));
-//	DMA_Send_Data((int)(Driver.VelCtrl.Speed) ,(int)(Driver.VoltageOutput*10.0f));
+//	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*100.0f));
+	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].posCtrl.actualPos/10.0f));
+//	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].posCtrl.output));
+//	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*10.0f));
 	
 }
 /**
@@ -106,40 +175,38 @@ void MotorCtrl(void)
   * @param  None
   * @retval 速度期望输出
   */
-float VelSlope(float cmdVel)
+float VelSlope(VelCtrlType *velPid)
 {
-	static float desiredVel = 0.0f;
 	/*************计算加减速度斜坡**************/
-	if(desiredVel < (cmdVel - Driver.VelCtrl.Acc)){
-		desiredVel +=Driver.VelCtrl.Acc;
-	}else if(desiredVel > (cmdVel + Driver.VelCtrl.Dec)){
-		desiredVel -=Driver.VelCtrl.Dec;
+	if(velPid->desiredVel[SOFT] < (velPid->desiredVel[CMD] - velPid->acc)){
+		velPid->desiredVel[SOFT] +=velPid->acc;
+	}else if(velPid->desiredVel[SOFT] > (velPid->desiredVel[CMD] + velPid->dec)){
+		velPid->desiredVel[SOFT] -=velPid->dec;
 	}else{
-		desiredVel = cmdVel;
+		velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
 	}	
-	return desiredVel;
+	return velPid->desiredVel[SOFT];
 }
+
 /**
   * @brief  速度控制
   * @param  None
   * @retval 速度PID的输出
   */
-float VelCtrl(float cmdVel)
+float VelPidCtrl(VelCtrlType *velPid)
 {
-	float velErr,velpidout;
-
 	/*****************速度环PID*****************/
-	velErr = cmdVel - Driver.VelCtrl.Speed;	
-	Driver.VelCtrl.TemI += Driver.VelCtrl.Ki*velErr;
-	Driver.VelCtrl.TemI = MaxMinLimit(Driver.VelCtrl.TemI,CURRENT_MAX);
-	velpidout = Driver.VelCtrl.Kp * velErr + Driver.VelCtrl.TemI;
+	velPid->velErr = velPid->desiredVel[SOFT] - velPid->speed;	
+	//计算积分
+	velPid->iOut += velPid->ki * velPid->velErr;
+	//积分限幅
+	velPid->iOut = MaxMinLimit(velPid->iOut,velPid->maxOutput);
+	//计算输出
+	velPid->output = velPid->kp * velPid->velErr + velPid->iOut;
+	//输出限幅
+	velPid->output = MaxMinLimit(velPid->output,velPid->maxOutput);
 	
-	Driver.VelCtrl.Output = MaxMinLimit(velpidout,CURRENT_MAX);
-	
-//	if(fabsf(Driver.VelCtrl.TemI) > fabsf(Driver.VelCtrl.Output))
-//		Driver.VelCtrl.TemI = Driver.VelCtrl.Output;
-	
-	return Driver.VelCtrl.Output;
+	return velPid->output;
 }
 
 /**
@@ -149,14 +216,7 @@ float VelCtrl(float cmdVel)
   */
 void VelCtrlInit(void)
 {
-	Driver.VelCtrl.Kp = 0.10f;
-	Driver.VelCtrl.Ki = 0.0010f;//0.0004f;
 
-	Driver.VelCtrl.TemI = 0.0f;
-	Driver.VelCtrl.DesiredVel = 0.0f;
-	Driver.VelCtrl.Acc = 0.0f;
-	Driver.VelCtrl.Dec = 0.0f;
-	Driver.VelCtrl.Output = 0.0f;
 }
 /**
   * @brief  限制输出幅值
@@ -167,7 +227,7 @@ float OutPutLim(float value)
 {
 	float outputMax,outputMin,outputBasic;
 	/********************计算动态最大最小输出****************************/
-	outputBasic = Driver.VelCtrl.Speed * EMF_CONSTANT;								//估算反电动势
+	outputBasic = Driver[0].velCtrl.speed * EMF_CONSTANT;								//估算反电动势
 	outputMax = outputBasic + VOL_AMP;									//输出幅度
 	outputMin = outputBasic - VOL_AMP;	 								//需要根据速度与电压关系改变
 	if(outputMax <  VOL_AMP) outputMax =  VOL_AMP;			//
@@ -187,193 +247,67 @@ float OutPutLim(float value)
 }
 
 /**
-  * @brief  位置控制
-  * @param  None
-  * @retval 位置环PID的输出。
-  */
-/***************位置环变量********************/
-int8_t		Sign = 0,SignDis = 0,SignVel = 0;
-int32_t		Tim = 0,TimEnd = 0,TimAcc = 0,TimEve = 0;
-int32_t 	Shape = 0,VelNow = 0;
-float 		DelPos = 0.0f,DisAcc = 0.0f,DisDec = 0.0f,DisVelDec = 0.0f,TemAimPos = 0.0f,SetposOld = 0.0f,PoStart = 0.0f;
-
-float PosCtrl(void)
-{
-	float posErr=0.0f,pospidout = 0.0f;		
-	static float posErrLast=0.0f;
-
-	/****************位置环路径规划****************/
-	if(Driver.PosCtrl.DesiredPos != SetposOld){
-		
-		//防止给定参数为0
-		if(Driver.VelCtrl.DesiredVel <= 0.001f)
-			Driver.VelCtrl.DesiredVel = 1.0f;
-		if(Driver.VelCtrl.Acc <= 0.00001f)
-			Driver.VelCtrl.Acc = 0.003f;
-			
-		DelPos = Driver.PosCtrl.DesiredPos - Driver.PosCtrl.ActualPos;
-		VelNow = Driver.VelCtrl.Speed;
-		VelNow = MaxMinLimit(VelNow,Driver.VelCtrl.DesiredVel);
-
-		
-		if(DelPos<0) SignDis = -1;
-		else				 SignDis =  1;
-		
-		if(VelNow<0) SignVel = -1;
-		else				 SignVel =  1;
-		
-		DisDec = Driver.VelCtrl.DesiredVel*Driver.VelCtrl.DesiredVel/Driver.VelCtrl.Acc/2;
-		DisVelDec = VelNow*VelNow/Driver.VelCtrl.Acc/2;
-		DisAcc = DisDec - DisVelDec;
-		
-		if((SignDis*SignVel > 0)&&(SignDis*DelPos < DisVelDec)) 
-			Sign = -1;
-		else 													 
-			Sign =  1;
-		
-		if((SignDis*VelNow > Driver.VelCtrl.DesiredVel)&&(Sign == 1)){
-			Shape = 5;
-			DisAcc = -DisAcc;
-			TimAcc = (SignVel*VelNow - Driver.VelCtrl.DesiredVel)/Driver.VelCtrl.Acc;
-			TimEve = (Sign*SignDis*DelPos - DisVelDec)/Driver.VelCtrl.DesiredVel;
-			TimEnd = TimAcc + TimEve + Driver.VelCtrl.DesiredVel/Driver.VelCtrl.Acc;
-			Tim = 0;
-			PoStart = Driver.PosCtrl.ActualPos;
-		}else if(Sign*SignDis*DelPos <= (DisAcc+DisDec)){
-			Shape = 3;
-			TimEnd = sqrt(4*(Sign*SignDis*DelPos+DisVelDec)/Driver.VelCtrl.Acc);
-			Tim = Sign*SignDis*VelNow/Driver.VelCtrl.Acc;
-			PoStart = Driver.PosCtrl.ActualPos - Sign*SignDis*DisVelDec;
-		}else{
-			Shape = 4;
-			TimAcc = Driver.VelCtrl.DesiredVel/Driver.VelCtrl.Acc;
-			TimEve = (Sign*SignDis*DelPos + DisVelDec - 2*DisDec)/Driver.VelCtrl.DesiredVel;
-			TimEnd = TimEve + 2*TimAcc;
-			Tim = Sign*SignDis*VelNow/Driver.VelCtrl.Acc;
-			PoStart = Driver.PosCtrl.ActualPos - Sign*SignDis*DisVelDec;
-		}
-		Tim += 3;		
-		SetposOld = Driver.PosCtrl.DesiredPos;
-	}
-	/*************************当前周期目标位置分情况计算*******************************/
-	if(Shape == 3){		
-		if(Tim<TimEnd/2)
-			TemAimPos = PoStart + Sign*SignDis*0.5f*Driver.VelCtrl.Acc*Tim*Tim;
-		else
-			TemAimPos = Driver.PosCtrl.DesiredPos - Sign*SignDis*0.5f*Driver.VelCtrl.Acc*(TimEnd-Tim)*(TimEnd-Tim);
-	}else if(Shape == 4){
-		if(Tim<TimAcc)
-			TemAimPos = PoStart + Sign*SignDis*0.5f*Driver.VelCtrl.Acc*Tim*Tim;
-		else if(Tim < (TimAcc+TimEve)) 
-			TemAimPos = PoStart + Sign*SignDis*(Driver.VelCtrl.DesiredVel*Tim - DisDec);		
-		else
-			TemAimPos = Driver.PosCtrl.DesiredPos - Sign*SignDis*0.5f*Driver.VelCtrl.Acc*(TimEnd-Tim)*(TimEnd-Tim);
-	}else if(Shape ==5){
-		if(Tim<TimAcc)
-			TemAimPos = PoStart + Sign*SignDis*SignVel*VelNow*Tim - Sign*SignDis*0.5f*Driver.VelCtrl.Acc*Tim*Tim;
-		else if(Tim < (TimAcc+TimEve)) 
-			TemAimPos = PoStart + Sign*SignDis*DisAcc + Sign*SignDis*Driver.VelCtrl.DesiredVel*(Tim - TimAcc);
-		else
-			TemAimPos = Driver.PosCtrl.DesiredPos - Sign*SignDis*0.5f*Driver.VelCtrl.Acc*(TimEnd-Tim)*(TimEnd-Tim);
-	}else{
-		TemAimPos = Driver.PosCtrl.DesiredPos;
-	}
-	/******************************计算位置环输出**************************************/
-	posErr=TemAimPos-Driver.PosCtrl.ActualPos;				
-//	pospidout=posErr*0.0090f+0.009f*(posErr-posErrLast)-0.00000f*Driver.VelCtrl.Speed;					//	
-	pospidout = posErr*Driver.PosCtrl.Kp + Driver.PosCtrl.Kd*(posErr-posErrLast) - 0.00000f*Driver.VelCtrl.Speed;		
-	//	
-	posErrLast = posErr;
-	
-	if(fabsf(posErr) <=200.0f)
-		pospidout = 0.0f;
-	
-	
-	/*******************动态限幅，控制输出********************/	
-//	if((pospidout > VOL_MAX)||(pospidout < -VOL_MAX))		Tim-=1;			//运行时打开
-	if(Tim>=TimEnd)	Tim = TimEnd;		
-	
-//	Driver.PosCtrl.Output = OutPutLim(pospidout);
-	Driver.PosCtrl.Output = MaxMinLimit(pospidout,Driver.VelCtrl.DesiredVel);
-	
-//	Driver.PosCtrl.Output = pospidout;
-	
-	Tim+=1;	
-	
-	return Driver.PosCtrl.Output;
-}
-
-
-/**
   * @brief  位置控制(新位置环程序)
   * @param  None
   * @retval 位置环PID的输出。
   */
-float PosCtrl_1(void)
+float PosCtrl(PosCtrlType *posPid)
 {
-	float posErr = 0.0f,posPidOut = 0.0f;
+	float posPidOut = 0.0f;
 	float desiredVel = 0.0f,signVel = 1.0f;
-	static float posErrLast=0.0f;
 	
 	/******************************计算位置环输出**************************************/
-	posErr=Driver.PosCtrl.DesiredPos - Driver.PosCtrl.ActualPos;				
-//	pospidout=posErr*0.0090f+0.009f*(posErr-posErrLast)-0.00000f*Driver.VelCtrl.Speed;					//	
-	posPidOut = posErr*Driver.PosCtrl.Kp + Driver.PosCtrl.Kd*(posErr-posErrLast) - 0.00000f*Driver.VelCtrl.Speed;		
+	posPid->posErr = posPid->desiredPos - posPid->actualPos;				
+	posPidOut = posPid->posErr*posPid->kp + posPid->kd*(posPid->posErr-posPid->posErrLast);		
+	posPid->posErrLast = posPid->posErr;
 	
-	posErrLast = posErr;
+	if(posPid->posErr < 0.0f) signVel = -1.0f;	
 	
-	if(posErr < 0.0f) signVel = -1.0f;
-	
-//	desiredVel = signVel*__sqrtf(2.0f*Driver.VelCtrl.Acc*signVel*posErr);
-	//乘以0.7是因为减速需要有调节量，有待优化（斜坡问题）
-	desiredVel = signVel*__sqrtf(2.0f*0.7f*Driver.VelCtrl.Acc*signVel*posErr);
+	//乘以0.7是因为减速需要有裕量，有待优化（斜坡问题）
+	desiredVel = signVel*__sqrtf(2.0f*0.7f*posPid->acc*signVel*posPid->posErr);
 		
 	if(fabsf(desiredVel) < fabsf(posPidOut))
 		posPidOut = desiredVel;
-
 	//给一定大小的死区
-//	if(fabsf(posErr) <= 200.0f)		posPidOut = 0.0f;
+//	if(fabsf(posPid->posErr) <= 200.0f)		posPidOut = 0.0f;
 	
-	Driver.PosCtrl.Output = MaxMinLimit(posPidOut,Driver.VelCtrl.DesiredVel);
+	posPid->output = MaxMinLimit(posPidOut,posPid->posVel);
 	
-	return Driver.PosCtrl.Output;
+	return posPid->output;
 }
-
 /**
   * @brief  Homing mode
   * @param  None
   * @retval 输出的值
   */
-void HomingMode(void)
+
+void HomingMode(DriverType *driver)
 {
-	static float posLast = 0.0f;
 	float output;
 
-	output = VelCtrl(Driver.HomingMode.Vel);
+	driver->velCtrl.desiredVel[SOFT] = driver->homingMode.vel;
+	output = VelPidCtrl(&driver->velCtrl);
 	
-	Driver.HomingMode.Output = MaxMinLimit(output,0.8f);//限制home模式时电流值
+	driver->homingMode.output = MaxMinLimit(output,driver->homingMode.current);//限制home模式时电流值
 	
-	if(fabsf(Driver.PosCtrl.ActualPos - posLast) <=2){		//2
-		Driver.HomingMode.Cnt++;
+	if(fabsf(driver->velCtrl.speed) <=2){		//2
+		driver->homingMode.cnt++;
 	}else{
-		Driver.HomingMode.Cnt = 0;
+		driver->homingMode.cnt = 0;
 	}
-	posLast = Driver.PosCtrl.ActualPos;
-	if(Driver.HomingMode.Cnt >= 500){									//500ms
-//		Driver.HomingMode.InitPos = UpdateAbsPos();
-//		Driver.HomingMode.InitPos = GetIncPos();
-		Driver.PosCtrl.ActualPos=0.0f;				//
-		Driver.PosCtrl.DesiredPos = Driver.PosCtrl.ActualPos;
+	
+	if(driver->homingMode.cnt >= 500){									//500ms
+
+		driver->posCtrl.actualPos=0.0f;				//
+		driver->posCtrl.desiredPos = driver->posCtrl.actualPos;
 		//清除输出
-		Driver.HomingMode.Output = 0.0f;
-		Driver.VelCtrl.Output = 0.0f;
-		Driver.VoltageOutput = 0.0f;
-		Driver.VelCtrl.TemI = 0.0f;
-		Sign = 0;
-		Driver.UnitMode = POSITION_CONTROL_MODE;
+		driver->homingMode.output = 0.0f;
+		driver->velCtrl.output = 0.0f;
+		driver->output = 0.0f;
+		driver->velCtrl.iOut = 0.0f;
+		driver->unitMode = POSITION_CONTROL_MODE;
 	}
 }
-
 /**
   * @brief  Homing mode Init
   * @param  None
@@ -381,8 +315,6 @@ void HomingMode(void)
   */
 void HomingModeInit(void)
 {
-	Driver.HomingMode.Vel = -3.0f;
-	Driver.HomingMode.Cnt = 0;
 }
 
 /**
@@ -392,11 +324,8 @@ void HomingModeInit(void)
   */
 float GetPosPidOut(void)
 {
-	return Driver.PosCtrl.Output;
+	return Driver[0].posCtrl.output;
 }
-
-
-
 
 /**
   * @brief  位置环初始化
@@ -404,22 +333,8 @@ float GetPosPidOut(void)
   * @retval None
   */
 void PosCtrlInit(void)
-{
-//	Driver.PosCtrl.Kp = 0.031f;
-//	Driver.PosCtrl.Kp = 0.011f;//静态时
-	Driver.PosCtrl.Kd = 0.0f;
-	Driver.PosCtrl.Kp = 0.11f;//
-//	Driver.PosCtrl.Kd = 0.11f; 
-	
-	Driver.VelCtrl.DesiredVel = 10.0f;
-	Driver.VelCtrl.Acc = 0.003f;
-	Driver.VelCtrl.Dec = 0.003f;						
-	
-	CalculSpeed();
+{					
 
-	Driver.PosCtrl.ActualPos = 0.0f;
-	Driver.PosCtrl.DesiredPos = Driver.PosCtrl.ActualPos;
-	SetposOld = Driver.PosCtrl.ActualPos;
 }
 
 /**
@@ -427,35 +342,22 @@ void PosCtrlInit(void)
   * @param  None
   * @retval Subtraction number between every two times.
 **/
-float CalculSpeed(void)
+float CalculSpeed_Pos(DriverType *driver,MotorType *motor)
 {
-	static int PosOld = 0;
-	int PosNow = 0;
-	int speed = 0.0f;
-	PosNow = GetMotorPos(0);										//
-	speed = (PosNow - PosOld);
-	PosOld = PosNow;
-	if(speed > (Driver.Encoder.Period/2)) speed -= Driver.Encoder.Period;
-	if(speed <-(Driver.Encoder.Period/2)) speed += Driver.Encoder.Period;
+	int deltaPos = 0;
+	deltaPos = (motor->pos - motor->posLast);
+	motor->posLast = motor->pos;
+	if(deltaPos > (driver->encoder.period/2)) deltaPos -= driver->encoder.period;
+	if(deltaPos <-(driver->encoder.period/2)) deltaPos += driver->encoder.period;
 	
-	Driver.PosCtrl.ActualPos += speed;
-
-//  T法测速	
-//	if(Driver.Encoder.TimeMode.TimNum != 0){ 
-//		if(speed >= 0.0f)
-//			Driver.Encoder.TimeMode.Vel = 4000.0f/(float)(Driver.Encoder.TimeMode.TimNum);
-//		else
-//			Driver.Encoder.TimeMode.Vel = -1.0f*4000.0f/(float)(Driver.Encoder.TimeMode.TimNum);
-//			
-//	}
+	driver->posCtrl.actualPos += deltaPos;
 	
 	//用反馈速度输入
-	Driver.VelCtrl.Speed = (float)(Motor[0].Vel)*0.1365333f;					//1/60*8192/1000=0.136533
+	driver->velCtrl.speed = (float)(motor->vel)*0.1365333f;					//1/60*8192/1000=0.136533
 	//用位置差分出的速度输入
-//	Driver.VelCtrl.Speed = speed;
+//	driver->velCtrl.speed = speed;
 	
-//	Driver.VelCtrl.Speed = Driver.Encoder.TimeMode.Vel;
-	return Driver.VelCtrl.Speed; 
+	return driver->velCtrl.speed; 
 }
 /**
   * @brief  Get Speed
@@ -464,7 +366,7 @@ float CalculSpeed(void)
 **/
 float GetSpeed(void)
 {
-	return Driver.VelCtrl.Speed;
+	return Driver[0].velCtrl.speed;
 }
 
 /**
@@ -474,7 +376,7 @@ float GetSpeed(void)
   */
 float GetVelPidOut(void)
 {
-	return Driver.VelCtrl.Output;
+	return Driver[0].velCtrl.output;
 }
 
 /**
@@ -492,30 +394,30 @@ float MaxMinLimit(float val,float limit)
 
 /**
   * @brief  电机使能
-	* @param  None
+  * @param  n:哪个电机  (0-7)
 	* @retval None
   */
-void MotorOn(void)
+void MotorOn(int n)
 {
-  if(Driver.UnitMode == POSITION_CONTROL_MODE)
-    Driver.PosCtrl.DesiredPos = Driver.PosCtrl.ActualPos;
+  if(Driver[n].unitMode == POSITION_CONTROL_MODE)
+    Driver[n].posCtrl.desiredPos = Driver[n].posCtrl.actualPos;
   
-  if(Driver.UnitMode == SPEED_CONTROL_MODE)
-    Driver.VelCtrl.DesiredVel = Driver.VelCtrl.Speed;
+  if(Driver[n].unitMode == SPEED_CONTROL_MODE)
+    Driver[n].velCtrl.desiredVel[CMD] = 0.0f;
   
-  Driver.VelCtrl.TemI = 0.0f;
+  Driver[n].velCtrl.iOut = 0.0f;
   
-  Driver.Status = ENABLE;
+  Driver[n].status = ENABLE;
 }
 
 /**
   * @brief  电机失能
-	* @param  None
+  * @param  n:哪个电机  (0-7)
 	* @retval None
   */
-void MotorOff(void)
+void MotorOff(int n)
 {
-  Driver.Status = DISABLE;
+  Driver[n].status = DISABLE;
 }
 
 /**
@@ -526,9 +428,9 @@ void MotorOff(void)
   */
 void VelCtrlTest(float vel,int tim)
 {
-	Driver.VelCtrl.DesiredVel = vel;
+	Driver[0].velCtrl.desiredVel[CMD] = vel;
 	TIM_Delayms(TIM3,tim);
-	Driver.VelCtrl.DesiredVel = -vel;
+	Driver[0].velCtrl.desiredVel[CMD] = -vel;
 	TIM_Delayms(TIM3,tim);
 
 }

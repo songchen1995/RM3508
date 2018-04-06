@@ -31,7 +31,7 @@ MotorType Motor[8] = {0};
   */
 int32_t GetMotorPos(int i)
 {
-	return Motor[i].Pos;
+	return Motor[i].pos;
 }
 		
 /************************ (C) COPYRIGHT 2016 ACTION *****END OF FILE****/

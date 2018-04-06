@@ -42,7 +42,7 @@
 /****************驱动器CAN1接口模块****start******************/
 
 extern MotorType Motor[8];
-extern DriverType Driver;
+extern DriverType Driver[8];
 
 
 /**
@@ -53,20 +53,23 @@ extern DriverType Driver;
 void CAN1_RX0_IRQHandler(void)
 {
 	uint8_t buffer[8];
-	uint32_t StdId=0;
+	uint8_t n = 0;
+	uint32_t stdId=0;
   UnionDataType Msg;
 	
-	CAN_RxMsg(CAN1, &StdId,buffer,8);
+	CAN_RxMsg(CAN1, &stdId,buffer,8);
 	
 	for(uint8_t i = 0; i < 8; i++)
 		Msg.data8[i] = buffer[i];
 	
-	if(StdId==0x201)
+	if((stdId==0x201)||(stdId==0x202)||(stdId==0x203)||(stdId==0x204)||
+		 (stdId==0x205)||(stdId==0x206)||(stdId==0x207)||(stdId==0x208))
 	{
-		Motor[0].Pos = (Msg.data8[0]<<8)+Msg.data8[1];
-		Motor[0].Vel = (int16_t)(Msg.data8[2]<<8)+Msg.data8[3];
-		Motor[0].Cur = (Msg.data8[4]<<8)+Msg.data8[5];
-		Motor[0].Temp = Msg.data8[6];
+		n = stdId - 0x201;
+		Motor[n].pos = (Msg.data8[0]<<8)+Msg.data8[1];
+		Motor[n].vel = (int16_t)(Msg.data8[2]<<8)+Msg.data8[3];
+		Motor[n].cur = (Msg.data8[4]<<8)+Msg.data8[5];
+		Motor[n].temp = Msg.data8[6];
 	}
 
 	CAN_ClearFlag(CAN1,CAN_FLAG_EWG);
@@ -94,65 +97,70 @@ void CAN2_RX0_IRQHandler(void)
 	for(uint8_t i = 0; i < 8; i++)
 		Msg1.data8[i] = buffer[i];
 
-	if(StdId == (0x300+CAN_ID_NUM))
-	{		
-		switch(Msg1.data32[0])
-		{
-			case 0x00004F4D:						//MO 
-				if(Msg1.data32[1] == 1){
-          MotorOn();
-				}else{
-          MotorOff();
-				}
-				break; 
-			case 0x0000564A:						//JV
-				Driver.VelCtrl.DesiredVel = (float)(Msg1.data32[1])/1000.0f;
-				if(Driver.VelCtrl.DesiredVel > VEL_MAX) Driver.VelCtrl.DesiredVel = VEL_MAX;
-				if(Driver.VelCtrl.DesiredVel <-VEL_MAX) Driver.VelCtrl.DesiredVel =-VEL_MAX;
-				break;
-			case 0x00004341:						//AC
-				Driver.VelCtrl.Acc = (float)(Msg1.data32[1])/1000000.0f;
-				break;
-			case 0x00004344:						//DC
-				Driver.VelCtrl.Dec = (float)(Msg1.data32[1])/1000000.0f;
-				break;
-			case 0x00005053:						//SP
-				Driver.VelCtrl.DesiredVel  = (float)(Msg1.data32[1])/1000.0f;
-				break;
-			case 0x00004150:						//PA绝对位置
-				Driver.PosCtrl.DesiredPos = (float)(Msg1.data32[1]);
-				break;
-			case 0x00005250:						//PR相对位置
-				Driver.PosCtrl.DesiredPos = Driver.PosCtrl.ActualPos + (float)(Msg1.data32[1]);
-				break;
-			case 0x40005149:						//IQ	 读取电流
-				Driver.Command.CAN_status = 0x40005149;					
-				break;
-			case 0x40005856:						//VX   读取速度
-				Driver.Command.CAN_status = 0x40005856;
-				break;
-			case 0x40005850:						//PX   读取位置
-				Driver.Command.CAN_status = 0x40005850;
-				break;
-			default:break;
-		}
-	}
-	else if(StdId == (0x300+0))
+	for(int j = 0; j < 8; j++)
 	{
-		
-		switch(Msg1.data32[0])
-		{
-			case 0x40005149:						//IQ	 读取电流
-				Driver.Command.CAN_status = 0x40005149;					
-				break;
-			case 0x40005856:						//VX   读取速度
-				Driver.Command.CAN_status = 0x40005856;
-				break;
-			case 0x40005850:						//PX   读取位置
-				Driver.Command.CAN_status = 0x40005850;
-				break;
-			default:break;
+		if(StdId == (0x300 + Driver[j].command.canId))
+		{		
+			switch(Msg1.data32[j])
+			{
+				case 0x00004F4D:						//MO 
+					if(Msg1.data32[j] == 1){
+						MotorOn(j);
+					}else{
+						MotorOff(j);
+					}
+					break; 
+				case 0x0000564A:						//JV
+					Driver[j].velCtrl.desiredVel[CMD] = (float)(Msg1.data32[1])/1000.0f;
+					Driver[j].velCtrl.desiredVel[CMD] = MaxMinLimit(Driver[j].velCtrl.desiredVel[CMD],Driver[j].velCtrl.desiredVel[MAX_V]);
+					break;
+				case 0x00004341:						//AC
+					Driver[j].velCtrl.acc = (float)(Msg1.data32[1])/1000000.0f;
+				  Driver[j].posCtrl.acc = 0.7f * Driver[j].velCtrl.acc;
+					break;
+				case 0x00004344:						//DC
+					Driver[j].velCtrl.dec = (float)(Msg1.data32[1])/1000000.0f;
+					break;
+				case 0x00005053:						//SP
+					Driver[j].posCtrl.posVel  = (float)(Msg1.data32[1])/1000.0f;
+					break;
+				case 0x00004150:						//PA绝对位置
+					Driver[j].posCtrl.desiredPos = (float)(Msg1.data32[1]);
+					break;
+				case 0x00005250:						//PR相对位置
+					Driver[j].posCtrl.desiredPos = Driver[j].posCtrl.actualPos + (float)(Msg1.data32[1]);
+					break;
+				case 0x40005149:						//IQ	 读取电流
+					Driver[j].command.can_status = 0x40005149;					
+					break;
+				case 0x40005856:						//VX   读取速度
+					Driver[j].command.can_status = 0x40005856;
+					break;
+				case 0x40005850:						//PX   读取位置
+					Driver[j].command.can_status = 0x40005850;
+					break;
+				default:break;
+			}
 		}
+		else if(StdId == (0x300+0))
+		{
+			
+			switch(Msg1.data32[0])
+			{
+				case 0x40005149:						//IQ	 读取电流
+					Driver[j].command.can_status = 0x40005149;					
+					break;
+				case 0x40005856:						//VX   读取速度
+					Driver[j].command.can_status = 0x40005856;
+					break;
+				case 0x40005850:						//PX   读取位置
+					Driver[j].command.can_status = 0x40005850;
+					break;
+				default:break;
+			}
+		}
+		if(Motor[j].type == NONE)
+			break;
 	}	
 
 	CAN_ClearFlag(CAN2,CAN_FLAG_EWG);
@@ -179,10 +187,6 @@ void TIM2_IRQHandler(void)
 	if(TIM_GetITStatus(TIM2, TIM_IT_Update)==SET)
   {	
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-	
-//		if(Motor[0].Vel < 1500) PerCur[0] = 2.5f;
-//		if(Motor[0].Vel > 1600) PerCur[0] = 0.0f;
-//		SetCur(PerCur);
 		
 		MotorCtrl();
 		

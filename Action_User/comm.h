@@ -37,7 +37,7 @@ typedef union
 /* Exported functions ------------------------------------------------------- */
 
 void SetCur(float* cur);
-void CanSendData(UnionDataType txData);
+void CanSendData(int id,UnionDataType txData);
 void CANRespond(void);
 
 #endif

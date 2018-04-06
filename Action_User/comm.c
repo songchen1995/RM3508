@@ -17,7 +17,7 @@
 #include "rm_motor.h"
 
 extern MotorType Motor[8];
-extern DriverType Driver;
+extern DriverType Driver[8];
 
 /**
   * @brief  设定电机的运行电流
@@ -33,6 +33,7 @@ void SetCur(float* cur)
 	
 	for(int i = 0; i < 4; i++)
 		data[i] = (int16_t)(cur[i]*16384.0f/20.0f);
+//		data[i] = (int16_t)(cur[i]*10000.0f/10.0f);  //M2006
 	
 	TxMessage.StdId=0x200;					     // standard identifier=0
 	TxMessage.ExtId=0x200;					     // extended identifier=StdId
@@ -64,39 +65,35 @@ void CANRespond(void)
 {
 	UnionDataType txData;
 
-	switch (Driver.Command.CAN_status)
+	for(int i = 0; i < 8; i++)
 	{
-		case 0:
-			break;
-		case 0x40005155: //UQ   读取电压输出(V)
-			txData.data32[0] = 0x00005155;
-			txData.dataf[1]  = Driver.VoltageOutput;
-			CanSendData(txData);
-			Driver.Command.CAN_status = 0;
-			break;
+		switch (Driver[i].command.can_status)
+		{
+			case 0:
+				break;
+			case 0x40005856: //VX   读取速度
+				txData.data32[0] = 0x00005856;
+				txData.data32[1]  = (int32_t)(Driver[0].velCtrl.speed * 1000);
+				CanSendData(Driver[i].command.canId,txData);
+				Driver[i].command.can_status = 0;
+				break;
 
-		case 0x40005856: //VX   读取速度
-			txData.data32[0] = 0x00005856;
-			txData.data32[1]  = (int32_t)(Driver.VelCtrl.Speed * 1000);
-			CanSendData(txData);
-			Driver.Command.CAN_status = 0;
-			break;
+			case 0x40005149: //IQ	 读取电流
+				txData.data32[0] = 0x00005149;
+				txData.dataf[1] = Motor[0].cur;
+				CanSendData(Driver[i].command.canId,txData);
+				Driver[i].command.can_status = 0;
+				break;
 
-		case 0x40005149: //IQ	 读取电流
-			txData.data32[0] = 0x00005149;
-			//				data[1] = FloatToInt32_t(CurrentOutput);
-			CanSendData(txData);
-			Driver.Command.CAN_status = 0;
-			break;
+			case 0x40005850: //PX   读取位置
+				txData.data32[0] = 0x00005850;
+				txData.data32[1]  = (int32_t)(Driver[0].posCtrl.actualPos);
+				CanSendData(Driver[i].command.canId,txData);
+				Driver[i].command.can_status = 0;
+				break;
 
-		case 0x40005850: //PX   读取位置
-			txData.data32[0] = 0x00005850;
-			txData.data32[1]  = (int32_t)(Driver.PosCtrl.ActualPos);
-			CanSendData(txData);
-			Driver.Command.CAN_status = 0;
-			break;
-
-		default: break;
+			default: break;
+		}
 	}
 }
 
@@ -106,13 +103,13 @@ void CANRespond(void)
   * @param 
   * @retval 
   */
-void CanSendData(UnionDataType txData)
+void CanSendData(int id,UnionDataType txData)
 {
 	uint8_t mbox;	 
 	CanTxMsg TxMessage;
 
-	TxMessage.StdId= (0x280+CAN_ID_NUM); // standard identifier=0
-	TxMessage.ExtId= (0x280+CAN_ID_NUM);					     // extended identifier=StdId
+	TxMessage.StdId= (0x280+id); // standard identifier=0
+	TxMessage.ExtId= (0x280+id);					     // extended identifier=StdId
 	TxMessage.IDE=CAN_Id_Standard ;			 // type of identifier for the message is Standard
 	TxMessage.RTR=CAN_RTR_Data  ;			   // the type of frame for the message that will be transmitted
 	TxMessage.DLC=8;
