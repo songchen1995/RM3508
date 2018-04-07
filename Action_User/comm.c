@@ -73,21 +73,21 @@ void CANRespond(void)
 				break;
 			case 0x40005856: //VX   读取速度
 				txData.data32[0] = 0x00005856;
-				txData.data32[1]  = (int32_t)(Driver[0].velCtrl.speed * 1000);
+				txData.data32[1]  = (int32_t)(Driver[i].velCtrl.speed * 1000);
 				CanSendData(Driver[i].command.canId,txData);
 				Driver[i].command.can_status = 0;
 				break;
 
 			case 0x40005149: //IQ	 读取电流
 				txData.data32[0] = 0x00005149;
-				txData.dataf[1] = Motor[0].cur;
+				txData.dataf[1] = Motor[i].cur;
 				CanSendData(Driver[i].command.canId,txData);
 				Driver[i].command.can_status = 0;
 				break;
 
 			case 0x40005850: //PX   读取位置
 				txData.data32[0] = 0x00005850;
-				txData.data32[1]  = (int32_t)(Driver[0].posCtrl.actualPos);
+				txData.data32[1]  = (int32_t)(Driver[i].posCtrl.actualPos);
 				CanSendData(Driver[i].command.canId,txData);
 				Driver[i].command.can_status = 0;
 				break;

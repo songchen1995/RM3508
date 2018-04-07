@@ -57,7 +57,7 @@ int main(void)
 //		VelCtrlTest(300.0f,200);
 //  	Driver[1].velCtrl.desiredVel[CMD] = 10.0f;
 //		
-//		Driver[0].posCtrl.desiredPos = 27.0f*8192.0f;
+//		Driver[3].posCtrl.desiredPos = 8.0f*8192.0f;
 //		TIM_Delayms(TIM3,1000);
 //		Driver[0].posCtrl.desiredPos = -0.0f*8192.0f;
 //		TIM_Delayms(TIM3,700);

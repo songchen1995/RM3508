@@ -49,8 +49,8 @@ void DriverInit(void)
 	Motor[6].type = M_2006;
 	Motor[7].type = M_2006;
 	
-	Driver[0].command.canId = 5;
-	Driver[1].command.canId = 6;
+	Driver[0].command.canId = 15;
+	Driver[1].command.canId = 16;
 	Driver[2].command.canId = 7;
 	Driver[3].command.canId = 8;
 	
@@ -299,7 +299,7 @@ void HomingMode(DriverType *driver)
 	if(driver->homingMode.cnt >= 500){									//500ms
 
 		driver->posCtrl.actualPos=0.0f;				//
-		driver->posCtrl.desiredPos = driver->posCtrl.actualPos;
+		driver->posCtrl.desiredPos = driver->posCtrl.actualPos + 8192.0f;
 		//Çå³ýÊä³ö
 		driver->homingMode.output = 0.0f;
 		driver->velCtrl.output = 0.0f;

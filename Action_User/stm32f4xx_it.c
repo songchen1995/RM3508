@@ -101,10 +101,10 @@ void CAN2_RX0_IRQHandler(void)
 	{
 		if(StdId == (0x300 + Driver[j].command.canId))
 		{		
-			switch(Msg1.data32[j])
+			switch(Msg1.data32[0])
 			{
 				case 0x00004F4D:						//MO 
-					if(Msg1.data32[j] == 1){
+					if(Msg1.data32[1] == 1){
 						MotorOn(j);
 					}else{
 						MotorOff(j);
