@@ -99,6 +99,9 @@ void CAN2_RX0_IRQHandler(void)
 
 	for(int j = 0; j < 8; j++)
 	{
+		if(Motor[j].type == NONE)
+			break;
+
 		if(StdId == (0x300 + Driver[j].command.canId))
 		{		
 			switch(Msg1.data32[0])
@@ -116,7 +119,7 @@ void CAN2_RX0_IRQHandler(void)
 					break;
 				case 0x00004341:						//AC
 					Driver[j].velCtrl.acc = (float)(Msg1.data32[1])/1000000.0f;
-				  Driver[j].posCtrl.acc = 0.7f * Driver[j].velCtrl.acc;
+				  Driver[j].posCtrl.acc = Driver[j].velCtrl.acc;
 					break;
 				case 0x00004344:						//DC
 					Driver[j].velCtrl.dec = (float)(Msg1.data32[1])/1000000.0f;
@@ -159,8 +162,6 @@ void CAN2_RX0_IRQHandler(void)
 				default:break;
 			}
 		}
-		if(Motor[j].type == NONE)
-			break;
 	}	
 
 	CAN_ClearFlag(CAN2,CAN_FLAG_EWG);

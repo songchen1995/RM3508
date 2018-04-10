@@ -38,12 +38,13 @@ void init(void)
 	
 	for(int i = 0; i < 8; i++)
 	{
+		if(Motor[i].type == NONE)
+			break;
+		
 		Driver[i].posCtrl.actualPos = 0.0f;
 		
 		MotorOn(i);
 		
-		if(Motor[i].type == NONE)
-			break;
 	}
  
 }

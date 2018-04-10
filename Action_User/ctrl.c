@@ -42,15 +42,15 @@ void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
 	Motor[1].type = RM_3508;
-	Motor[2].type = M_2006;
+	Motor[2].type = NONE;
 	Motor[3].type = M_2006;
 	Motor[4].type = NONE;
 	Motor[5].type = RM_3508;
 	Motor[6].type = M_2006;
 	Motor[7].type = M_2006;
 	
-	Driver[0].command.canId = 15;
-	Driver[1].command.canId = 16;
+	Driver[0].command.canId = 5;
+	Driver[1].command.canId = 6;
 	Driver[2].command.canId = 7;
 	Driver[3].command.canId = 8;
 	
@@ -73,8 +73,8 @@ void DriverInit(void)
 			Driver[i].posCtrl.kp = POS_KP_3508;
 			Driver[i].homingMode.current = 0.8f;
 			
-			Driver[i].velCtrl.acc = 18.0f;
-			Driver[i].velCtrl.dec = 18.0f;
+			Driver[i].velCtrl.acc = 1.0f;
+			Driver[i].velCtrl.dec = 1.0f;
 			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
 			Driver[i].posCtrl.desiredPos = 0.0f;
 			Driver[i].posCtrl.acc = 0.7f*Driver[i].velCtrl.dec;
@@ -96,8 +96,8 @@ void DriverInit(void)
 			Driver[i].posCtrl.kp = POS_KP_2006;
 			Driver[i].homingMode.current = 1.5f;
 			
-			Driver[i].velCtrl.acc = 18.0f;
-			Driver[i].velCtrl.dec = 18.0f;
+			Driver[i].velCtrl.acc = 1.0f;
+			Driver[i].velCtrl.dec = 1.0f;
 			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
 			Driver[i].posCtrl.desiredPos = 0.0f;
 			Driver[i].posCtrl.acc = 0.7f*Driver[i].velCtrl.dec;
@@ -110,6 +110,9 @@ void DriverInit(void)
 		}
 	}
   //ÅäÖÃ³õÊ¼×´Ì¬
+	Driver[0].homingMode.current = 2.6f;
+	Driver[1].homingMode.current = 1.4f;
+
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
 	
@@ -302,8 +305,11 @@ void HomingMode(DriverType *driver)
 		driver->posCtrl.desiredPos = driver->posCtrl.actualPos + 8192.0f;
 		//Çå³ýÊä³ö
 		driver->homingMode.output = 0.0f;
+		driver->velCtrl.desiredVel[CMD] = 0.0f;
+		driver->velCtrl.desiredVel[SOFT] = 0.0f;
 		driver->velCtrl.output = 0.0f;
 		driver->output = 0.0f;
+		driver->homingMode.output = 0.0f;
 		driver->velCtrl.iOut = 0.0f;
 		driver->unitMode = POSITION_CONTROL_MODE;
 	}

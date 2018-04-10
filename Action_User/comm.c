@@ -67,6 +67,9 @@ void CANRespond(void)
 
 	for(int i = 0; i < 8; i++)
 	{
+		if(Motor[i].type == NONE)
+			break;
+		
 		switch (Driver[i].command.can_status)
 		{
 			case 0:
