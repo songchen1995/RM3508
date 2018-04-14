@@ -221,10 +221,10 @@ typedef struct
 #define  POS_KD_3508         0.0f
 
 #define  VEL_MAX_2006				 2400.0f			//最大速度
-#define  VEL_KP_2006   			 0.03f			//速度环Kp
+#define  VEL_KP_2006   			 0.05f			//速度环Kp
 #define  VEL_KI_2006				 0.003f			//速度环Ki
-#define  POS_KP_2006         0.05f
-#define  POS_KD_2006         2.0f
+#define  POS_KP_2006         0.027f
+#define  POS_KD_2006         0.00f
 
 //驱动器工作模式
 #define  SPEED_CONTROL_MODE				2

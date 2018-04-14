@@ -42,15 +42,15 @@ void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
 	Motor[1].type = RM_3508;
-	Motor[2].type = NONE;
+	Motor[2].type = M_2006;
 	Motor[3].type = M_2006;
 	Motor[4].type = NONE;
 	Motor[5].type = RM_3508;
 	Motor[6].type = M_2006;
 	Motor[7].type = M_2006;
 	
-	Driver[0].command.canId = 5;
-	Driver[1].command.canId = 6;
+	Driver[0].command.canId = 15;
+	Driver[1].command.canId = 16;
 	Driver[2].command.canId = 7;
 	Driver[3].command.canId = 8;
 	
@@ -115,7 +115,9 @@ void DriverInit(void)
 
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
+//	Driver[2].unitMode = SPEED_CONTROL_MODE;
 	
+
 }
 
 /**
@@ -134,6 +136,13 @@ void MotorCtrl(void)
 			break;
 		
 		CalculSpeed_Pos(&Driver[i],&Motor[i]);
+		
+		if(Driver[i].status != ENABLE)
+		{
+			Driver[i].output = 0.0f;		
+			continue;
+		}
+			
 		switch(Driver[i].unitMode)
 		{
 			case POSITION_CONTROL_MODE:
@@ -154,8 +163,7 @@ void MotorCtrl(void)
 				break;
 			default:break;
 		}
-		if(Driver[i].status != ENABLE)
-			Driver[i].output = 0.0f;	
+
 	}
 
 
@@ -168,8 +176,8 @@ void MotorCtrl(void)
 	SetCur(PerCur);
 	
 //	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*100.0f));
-	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].posCtrl.actualPos/10.0f));
-//	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].posCtrl.output));
+//	DMA_Send_Data((int)(Driver[2].velCtrl.speed) ,(int)(Driver[2].posCtrl.actualPos/10.0f));
+	DMA_Send_Data((int)(Driver[2].velCtrl.speed) ,(int)(Driver[2].posCtrl.output));
 //	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*10.0f));
 	
 }

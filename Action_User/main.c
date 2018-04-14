@@ -56,12 +56,12 @@ int main(void)
 	{
 		CANRespond();
 //		VelCtrlTest(300.0f,200);
-//  	Driver[1].velCtrl.desiredVel[CMD] = 10.0f;
+//		Driver[2].velCtrl.desiredVel[CMD] = 1.0f;
 //		
-//		Driver[3].posCtrl.desiredPos = 8.0f*8192.0f;
-//		TIM_Delayms(TIM3,1000);
-//		Driver[0].posCtrl.desiredPos = -0.0f*8192.0f;
-//		TIM_Delayms(TIM3,700);
+//		Driver[2].posCtrl.desiredPos = 3.0f*8192.0f;
+//		TIM_Delayms(TIM3,2000);
+//		Driver[2].posCtrl.desiredPos = -0.0f*8192.0f;
+//		TIM_Delayms(TIM3,2700);
 	}
 }
 
