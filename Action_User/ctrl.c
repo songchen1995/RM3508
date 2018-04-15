@@ -42,15 +42,15 @@ void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
 	Motor[1].type = RM_3508;
-	Motor[2].type = M_2006;
+	Motor[2].type = NONE;
 	Motor[3].type = M_2006;
 	Motor[4].type = NONE;
 	Motor[5].type = RM_3508;
 	Motor[6].type = M_2006;
 	Motor[7].type = M_2006;
 	
-	Driver[0].command.canId = 15;
-	Driver[1].command.canId = 16;
+	Driver[0].command.canId = 5;
+	Driver[1].command.canId = 6;
 	Driver[2].command.canId = 7;
 	Driver[3].command.canId = 8;
 	
@@ -111,7 +111,7 @@ void DriverInit(void)
 	}
   //≈‰÷√≥ı º◊¥Ã¨
 	Driver[0].homingMode.current = 2.6f;
-	Driver[1].homingMode.current = 1.4f;
+	Driver[1].homingMode.current = 2.0f;
 
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
