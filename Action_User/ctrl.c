@@ -33,6 +33,9 @@ extern MotorType Motor[8];
 /* Private  function prototypes -----------------------------------------------*/
 /* Private  functions ---------------------------------------------------------*/
 
+#define AUTO_3508 1
+//#define AUTO_2006 1
+
 /**
   * @brief  Çý¶¯Æ÷³õÊ¼»¯
   * @param  None
@@ -42,15 +45,29 @@ void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
 	Motor[1].type = RM_3508;
+#if AUTO_3508
 	Motor[2].type = NONE;
+#elif AUTO_2006
+	Motor[2].type = M_2006;
+#else
+	Motor[2].type = NONE;
+#endif
 	Motor[3].type = M_2006;
 	Motor[4].type = NONE;
 	Motor[5].type = RM_3508;
 	Motor[6].type = M_2006;
 	Motor[7].type = M_2006;
 	
+#if AUTO_3508
 	Driver[0].command.canId = 5;
 	Driver[1].command.canId = 6;
+#elif AUTO_2006
+	Driver[0].command.canId = 15;
+	Driver[1].command.canId = 16;
+#else
+	Driver[0].command.canId = 5;
+	Driver[1].command.canId = 6;
+#endif
 	Driver[2].command.canId = 7;
 	Driver[3].command.canId = 8;
 	
@@ -94,7 +111,7 @@ void DriverInit(void)
 			Driver[i].velCtrl.desiredVel[MAX_V] = VEL_MAX_2006;
 			Driver[i].posCtrl.kd = POS_KD_2006;
 			Driver[i].posCtrl.kp = POS_KP_2006;
-			Driver[i].homingMode.current = 1.5f;
+			Driver[i].homingMode.current = 2.0f;
 			
 			Driver[i].velCtrl.acc = 1.0f;
 			Driver[i].velCtrl.dec = 1.0f;
@@ -111,7 +128,7 @@ void DriverInit(void)
 	}
   //ÅäÖÃ³õÊ¼×´Ì¬
 	Driver[0].homingMode.current = 2.6f;
-	Driver[1].homingMode.current = 2.0f;
+	Driver[1].homingMode.current = 2.4f;
 
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
