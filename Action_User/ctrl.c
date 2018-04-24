@@ -34,7 +34,10 @@ extern MotorType Motor[8];
 /* Private  functions ---------------------------------------------------------*/
 
 #define AUTO_3508 1
-//#define AUTO_2006 1
+#define AUTO_2006 2
+#define MANUAL    3
+
+#define BOARD  MANUAL
 
 /**
   * @brief  Çý¶¯Æ÷³õÊ¼»¯
@@ -45,9 +48,9 @@ void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
 	Motor[1].type = RM_3508;
-#if AUTO_3508
+#if BOARD == AUTO_3508
 	Motor[2].type = NONE;
-#elif AUTO_2006
+#elif BOARD == AUTO_2006
 	Motor[2].type = M_2006;
 #else
 	Motor[2].type = NONE;
@@ -58,18 +61,22 @@ void DriverInit(void)
 	Motor[6].type = M_2006;
 	Motor[7].type = M_2006;
 	
-#if AUTO_3508
+#if BOARD == AUTO_3508
 	Driver[0].command.canId = 5;
 	Driver[1].command.canId = 6;
-#elif AUTO_2006
-	Driver[0].command.canId = 15;
-	Driver[1].command.canId = 16;
-#else
-	Driver[0].command.canId = 5;
-	Driver[1].command.canId = 6;
-#endif
 	Driver[2].command.canId = 7;
 	Driver[3].command.canId = 8;
+#elif BOARD == AUTO_2006
+	Driver[0].command.canId = 15;
+	Driver[1].command.canId = 16;
+	Driver[2].command.canId = 7;
+	Driver[3].command.canId = 8;
+#else
+	Driver[0].command.canId = 15;
+	Driver[1].command.canId = 7;
+	Driver[2].command.canId = 17;
+	Driver[3].command.canId = 8;
+#endif
 	
 	for(int i = 0; i < 8; i++)
 	{
