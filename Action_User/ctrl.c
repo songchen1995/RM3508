@@ -72,10 +72,10 @@ void DriverInit(void)
 	Driver[2].command.canId = 7;
 	Driver[3].command.canId = 8;
 #else
-	Driver[0].command.canId = 15;
+	Driver[0].command.canId = 5;
 	Driver[1].command.canId = 7;
 	Driver[2].command.canId = 17;
-	Driver[3].command.canId = 8;
+	Driver[3].command.canId = 18;
 #endif
 	
 	for(int i = 0; i < 8; i++)
@@ -139,7 +139,7 @@ void DriverInit(void)
 
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
-//	Driver[2].unitMode = SPEED_CONTROL_MODE;
+	Driver[0].unitMode = POSITION_CONTROL_MODE;
 	
 
 }
