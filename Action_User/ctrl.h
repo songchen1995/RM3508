@@ -212,7 +212,7 @@ typedef struct
 #define	 EMF_CONSTANT			0.020926f		//电动势常数，电机本身参数 = 电压矢量(V)/速度(pulse/ms)
 
 #define  CURRENT_MAX_3508    20.0f
-#define  CURRENT_MAX_2006    3.0f
+#define  CURRENT_MAX_2006    6.0f
 
 #define  VEL_MAX_3508				 1280.0f			//最大速度
 #define  VEL_KP_3508   			 0.1f			  //速度环Kp

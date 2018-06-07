@@ -37,7 +37,7 @@ extern MotorType Motor[8];
 #define AUTO_2006 2
 #define MANUAL    3
 
-#define BOARD  MANUAL
+#define BOARD  AUTO_2006
 
 /**
   * @brief  Çý¶¯Æ÷³õÊ¼»¯
@@ -118,7 +118,7 @@ void DriverInit(void)
 			Driver[i].velCtrl.desiredVel[MAX_V] = VEL_MAX_2006;
 			Driver[i].posCtrl.kd = POS_KD_2006;
 			Driver[i].posCtrl.kp = POS_KP_2006;
-			Driver[i].homingMode.current = 2.0f;
+			Driver[i].homingMode.current = 2.8f;
 			
 			Driver[i].velCtrl.acc = 1.0f;
 			Driver[i].velCtrl.dec = 1.0f;
@@ -134,8 +134,8 @@ void DriverInit(void)
 		}
 	}
   //ÅäÖÃ³õÊ¼×´Ì¬
-	Driver[0].homingMode.current = 2.6f;
-	Driver[1].homingMode.current = 2.4f;
+	Driver[0].homingMode.current = 2.8f;
+	Driver[1].homingMode.current = 2.8f;
 
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
@@ -192,11 +192,21 @@ void MotorCtrl(void)
 
 
   
-	PerCur[0] = Driver[0].output;
-	PerCur[1] = Driver[1].output;
-	PerCur[2] = Driver[2].output;
-	PerCur[3] = Driver[3].output;
+//	PerCur[0] = Driver[0].output;
+//	PerCur[1] = Driver[1].output;
+//	PerCur[2] = Driver[2].output;
+//	PerCur[3] = Driver[3].output;
 //	PerCur[0] = 0.0f;
+	
+	for(int i = 0; i < 4; i++)
+	{
+		if(Motor[i].type == RM_3508)
+			PerCur[i] = Driver[i].output*16384.0f/20.0f;
+		else if(Motor[i].type == M_2006)
+			PerCur[i] = Driver[i].output*10000.0f/10.0f;  //M2006
+		else 
+			PerCur[i] = 0.0f;
+	}
 	SetCur(PerCur);
 	
 //	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*100.0f));

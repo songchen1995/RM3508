@@ -32,8 +32,7 @@ void SetCur(float* cur)
 	int16_t data[4] = {0};
 	
 	for(int i = 0; i < 4; i++)
-		data[i] = (int16_t)(cur[i]*16384.0f/20.0f);
-//		data[i] = (int16_t)(cur[i]*10000.0f/10.0f);  //M2006
+		data[i] = (int16_t)(cur[i]);
 	
 	TxMessage.StdId=0x200;					     // standard identifier=0
 	TxMessage.ExtId=0x200;					     // extended identifier=StdId
