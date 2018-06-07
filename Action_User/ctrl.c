@@ -37,7 +37,7 @@ extern MotorType Motor[8];
 #define AUTO_2006 2
 #define MANUAL    3
 
-#define BOARD  AUTO_2006
+#define BOARD  AUTO_3508
 
 /**
   * @brief  Çý¶¯Æ÷³õÊ¼»¯
@@ -139,7 +139,13 @@ void DriverInit(void)
 
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
+#if BOARD == AUTO_3508
+	Driver[0].unitMode = HOMING_MODE;
+#elif BOARD == AUTO_2006
+	Driver[0].unitMode = HOMING_MODE;
+#else
 	Driver[0].unitMode = POSITION_CONTROL_MODE;
+#endif
 	
 
 }

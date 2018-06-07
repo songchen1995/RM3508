@@ -224,7 +224,7 @@ typedef struct
 #define  VEL_KP_2006   			 0.05f			//速度环Kp
 #define  VEL_KI_2006				 0.003f			//速度环Ki
 #define  POS_KP_2006         0.027f
-#define  POS_KD_2006         0.00f
+#define  POS_KD_2006         0.05f
 
 //驱动器工作模式
 #define  SPEED_CONTROL_MODE				2
