@@ -49,7 +49,7 @@ void DriverInit(void)
 	Motor[0].type = RM_3508;
 	Motor[1].type = RM_3508;
 #if BOARD == AUTO_3508
-	Motor[2].type = NONE;
+	Motor[2].type = M_2006;
 #elif BOARD == AUTO_2006
 	Motor[2].type = M_2006;
 #else
