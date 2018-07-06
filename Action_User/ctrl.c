@@ -133,6 +133,9 @@ void DriverInit(void)
 			break;
 		}
 	}
+	
+	//
+	
   //配置初始状态
 	Driver[0].homingMode.current = 2.8f;
 	Driver[1].homingMode.current = 2.8f;
@@ -140,6 +143,8 @@ void DriverInit(void)
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
 #if BOARD == AUTO_3508
+	//自动车俯仰正转归位
+	Driver[0].homingMode.vel = 160.f;
 	Driver[0].unitMode = HOMING_MODE;
 #elif BOARD == AUTO_2006
 	Driver[0].unitMode = HOMING_MODE;
