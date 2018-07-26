@@ -145,6 +145,8 @@ void DriverInit(void)
 #if BOARD == AUTO_3508
 	//自动车俯仰正转归位
 	Driver[0].homingMode.vel = 160.f;
+	Driver[1].homingMode.vel = 160.f;
+	
 	Driver[0].unitMode = HOMING_MODE;
 #elif BOARD == AUTO_2006
 	Driver[0].unitMode = HOMING_MODE;
