@@ -37,7 +37,7 @@ extern MotorType Motor[8];
 #define AUTO_2006 2
 #define MANUAL    3
 
-#define BOARD  AUTO_3508
+#define BOARD  MANUAL
 
 /**
   * @brief  Çý¶¯Æ÷³õÊ¼»¯
@@ -101,7 +101,7 @@ void DriverInit(void)
 			Driver[i].velCtrl.dec = 1.0f;
 			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
 			Driver[i].posCtrl.desiredPos = 0.0f;
-			Driver[i].posCtrl.acc = 0.7f*Driver[i].velCtrl.dec;
+			Driver[i].posCtrl.acc = Driver[i].velCtrl.dec;
 			Driver[i].posCtrl.posVel = 250.0f;
 			Driver[i].homingMode.vel = -160.0f;
 

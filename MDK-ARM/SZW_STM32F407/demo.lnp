@@ -1,4 +1,4 @@
---cpu Cortex-M4.fp
+--cpu=Cortex-M4.fp
 ".\szw_stm32f407\main.o"
 ".\szw_stm32f407\stm32f4xx_it.o"
 ".\szw_stm32f407\can.o"
