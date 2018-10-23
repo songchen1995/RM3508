@@ -37,7 +37,7 @@ extern MotorType Motor[8];
 #define AUTO_2006 2
 #define MANUAL    3
 
-#define BOARD  MANUAL
+#define BOARD  AUTO_3508
 
 /**
   * @brief  驱动器初始化
@@ -47,7 +47,7 @@ extern MotorType Motor[8];
 void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
-	Motor[1].type = RM_3508;
+	Motor[1].type = NONE;
 #if BOARD == AUTO_3508
 	Motor[2].type = M_2006;
 #elif BOARD == AUTO_2006
@@ -80,13 +80,13 @@ void DriverInit(void)
 	
 	for(int i = 0; i < 8; i++)
 	{
-		Driver[i].status = DISABLE;
+		Driver[i].status = ENABLE;
 		Driver[i].encoder.period = 8192;		
 		
 	  if(Motor[i].type == RM_3508)
 		{
-			Driver[i].unitMode = HOMING_MODE;
-		//  Driver[i].unitMode = POSITION_CONTROL_MODE;
+		//	Driver[i].unitMode = HOMING_MODE;
+		  Driver[i].unitMode = POSITION_CONTROL_MODE;
 		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
 			
 			Driver[i].velCtrl.kp = VEL_KP_3508;
@@ -97,18 +97,18 @@ void DriverInit(void)
 			Driver[i].posCtrl.kp = POS_KP_3508;
 			Driver[i].homingMode.current = 0.8f;
 			
-			Driver[i].velCtrl.acc = 1.0f;
-			Driver[i].velCtrl.dec = 1.0f;
-			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
-			Driver[i].posCtrl.desiredPos = 0.0f;
+			Driver[i].velCtrl.acc = 1000.0f;
+			Driver[i].velCtrl.dec = 1000.0f;
+			Driver[i].velCtrl.desiredVel[CMD] = 1000.0f;
+//			Driver[i].posCtrl.desiredPos = 0.0f;
 			Driver[i].posCtrl.acc = Driver[i].velCtrl.dec;
-			Driver[i].posCtrl.posVel = 250.0f;
+			Driver[i].posCtrl.posVel = 50.0f;
 			Driver[i].homingMode.vel = -160.0f;
 
 		}
 		else if(Motor[i].type == M_2006)  //M2006的参数
 		{
-			Driver[i].unitMode = HOMING_MODE;
+		//	Driver[i].unitMode = HOMING_MODE;
 		//  Driver[i].unitMode = POSITION_CONTROL_MODE;
 		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
 			
@@ -147,11 +147,12 @@ void DriverInit(void)
 	Driver[0].homingMode.vel = 160.f;
 	Driver[1].homingMode.vel = 160.f;
 	
-	Driver[0].unitMode = HOMING_MODE;
+//	Driver[0].unitMode = HOMING_MODE;
 #elif BOARD == AUTO_2006
 	Driver[0].unitMode = HOMING_MODE;
 #else
-	Driver[0].unitMode = POSITION_CONTROL_MODE;
+	Driver[0].unitMode = SPEED_CONTROL_MODE;
+	Driver[0].velCtrl.desiredVel[CMD] = 250;
 #endif
 	
 
@@ -467,7 +468,7 @@ void MotorOn(int n)
     Driver[n].velCtrl.desiredVel[CMD] = 0.0f;
   
   Driver[n].velCtrl.iOut = 0.0f;
-  
+
   Driver[n].status = ENABLE;
 }
 

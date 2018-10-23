@@ -32,7 +32,7 @@ void init(void)
   
 	DriverInit();
 	
-  TIM_Cmd(TIM2,ENABLE);	
+  	
   
 	TIM_Delayms(TIM3,200);
 	
@@ -42,19 +42,26 @@ void init(void)
 			break;
 		
 		Driver[i].posCtrl.actualPos = 0.0f;
-		
+
 		MotorOn(i);
 		
 	}
- 
+//	TIM_Cmd(TIM2,ENABLE);
 }
 int main(void)
 {
 	init();
-	
+//	Driver[0].velCtrl.desiredVel[CMD] = 8.192f * 180;
+//	TIM_Delayms(TIM3,1000);
+//	delay_ms(10);
+//  Driver[0].posCtrl.actualPos = Motor[0].pos - 4000.f;
+//	Driver[0].posCtrl.desiredPos = 0.f;
 	while(1)
 	{
+		
 		CANRespond();
+//		Driver[0].posCtrl.desiredPos = 19 * 8192; 
+//		TIM_Delayms(TIM3,500);
 //		VelCtrlTest(300.0f,200);
 //		Driver[2].velCtrl.desiredVel[CMD] = 1.0f;
 //		
