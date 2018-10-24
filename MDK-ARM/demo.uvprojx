@@ -433,6 +433,11 @@
               <FileType>1</FileType>
               <FilePath>..\Action_User\comm.c</FilePath>
             </File>
+            <File>
+              <FileName>tle5012.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Action_User\tle5012.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

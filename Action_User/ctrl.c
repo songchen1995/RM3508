@@ -21,6 +21,7 @@
 #include "elmo.h"
 #include "comm.h"
 #include "timer.h"
+#include "TLE5012.h"
 
 /* Private  typedef -----------------------------------------------------------*/
 /* Private  define ------------------------------------------------------------*/
@@ -102,7 +103,7 @@ void DriverInit(void)
 			Driver[i].velCtrl.desiredVel[CMD] = 1000.0f;
 //			Driver[i].posCtrl.desiredPos = 0.0f;
 			Driver[i].posCtrl.acc = Driver[i].velCtrl.dec;
-			Driver[i].posCtrl.posVel = 50.0f;
+			Driver[i].posCtrl.posVel = 250.0f;
 			Driver[i].homingMode.vel = -160.0f;
 
 		}
@@ -120,8 +121,8 @@ void DriverInit(void)
 			Driver[i].posCtrl.kp = POS_KP_2006;
 			Driver[i].homingMode.current = 2.8f;
 			
-			Driver[i].velCtrl.acc = 1.0f;
-			Driver[i].velCtrl.dec = 1.0f;
+			Driver[i].velCtrl.acc = 100.0f;
+			Driver[i].velCtrl.dec = 100.0f;
 			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
 			Driver[i].posCtrl.desiredPos = 0.0f;
 			Driver[i].posCtrl.acc = 0.7f*Driver[i].velCtrl.dec;
@@ -134,16 +135,15 @@ void DriverInit(void)
 		}
 	}
 	
-	//
-	
   //配置初始状态
 	Driver[0].homingMode.current = 2.8f;
 	Driver[1].homingMode.current = 2.8f;
-
+  
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
 #if BOARD == AUTO_3508
 	//自动车俯仰正转归位
+	
 	Driver[0].homingMode.vel = 160.f;
 	Driver[1].homingMode.vel = 160.f;
 	
@@ -154,7 +154,30 @@ void DriverInit(void)
 	Driver[0].unitMode = SPEED_CONTROL_MODE;
 	Driver[0].velCtrl.desiredVel[CMD] = 250;
 #endif
-	
+}
+
+/**
+  * @brief  ZeroPosInit
+	* @param  using the outer encoder to get the zero point of the motor
+	* @retval None
+  */
+void ZeroPosInit(void)
+{
+	Driver[0].target5012B = 1000;
+	for(int i = 0; i < 8; i++)
+	{
+		if(Motor[i].type == RM_3508)
+		{
+			Driver[i].encoder5012B = TLE5012B_GetPos15bit()/4;
+			Driver[i].posCtrl.actualPos =((Driver[i].encoder5012B) - Driver[i].target5012B); 
+			Driver[i].posCtrl.desiredPos = 0;		
+		
+		}
+		else
+		{
+			break;
+		}
+	}
 
 }
 
@@ -168,6 +191,8 @@ float PerCur[4] = {0.0f};
 void MotorCtrl(void)
 {
 //	CalculSpeed();
+	TLE5012B_UpateData();
+	Driver[0].encoder5012B = TLE5012B_GetPos15bit()/4;
 	for(int i = 0; i < 8; i++)
 	{
 		if(Motor[i].type == NONE)
@@ -175,7 +200,7 @@ void MotorCtrl(void)
 		
 		CalculSpeed_Pos(&Driver[i],&Motor[i]);
 		
-		if(Driver[i].status != ENABLE)
+		if(Driver[i].status != ENABLE)   
 		{
 			Driver[i].output = 0.0f;		
 			continue;
@@ -225,7 +250,7 @@ void MotorCtrl(void)
 	
 //	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*100.0f));
 //	DMA_Send_Data((int)(Driver[2].velCtrl.speed) ,(int)(Driver[2].posCtrl.actualPos/10.0f));
-	DMA_Send_Data((int)(Driver[2].velCtrl.speed) ,(int)(Driver[2].posCtrl.output));
+//	DMA_Send_Data((int)(Driver[2].velCtrl.speed) ,(int)(Driver[2].posCtrl.output));
 //	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*10.0f));
 	
 }
@@ -461,9 +486,8 @@ float MaxMinLimit(float val,float limit)
   */
 void MotorOn(int n)
 {
-  if(Driver[n].unitMode == POSITION_CONTROL_MODE)
-    Driver[n].posCtrl.desiredPos = Driver[n].posCtrl.actualPos;
-  
+ if(Driver[n].unitMode == POSITION_CONTROL_MODE)
+    Driver[n].posCtrl.desiredPos = 0;
   if(Driver[n].unitMode == SPEED_CONTROL_MODE)
     Driver[n].velCtrl.desiredVel[CMD] = 0.0f;
   

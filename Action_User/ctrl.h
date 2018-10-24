@@ -122,7 +122,7 @@ typedef struct
   */
 typedef struct
 {
-	float actualPos;
+	int actualPos;
 	
 	float desiredPos;
 	
@@ -172,13 +172,17 @@ typedef struct
   
 	float output;
 	
+	int encoder5012B;
+	
+	int target5012B;
+	
 	VelCtrlType velCtrl;
 	
 	PosCtrlType posCtrl;
 	
 	HomingModeType homingMode;
 	
-	EncoderType  encoder;
+	EncoderType  encoder;	
 	
 	CommutationType commutation;
 	
@@ -229,7 +233,10 @@ typedef struct
 //驱动器工作模式
 #define  SPEED_CONTROL_MODE				2
 #define  POSITION_CONTROL_MODE		5
+#define  TORQUE_CONTROL_MODE			3
+#define  ZERO_POS_Init_MODE       4
 #define  HOMING_MODE							6
+
 //区别使用斜坡前后的速度
 #define  CMD   0
 #define  SOFT  1
@@ -264,7 +271,7 @@ void 		HomingModeInit(void);
 void    MotorOn(int n);
 void    MotorOff(int n);
 void    VelCtrlTest(float vel,int tim);
-
+void 		ZeroPosInit(void);
 
 #endif
 
