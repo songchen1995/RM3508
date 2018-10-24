@@ -98,12 +98,12 @@ void DriverInit(void)
 			Driver[i].posCtrl.kp = POS_KP_3508;
 			Driver[i].homingMode.current = 0.8f;
 			
-			Driver[i].velCtrl.acc = 1000.0f;
-			Driver[i].velCtrl.dec = 1000.0f;
+			Driver[i].velCtrl.acc = 100.0f;
+			Driver[i].velCtrl.dec = 100.0f;
 			Driver[i].velCtrl.desiredVel[CMD] = 1000.0f;
 //			Driver[i].posCtrl.desiredPos = 0.0f;
-			Driver[i].posCtrl.acc = Driver[i].velCtrl.dec;
-			Driver[i].posCtrl.posVel = 250.0f;
+			Driver[i].posCtrl.acc = 0.7 *Driver[i].velCtrl.dec;
+			Driver[i].posCtrl.posVel = 100.0f;
 			Driver[i].homingMode.vel = -160.0f;
 
 		}
@@ -487,7 +487,7 @@ float MaxMinLimit(float val,float limit)
 void MotorOn(int n)
 {
  if(Driver[n].unitMode == POSITION_CONTROL_MODE)
-    Driver[n].posCtrl.desiredPos = 0;
+    Driver[n].posCtrl.desiredPos = Driver[n].posCtrl.actualPos;
   if(Driver[n].unitMode == SPEED_CONTROL_MODE)
     Driver[n].velCtrl.desiredVel[CMD] = 0.0f;
   

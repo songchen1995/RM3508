@@ -37,18 +37,17 @@ void init(void)
 	DriverInit();
 		
   	
-  
+  TIM_Cmd(TIM2,ENABLE);
 	
-	
+	TIM_Delayms(TIM3,200);
 	for(int i = 0; i < 8; i++)
 	{
 		if(Motor[i].type == NONE)
 			break;
 		Driver[i].posCtrl.actualPos = 0;
 		MotorOn(i);
-		
 	}
-	TIM_Cmd(TIM2,ENABLE);
+	
 }
 int main(void)
 {
