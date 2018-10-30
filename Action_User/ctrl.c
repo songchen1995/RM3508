@@ -48,7 +48,7 @@ extern MotorType Motor[8];
 void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
-	Motor[1].type = NONE;
+	Motor[1].type = RM_3508;
 #if BOARD == AUTO_3508
 	Motor[2].type = M_2006;
 #elif BOARD == AUTO_2006
@@ -81,12 +81,12 @@ void DriverInit(void)
 	
 	for(int i = 0; i < 8; i++)
 	{
-		Driver[i].status = ENABLE;
+		Driver[i].status = DISABLE;
 		Driver[i].encoder.period = 8192;		
 		
 	  if(Motor[i].type == RM_3508)
 		{
-		//	Driver[i].unitMode = HOMING_MODE;
+			//Driver[i].unitMode = HOMING_MODE;
 		  Driver[i].unitMode = POSITION_CONTROL_MODE;
 		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
 			
@@ -98,18 +98,18 @@ void DriverInit(void)
 			Driver[i].posCtrl.kp = POS_KP_3508;
 			Driver[i].homingMode.current = 0.8f;
 			
-			Driver[i].velCtrl.acc = 100.0f;
-			Driver[i].velCtrl.dec = 100.0f;
-			Driver[i].velCtrl.desiredVel[CMD] = 1000.0f;
-//			Driver[i].posCtrl.desiredPos = 0.0f;
-			Driver[i].posCtrl.acc = 0.7 *Driver[i].velCtrl.dec;
-			Driver[i].posCtrl.posVel = 100.0f;
+			Driver[i].velCtrl.acc = 1.0f;
+			Driver[i].velCtrl.dec = 1.0f;
+			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
+			Driver[i].posCtrl.desiredPos = 0.0f;
+			Driver[i].posCtrl.acc = 0.7f*Driver[i].velCtrl.dec;
+			Driver[i].posCtrl.posVel = 250.0f;
 			Driver[i].homingMode.vel = -160.0f;
 
 		}
 		else if(Motor[i].type == M_2006)  //M2006的参数
 		{
-		//	Driver[i].unitMode = HOMING_MODE;
+			Driver[i].unitMode = HOMING_MODE;
 		//  Driver[i].unitMode = POSITION_CONTROL_MODE;
 		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
 			
@@ -135,15 +135,16 @@ void DriverInit(void)
 		}
 	}
 	
+	//
+	
   //配置初始状态
 	Driver[0].homingMode.current = 2.8f;
 	Driver[1].homingMode.current = 2.8f;
-  
+
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
 #if BOARD == AUTO_3508
 	//自动车俯仰正转归位
-	
 	Driver[0].homingMode.vel = 160.f;
 	Driver[1].homingMode.vel = 160.f;
 	
@@ -151,34 +152,41 @@ void DriverInit(void)
 #elif BOARD == AUTO_2006
 	Driver[0].unitMode = HOMING_MODE;
 #else
-	Driver[0].unitMode = SPEED_CONTROL_MODE;
-	Driver[0].velCtrl.desiredVel[CMD] = 250;
+	Driver[0].unitMode = POSITION_CONTROL_MODE;
 #endif
+	
+
 }
 
 /**
   * @brief  ZeroPosInit
 	* @param  using the outer encoder to get the zero point of the motor
+  * @note   There will be 0.4 degree of errors while zeropos initing
 	* @retval None
   */
 void ZeroPosInit(void)
 {
-	Driver[0].target5012B = 1000;
+	Driver[0].target5012B = 6000;
 	for(int i = 0; i < 8; i++)
 	{
 		if(Motor[i].type == RM_3508)
 		{
-			Driver[i].encoder5012B = TLE5012B_GetPos15bit()/4;
-			Driver[i].posCtrl.actualPos =((Driver[i].encoder5012B) - Driver[i].target5012B); 
-			Driver[i].posCtrl.desiredPos = 0;		
-		
+			Driver[i].encoder5012B = TLE5012B_GetPos14bit();
+			Driver[i].posCtrl.actualPos =(( Driver[i].encoder5012B) - Driver[i].target5012B); 
+			Driver[i].posCtrl.desiredPos = Driver[i].posCtrl.actualPos;
 		}
 		else
 		{
 			break;
 		}
 	}
+}
 
+void ZeroPosCtrl(DriverType* driver)
+{
+	TLE5012B_UpateData();
+	Driver[0].encoder5012B = TLE5012B_GetPos15bit()/4;
+	PosCtrl(&driver->posCtrl);
 }
 
 /**
@@ -192,7 +200,8 @@ void MotorCtrl(void)
 {
 //	CalculSpeed();
 	TLE5012B_UpateData();
-	Driver[0].encoder5012B = TLE5012B_GetPos15bit()/4;
+	Driver[0].encoder5012B = TLE5012B_GetPos14bit();
+	DMA_Send_Data(Driver[0].encoder5012B,Driver[0].posCtrl.actualPos);
 	for(int i = 0; i < 8; i++)
 	{
 		if(Motor[i].type == NONE)

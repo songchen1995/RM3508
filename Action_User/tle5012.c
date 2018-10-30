@@ -145,7 +145,10 @@ int32_t TLE5012B_GetPos15bit(void)
 	return TLE5012BData.pos15bit;
 }
 
-
+int32_t TLE5012B_GetPos14bit(void)
+{
+	return TLE5012BData.pos15bit / 4;
+}
 
 /**
  * 读取磁编码器的AVAL ASPD FYNC 寄存器
@@ -153,7 +156,7 @@ int32_t TLE5012B_GetPos15bit(void)
  */
 static void TLE5012B_AccessRegister(void)
 {
-	TLE5012BData.pos15bit = ((int32_t)TLE5012ReadAbsPos()/4);
+	TLE5012BData.pos15bit = ((int32_t)TLE5012ReadAbsPos());
 	TLE5012BData.posMec = TLE5012BData.pos15bit;
 }
 

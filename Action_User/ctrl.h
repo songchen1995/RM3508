@@ -158,6 +158,22 @@ typedef struct
 	
 }HomingModeType;
 
+typedef struct
+{
+	float vel;
+	
+	float current;
+	
+	float actualPos;
+	
+	float desiredPos;
+	
+	int32_t cnt;
+	
+	float output;
+	
+}ZeroPosInitType;
+
 /** 
   * @brief  Driver type structure definition  
   * @note     
@@ -179,6 +195,8 @@ typedef struct
 	VelCtrlType velCtrl;
 	
 	PosCtrlType posCtrl;
+	
+	ZeroPosInitType zeroCtrl;
 	
 	HomingModeType homingMode;
 	
@@ -234,7 +252,7 @@ typedef struct
 #define  SPEED_CONTROL_MODE				2
 #define  POSITION_CONTROL_MODE		5
 #define  TORQUE_CONTROL_MODE			3
-#define  ZERO_POS_Init_MODE       4
+#define  ZERO_POSITION_INIT_MODE       4
 #define  HOMING_MODE							6
 
 //区别使用斜坡前后的速度

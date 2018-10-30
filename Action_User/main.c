@@ -52,20 +52,15 @@ void init(void)
 int main(void)
 {
 	init();
-//	Driver[0].velCtrl.desiredVel[CMD] = 8.192f * 180;
-//	TIM_Delayms(TIM3,1000);
-//	ZeroPosInit();//Please Use it before interupts
-	TIM_Delayms(TIM3,5000);
-//	delay_ms(10);
-//  Driver[0].posCtrl.actualPos = Motor[0].pos - 4000.f;
-//	Driver[0].posCtrl.desiredPos = 0.f;
+	ZeroPosInit();
+
 	
 	while(1)
 	{
 		
 		CANRespond();
 		
-		Driver[0].posCtrl.desiredPos = 19 * 8192; 
+		Driver[0].posCtrl.desiredPos = 0; 
 //		TIM_Delayms(TIM3,500);
 //		VelCtrlTest(300.0f,200);
 //		Driver[2].velCtrl.desiredVel[CMD] = 1.0f;
