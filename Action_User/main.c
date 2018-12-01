@@ -52,7 +52,7 @@ void init(void)
 int main(void)
 {
 	init();
-	ZeroPosInit();
+//	ZeroPosInit();
 
 	
 	while(1)

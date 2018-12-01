@@ -233,6 +233,12 @@ void MotorCtrl(void)
 				HomingMode(&Driver[i]);
 				Driver[i].output = Driver[i].homingMode.output;
 				break;
+			case PVT_MODE:
+			  PVTCtrl(&Driver[i].pvtCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
+				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].pvtCtrl.output;
+				VelSlope(&Driver[i].velCtrl);
+				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);				
+				break;
 			default:break;
 		}
 
@@ -367,6 +373,94 @@ float PosCtrl(PosCtrlType *posPid)
 	posPid->output = MaxMinLimit(posPidOut,posPid->posVel);
 	
 	return posPid->output;
+}
+
+
+
+
+
+
+/**
+  * @brief PVTPos
+  * @param  None
+  * @retval 
+  */
+float PVTPosCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid)
+{
+	float posPidOut = 0.0f;
+	float desiredVel = 0.0f,signVel = 1.0f;
+	
+	/******************************݆̣λ׃۷ˤԶ**************************************/
+	pvtPid->posErr = pvtPid->desiredPos - posPid->actualPos;				
+	posPidOut = pvtPid->posErr * pvtPid->pos_kp + pvtPid->pos_kd * (pvtPid->posErr-pvtPid->posErrLast);		
+	pvtPid->posErrLast = posPid->posErr;
+	
+	if(pvtPid->posErr < 0.0f) signVel = -1.0f;	
+	
+	
+	desiredVel = signVel*__sqrtf(2.0f*0.7f*posPid->acc*signVel*posPid->posErr);
+		
+	if(fabsf(desiredVel) < fabsf(posPidOut))
+		posPidOut = desiredVel;
+
+//	if(fabsf(posPid->posErr) <= 200.0f)		posPidOut = 0.0f;
+	
+	posPid->output = MaxMinLimit(posPidOut,posPid->posVel);
+	
+	return posPid->output;
+}
+
+
+/**
+  * @brief PVT
+  * @param  None
+  * @retval 
+  */
+//速度和位置的闭环
+//delp,delv异号没有意义
+float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
+{
+	float posPidOut = 0.0f, velPidOut  = 0, pvtPidOut = 0;
+	float desiredVel = 0.0f,signVel = 1.0f;
+	
+
+	if(pvtPid->desiredPos != pvtPid->desiredPosLast && signVel == 0.f)
+	{
+		if(pvtPid->desiredPos - pvtPid->desiredVelLast < -0.5f)
+		{
+			signVel = -1.f;
+		}
+		else if(pvtPid ->desiredPos - pvtPid-> desiredVelLast > 0.5f)
+		{
+			signVel = 1.f;
+		}
+		pvtPid->desiredPosLast =  pvtPid->desiredPos;
+	}
+	//使用串行PID进行(p,v)控制
+	//到达对应(p,v)，点后，不再对p闭环，而只对v闭环
+	//在完成一个目标点之前不会进行下一次规划
+	posPidOut = PVTPosCtrl(pvtPid,posPid);
+	velPidOut = pvtPid->desiredVel;
+	if(signVel == 1.f)
+	{
+		if(pvtPid->desiredPos - posPid->actualPos <= 0.f)
+		{
+			posPidOut = 0;
+			signVel = 0.f;
+		}
+	}	
+	else if(signVel == -1.f)
+	{
+		if(pvtPid->desiredPos - Driver[0].posCtrl.actualPos >= 0.f)
+		{
+			posPidOut = 0;
+			signVel = 0.f;
+		}
+	}
+	
+	pvtPid->output = MaxMinLimit(posPidOut + velPidOut,pvtPid -> velLimit);
+
+	return pvtPid->output;
 }
 /**
   * @brief  Homing mode

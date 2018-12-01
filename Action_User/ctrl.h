@@ -140,6 +140,42 @@ typedef struct
 	
 }PosCtrlType;
 
+
+/** 
+  * @brief  PosCtrl type structure definition  
+  * @note     
+  */
+typedef struct
+{
+	float desiredVel;
+	
+	float desiredPos;
+	
+	float desiredTime;
+	
+	float desiredVelLast;
+	
+	float desiredPosLast;
+	
+	float velLimit;
+	
+	float posErr,posErrLast;
+	
+	float velErr, velErrLast;
+	
+	float vel_kp;
+	
+	float vel_kd;
+	
+	float pos_kp;
+	
+	float pos_kd;
+	
+	float output;
+	
+}PVTCtrlType;
+
+
 /** 
   * @brief  HomingMode type structure definition  
   * @note     
@@ -195,6 +231,8 @@ typedef struct
 	VelCtrlType velCtrl;
 	
 	PosCtrlType posCtrl;
+	
+	PVTCtrlType pvtCtrl;
 	
 	ZeroPosInitType zeroCtrl;
 	
@@ -254,6 +292,7 @@ typedef struct
 #define  TORQUE_CONTROL_MODE			3
 #define  ZERO_POSITION_INIT_MODE       4
 #define  HOMING_MODE							6
+#define  PVT_MODE									7
 
 //区别使用斜坡前后的速度
 #define  CMD   0
@@ -273,6 +312,7 @@ float 	OutPutLim(float val);
 float   VelSlope(VelCtrlType *velPid);
 float   VelPidCtrl(VelCtrlType *velPid);
 float   PosCtrl(PosCtrlType *posPid);
+float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid);
 //float 	VelCtrl(float cmdVel);
 void 		VelCtrlInit(void);
 void		PosCtrlInit(void);
