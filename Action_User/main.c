@@ -49,6 +49,7 @@ void init(void)
 	}
 	
 }
+int status = 0;
 int main(void)
 {
 	init();
@@ -59,8 +60,28 @@ int main(void)
 	{
 		
 		CANRespond();
-		
-		Driver[0].posCtrl.desiredPos = 0; 
+		switch(status)
+		{
+			case 0 : 
+			Driver[0].pvtCtrl.desiredPos = 1.f * 8192.f;
+			Driver[0].pvtCtrl.desiredVel = 100.f;		
+			if(Driver[0].posCtrl.actualPos >= 1.f * 8192.f)
+			{
+				status = 1;
+			}
+			break;
+			case 1:
+			Driver[0].pvtCtrl.desiredPos = 38.f * 8192.f;
+			Driver[0].pvtCtrl.desiredVel = 0.f;
+			if(Driver[0].posCtrl.actualPos <= 0.f * 8192.f)
+			{
+				status = 2;
+			}
+			break;
+		}
+		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
+		TIM_Delayms(TIM3,1);
+//		Driver[0].posCtrl.desiredPos = 0; 
 //		TIM_Delayms(TIM3,500);
 //		VelCtrlTest(300.0f,200);
 //		Driver[2].velCtrl.desiredVel[CMD] = 1.0f;

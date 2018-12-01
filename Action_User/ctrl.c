@@ -48,7 +48,7 @@ extern MotorType Motor[8];
 void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
-	Motor[1].type = RM_3508;
+	Motor[1].type = NONE;
 #if BOARD == AUTO_3508
 	Motor[2].type = M_2006;
 #elif BOARD == AUTO_2006
@@ -87,9 +87,9 @@ void DriverInit(void)
 	  if(Motor[i].type == RM_3508)
 		{
 			//Driver[i].unitMode = HOMING_MODE;
-		  Driver[i].unitMode = POSITION_CONTROL_MODE;
+		 // Driver[i].unitMode = POSITION_CONTROL_MODE;
 		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
-			
+			Driver[i].unitMode = PVT_MODE;
 			Driver[i].velCtrl.kp = VEL_KP_3508;
 			Driver[i].velCtrl.ki = VEL_KI_3508;
 			Driver[i].velCtrl.maxOutput = CURRENT_MAX_3508;
@@ -98,11 +98,11 @@ void DriverInit(void)
 			Driver[i].posCtrl.kp = POS_KP_3508;
 			Driver[i].homingMode.current = 0.8f;
 			
-			Driver[i].velCtrl.acc = 1.0f;
-			Driver[i].velCtrl.dec = 1.0f;
+			Driver[i].velCtrl.acc = 1000.0f;
+			Driver[i].velCtrl.dec = 1000.0f;
 			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
 			Driver[i].posCtrl.desiredPos = 0.0f;
-			Driver[i].posCtrl.acc = 0.7f*Driver[i].velCtrl.dec;
+			Driver[i].posCtrl.acc = Driver[i].velCtrl.dec;
 			Driver[i].posCtrl.posVel = 250.0f;
 			Driver[i].homingMode.vel = -160.0f;
 
@@ -147,7 +147,9 @@ void DriverInit(void)
 	//�Զ���������ת��λ
 	Driver[0].homingMode.vel = 160.f;
 	Driver[1].homingMode.vel = 160.f;
-	
+	Driver[0].pvtCtrl.velLimit = VEL_MAX_3508;
+	Driver[0].pvtCtrl.pos_kp = POS_KP_3508;
+	Driver[0].pvtCtrl.pos_kd = POS_KD_3508;
 //	Driver[0].unitMode = HOMING_MODE;
 #elif BOARD == AUTO_2006
 	Driver[0].unitMode = HOMING_MODE;
@@ -201,7 +203,6 @@ void MotorCtrl(void)
 //	CalculSpeed();
 	TLE5012B_UpateData();
 	Driver[0].encoder5012B = TLE5012B_GetPos14bit();
-	DMA_Send_Data(Driver[0].encoder5012B,Driver[0].posCtrl.actualPos);
 	for(int i = 0; i < 8; i++)
 	{
 		if(Motor[i].type == NONE)
@@ -237,7 +238,9 @@ void MotorCtrl(void)
 			  PVTCtrl(&Driver[i].pvtCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
 				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].pvtCtrl.output;
 				VelSlope(&Driver[i].velCtrl);
-				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);				
+				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);		
+						
+//				DMA_Send_Data('\r','\n');
 				break;
 			default:break;
 		}
@@ -398,7 +401,7 @@ float PVTPosCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid)
 	if(pvtPid->posErr < 0.0f) signVel = -1.0f;	
 	
 	
-	desiredVel = signVel*__sqrtf(2.0f*0.7f*posPid->acc*signVel*posPid->posErr);
+	desiredVel = signVel*__sqrtf(2.0f*0.7f*posPid->acc*signVel*pvtPid->posErr);
 		
 	if(fabsf(desiredVel) < fabsf(posPidOut))
 		posPidOut = desiredVel;
@@ -421,20 +424,21 @@ float PVTPosCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid)
 float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
 	float posPidOut = 0.0f, velPidOut  = 0, pvtPidOut = 0;
-	float desiredVel = 0.0f,signVel = 1.0f;
+	static float desiredVel = 0.0f,signVel = 1.0f;
 	
 
-	if(pvtPid->desiredPos != pvtPid->desiredPosLast && signVel == 0.f)
+	if(pvtPid->desiredPos != pvtPid->desiredPosLast )
 	{
-		if(pvtPid->desiredPos - pvtPid->desiredVelLast < -0.5f)
+		if(pvtPid->desiredPos - pvtPid->desiredPosLast  < 0.01f)
 		{
 			signVel = -1.f;
+			pvtPid->desiredPosLast =  pvtPid->desiredPos;
 		}
-		else if(pvtPid ->desiredPos - pvtPid-> desiredVelLast > 0.5f)
+		else if(pvtPid->desiredPos - pvtPid->desiredPosLast> 0.01f)
 		{
 			signVel = 1.f;
+			pvtPid->desiredPosLast =  pvtPid->desiredPos;
 		}
-		pvtPid->desiredPosLast =  pvtPid->desiredPos;
 	}
 	//使用串行PID进行(p,v)控制
 	//到达对应(p,v)，点后，不再对p闭环，而只对v闭环
@@ -446,18 +450,19 @@ float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
 		if(pvtPid->desiredPos - posPid->actualPos <= 0.f)
 		{
 			posPidOut = 0;
-			signVel = 0.f;
+			//signVel = 0.f;
 		}
 	}	
 	else if(signVel == -1.f)
 	{
-		if(pvtPid->desiredPos - Driver[0].posCtrl.actualPos >= 0.f)
+		if(pvtPid->desiredPos - posPid->actualPos >= 0.f)
 		{
 			posPidOut = 0;
-			signVel = 0.f;
+			//signVel = 0.f;
 		}
 	}
 	
+//	DMA_Send_Data(signVel,(int)pvtPid->desiredPos);
 	pvtPid->output = MaxMinLimit(posPidOut + velPidOut,pvtPid -> velLimit);
 
 	return pvtPid->output;
