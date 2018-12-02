@@ -422,14 +422,14 @@ float PosCtrl(PosCtrlType *posPid)
 //速度和位置的闭环(时间分段，PID平滑)
 //CIRCULAR MODE
 //delp,delv异号没有意义
-
+extern float track[20], track2[20];
 float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
 	static float posPidOut = 0.0f, velPidOut  = 0, pvtPidOut = 0;
 	static float desiredVel = 0.0f,signVel = 1.0f;
 	static int index = 1,cnt = 0;
 	static float kp = 0.1,ki = 0.00001,posErr = 0,posErrLast = 0;
-	if(index < 22)
+	if(index < 20)
 	{
 		if(cnt < pvtPid->desiredTime[index])
 		{
@@ -447,9 +447,18 @@ float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
 	posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
 	posErrLast = posErr;
 	
-	if(index == 22)
+	if(index == 20)
 	{
-		index = 22;
+		index = 0;
+		if(pvtPid->desiredPos == track)
+		{
+			pvtPid->desiredPos = track2;
+		}
+		else if(pvtPid->desiredPos == track2)
+		{
+			pvtPid->desiredPos = track;
+		}
+		
 //		velPidOut = 0;
 		cnt = 0;
 	}

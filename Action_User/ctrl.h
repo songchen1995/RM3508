@@ -149,9 +149,9 @@ typedef struct
 {
 	float desiredVel[4];
 	
-	float desiredPos[22];
+	float *desiredPos;
 	
-	float desiredTime[22];
+	float *desiredTime;
 	
 	float desiredVelLast;
 	
