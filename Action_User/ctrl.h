@@ -153,6 +153,8 @@ typedef struct
 	
 	float *desiredTime;
 	
+	int flag;
+	
 	float desiredVelLast;
 	
 	float desiredPosLast;

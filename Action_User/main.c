@@ -100,6 +100,8 @@ float time[40]=
 {
 	10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
 };
+
+int status;
 int main(void)
 {
 	Driver[0].pvtCtrl.desiredPos = track2;
@@ -146,11 +148,37 @@ int main(void)
 //	Driver[0].pvtCtrl.desiredTime[8] = 200;
 //	Driver[0].pvtCtrl.desiredTime[9] = 200;	
 //	Driver[0].velCtrl.desiredVel[CMD] = 600.0f;
+
+	TIM_Delayms(TIM3,1000);	
+
 	while(1)
 	{
 		
 		CANRespond();
-		
+		switch(status)
+		{
+			case 0:
+				if(Driver[0].pvtCtrl.flag == 0x00000001)
+				{
+						for(int i = 0; i < 20; i++)
+						{
+							track[i] = 0;
+						}
+				}
+				if(Driver[0].pvtCtrl.flag == 0x0000000)
+				{
+					for(int i = 0; i < 20; i++)
+					{
+						track2[i] = 0;
+					}
+				}
+//				Driver[0].pvtCtrl.flag = 1;
+//				status = 1;
+				break;
+			case 1:
+				
+				break;
+		}
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
 		TIM_Delayms(TIM3,1);
 //		Driver[0].posCtrl.desiredPos = 0; 

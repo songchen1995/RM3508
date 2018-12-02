@@ -453,10 +453,12 @@ float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
 		if(pvtPid->desiredPos == track)
 		{
 			pvtPid->desiredPos = track2;
+			pvtPid->flag = 0x00000001;
 		}
 		else if(pvtPid->desiredPos == track2)
 		{
 			pvtPid->desiredPos = track;
+			pvtPid->flag = 0x00000000;
 		}
 		
 //		velPidOut = 0;
