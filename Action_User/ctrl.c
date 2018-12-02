@@ -88,18 +88,18 @@ void DriverInit(void)
 		{
 			//Driver[i].unitMode = HOMING_MODE;
 		 // Driver[i].unitMode = POSITION_CONTROL_MODE;
-		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
+		 // Driver[i].unitMode = SPEED_CONTROL_MODE;
 			Driver[i].unitMode = PVT_MODE;
 			Driver[i].velCtrl.kp = VEL_KP_3508;
-			Driver[i].velCtrl.ki = VEL_KI_3508;
+			Driver[i].velCtrl.ki = VEL_KI_3508 * 1;
 			Driver[i].velCtrl.maxOutput = CURRENT_MAX_3508;
 			Driver[i].velCtrl.desiredVel[MAX_V] = VEL_MAX_3508;
 			Driver[i].posCtrl.kd = POS_KD_3508;
 			Driver[i].posCtrl.kp = POS_KP_3508;
 			Driver[i].homingMode.current = 0.8f;
 			
-			Driver[i].velCtrl.acc = 1000.0f;
-			Driver[i].velCtrl.dec = 1000.0f;
+			Driver[i].velCtrl.acc = 100.0f;
+			Driver[i].velCtrl.dec = 100.0f;
 			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
 			Driver[i].posCtrl.desiredPos = 0.0f;
 			Driver[i].posCtrl.acc = Driver[i].velCtrl.dec;
@@ -265,7 +265,7 @@ void MotorCtrl(void)
 			PerCur[i] = 0.0f;
 	}
 	SetCur(PerCur);
-	
+//	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)PerCur[0]);	
 //	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*100.0f));
 //	DMA_Send_Data((int)(Driver[2].velCtrl.speed) ,(int)(Driver[2].posCtrl.actualPos/10.0f));
 //	DMA_Send_Data((int)(Driver[2].velCtrl.speed) ,(int)(Driver[2].posCtrl.output));
@@ -428,16 +428,13 @@ float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
 	static float posPidOut = 0.0f, velPidOut  = 0, pvtPidOut = 0;
 	static float desiredVel = 0.0f,signVel = 1.0f;
 	static int index = 1,cnt = 0;
-	static float kp = 0.01,ki = -0.0001,posErr = 0,posErrLast = 0;
-	if(index < 50)
+	static float kp = 0.1,ki = 0.00001,posErr = 0,posErrLast = 0;
+	if(index < 22)
 	{
 		if(cnt < pvtPid->desiredTime[index])
 		{
 			velPidOut = (pvtPid->desiredPos[index] - pvtPid->desiredPos[index-1]) / (pvtPid->desiredTime[index]);
-			posErr = pvtPid->desiredPos[index] - posPid->actualPos;
-			posPidOut = posErr * kp;    
 			cnt++;
-//			posErrLast = posErr;
 		}
 		else
 		{
@@ -445,12 +442,19 @@ float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
 			cnt = 0;
 		}
 	}
-	if(index == 50)
+
+	posErr = pvtPid->desiredPos[index] - posPid->actualPos;
+	posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
+	posErrLast = posErr;
+	
+	if(index == 22)
 	{
-		index = 1;
+		index = 22;
+//		velPidOut = 0;
 		cnt = 0;
 	}
-	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)pvtPid->desiredPos[index],(int)posPid->actualPos);	
+	
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)velPid->desiredVel[CMD],(int)velPid->speed,(int)pvtPid->desiredPos[index-1],(int)posPid->actualPos);	
 	
 //	DMA_Send_Data(signVel,(int)pvtPid->desiredPos);
 	pvtPid->output = MaxMinLimit(velPidOut + posPidOut,pvtPid -> velLimit);
