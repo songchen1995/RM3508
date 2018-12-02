@@ -54,32 +54,44 @@ int main(void)
 {
 	init();
 //	ZeroPosInit();
+	for(int i = 0; i < 50; i ++)
+	{
+		Driver[0].pvtCtrl.desiredPos[i] = 30.f * 8192.f * sinf(i / 50.f * 2.f * PI);
+		Driver[0].pvtCtrl.desiredTime[i] = 10;
+//		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].pvtCtrl.desiredPos[i],(int)Driver[0].pvtCtrl.desiredTime[i]);	
+	}
 
+//	Driver[0].pvtCtrl.desiredPos[0] = 0;
+//	Driver[0].pvtCtrl.desiredPos[1] = 10 * 8192.f;
+//	Driver[0].pvtCtrl.desiredPos[2] = 20 * 8192.f;
+//	Driver[0].pvtCtrl.desiredPos[3] = 30 * 8192.f;
+//	Driver[0].pvtCtrl.desiredPos[4] = 40 * 8192.f;
+//	
+//	Driver[0].pvtCtrl.desiredPos[5] = 30 * 8192.f;
+//	Driver[0].pvtCtrl.desiredPos[6] = 20 * 8192.f;
+//	Driver[0].pvtCtrl.desiredPos[7] = 10 * 8192.f;
+//	Driver[0].pvtCtrl.desiredPos[8] = 0 * 8192.f;
+//	Driver[0].pvtCtrl.desiredPos[9] = 0 * 8192.f;
+//	Driver[0].pvtCtrl.desiredVel[0] = 0;
+//	Driver[0].pvtCtrl.desiredVel[1] = 100;
+//	Driver[0].pvtCtrl.desiredVel[2] = 0 * 8192.f;
 	
+//	Driver[0].pvtCtrl.desiredTime[0] = 200;
+//	Driver[0].pvtCtrl.desiredTime[1] = 200;
+//	Driver[0].pvtCtrl.desiredTime[2] = 200;
+//	Driver[0].pvtCtrl.desiredTime[3] = 200;
+//	Driver[0].pvtCtrl.desiredTime[4] = 200;
+//	Driver[0].pvtCtrl.desiredTime[5] = 200;
+//	Driver[0].pvtCtrl.desiredTime[6] = 200;
+//	Driver[0].pvtCtrl.desiredTime[7] = 200;
+//	Driver[0].pvtCtrl.desiredTime[8] = 200;
+//	Driver[0].pvtCtrl.desiredTime[9] = 200;	
 	while(1)
 	{
 		
 		CANRespond();
-		switch(status)
-		{
-			case 0 : 
-			Driver[0].pvtCtrl.desiredPos = 1.f * 8192.f;
-			Driver[0].pvtCtrl.desiredVel = 100.f;		
-			if(Driver[0].posCtrl.actualPos >= 1.f * 8192.f)
-			{
-				status = 1;
-			}
-			break;
-			case 1:
-			Driver[0].pvtCtrl.desiredPos = 38.f * 8192.f;
-			Driver[0].pvtCtrl.desiredVel = 0.f;
-			if(Driver[0].posCtrl.actualPos <= 0.f * 8192.f)
-			{
-				status = 2;
-			}
-			break;
-		}
-		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
+		
+//		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
 		TIM_Delayms(TIM3,1);
 //		Driver[0].posCtrl.desiredPos = 0; 
 //		TIM_Delayms(TIM3,500);

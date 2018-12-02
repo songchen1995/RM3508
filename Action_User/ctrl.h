@@ -147,11 +147,11 @@ typedef struct
   */
 typedef struct
 {
-	float desiredVel;
+	float desiredVel[4];
 	
-	float desiredPos;
+	float desiredPos[50];
 	
-	float desiredTime;
+	float desiredTime[50];
 	
 	float desiredVelLast;
 	

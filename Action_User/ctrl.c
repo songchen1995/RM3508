@@ -388,30 +388,30 @@ float PosCtrl(PosCtrlType *posPid)
   * @param  None
   * @retval 
   */
-float PVTPosCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid)
-{
-	float posPidOut = 0.0f;
-	float desiredVel = 0.0f,signVel = 1.0f;
-	
-	/******************************݆̣λ׃۷ˤԶ**************************************/
-	pvtPid->posErr = pvtPid->desiredPos - posPid->actualPos;				
-	posPidOut = pvtPid->posErr * pvtPid->pos_kp + pvtPid->pos_kd * (pvtPid->posErr-pvtPid->posErrLast);		
-	pvtPid->posErrLast = posPid->posErr;
-	
-	if(pvtPid->posErr < 0.0f) signVel = -1.0f;	
-	
-	
-	desiredVel = signVel*__sqrtf(2.0f*0.7f*posPid->acc*signVel*pvtPid->posErr);
-		
-	if(fabsf(desiredVel) < fabsf(posPidOut))
-		posPidOut = desiredVel;
+//float PVTPosCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid)
+//{
+//	float posPidOut = 0.0f;
+//	float desiredVel = 0.0f,signVel = 1.0f;
+//	
+//	/******************************݆̣λ׃۷ˤԶ**************************************/
+//	pvtPid->posErr = pvtPid->desiredPos - posPid->actualPos;				
+//	posPidOut = pvtPid->posErr * pvtPid->pos_kp + pvtPid->pos_kd * (pvtPid->posErr-pvtPid->posErrLast);		
+//	pvtPid->posErrLast = posPid->posErr;
+//	
+//	if(pvtPid->posErr < 0.0f) signVel = -1.0f;	
+//	
+//	
+//	desiredVel = signVel*__sqrtf(2.0f*0.7f*posPid->acc*signVel*pvtPid->posErr);
+//		
+//	if(fabsf(desiredVel) < fabsf(posPidOut))
+//		posPidOut = desiredVel;
 
-//	if(fabsf(posPid->posErr) <= 200.0f)		posPidOut = 0.0f;
-	
-	posPid->output = MaxMinLimit(posPidOut,posPid->posVel);
-	
-	return posPid->output;
-}
+////	if(fabsf(posPid->posErr) <= 200.0f)		posPidOut = 0.0f;
+//	
+//	posPid->output = MaxMinLimit(posPidOut,posPid->posVel);
+//	
+//	return posPid->output;
+//}
 
 
 /**
@@ -419,51 +419,41 @@ float PVTPosCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid)
   * @param  None
   * @retval 
   */
-//速度和位置的闭环
+//速度和位置的闭环(时间分段，PID平滑)
+//CIRCULAR MODE
 //delp,delv异号没有意义
+
 float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
-	float posPidOut = 0.0f, velPidOut  = 0, pvtPidOut = 0;
+	static float posPidOut = 0.0f, velPidOut  = 0, pvtPidOut = 0;
 	static float desiredVel = 0.0f,signVel = 1.0f;
-	
-
-	if(pvtPid->desiredPos != pvtPid->desiredPosLast )
+	static int index = 1,cnt = 0;
+	static float kp = 0.01,ki = -0.0001,posErr = 0,posErrLast = 0;
+	if(index < 50)
 	{
-		if(pvtPid->desiredPos - pvtPid->desiredPosLast  < 0.01f)
+		if(cnt < pvtPid->desiredTime[index])
 		{
-			signVel = -1.f;
-			pvtPid->desiredPosLast =  pvtPid->desiredPos;
+			velPidOut = (pvtPid->desiredPos[index] - pvtPid->desiredPos[index-1]) / (pvtPid->desiredTime[index]);
+			posErr = pvtPid->desiredPos[index] - posPid->actualPos;
+			posPidOut = posErr * kp;    
+			cnt++;
+//			posErrLast = posErr;
 		}
-		else if(pvtPid->desiredPos - pvtPid->desiredPosLast> 0.01f)
+		else
 		{
-			signVel = 1.f;
-			pvtPid->desiredPosLast =  pvtPid->desiredPos;
+			index++;
+			cnt = 0;
 		}
 	}
-	//使用串行PID进行(p,v)控制
-	//到达对应(p,v)，点后，不再对p闭环，而只对v闭环
-	//在完成一个目标点之前不会进行下一次规划
-	posPidOut = PVTPosCtrl(pvtPid,posPid);
-	velPidOut = pvtPid->desiredVel;
-	if(signVel == 1.f)
+	if(index == 50)
 	{
-		if(pvtPid->desiredPos - posPid->actualPos <= 0.f)
-		{
-			posPidOut = 0;
-			//signVel = 0.f;
-		}
-	}	
-	else if(signVel == -1.f)
-	{
-		if(pvtPid->desiredPos - posPid->actualPos >= 0.f)
-		{
-			posPidOut = 0;
-			//signVel = 0.f;
-		}
+		index = 1;
+		cnt = 0;
 	}
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)pvtPid->desiredPos[index],(int)posPid->actualPos);	
 	
 //	DMA_Send_Data(signVel,(int)pvtPid->desiredPos);
-	pvtPid->output = MaxMinLimit(posPidOut + velPidOut,pvtPid -> velLimit);
+	pvtPid->output = MaxMinLimit(velPidOut + posPidOut,pvtPid -> velLimit);
 
 	return pvtPid->output;
 }
