@@ -422,49 +422,81 @@ float PosCtrl(PosCtrlType *posPid)
 //速度和位置的闭环(时间分段，PID平滑)
 //CIRCULAR MODE
 //delp,delv异号没有意义
-extern float track[20], track2[20];
+extern float track[20], track2[20],MP[2][2];
+extern float time[20], time2[20];
 float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
 	static float posPidOut = 0.0f, velPidOut  = 0, pvtPidOut = 0;
 	static float desiredVel = 0.0f,signVel = 1.0f;
 	static int index = 1,cnt = 0;
-	static float kp = 0.1,ki = 0.00001,posErr = 0,posErrLast = 0;
-	if(index < 20)
+	static float kp = 0.01,ki = 0.35,posErr = 0,posErrLast = 0;
+	if(pvtPid->flag & 0x00001000)
 	{
-		if(cnt < pvtPid->desiredTime[index])
+		if(index < 20)
 		{
-			velPidOut = (pvtPid->desiredPos[index] - pvtPid->desiredPos[index-1]) / (pvtPid->desiredTime[index]);
-			cnt++;
-		}
-		else
+			if(cnt < pvtPid->desiredTime[index])
+			{
+				velPidOut = (pvtPid->desiredPos[index] - pvtPid->desiredPos[index-1]) / (pvtPid->desiredTime[index-1]);
+				cnt++;
+				posErr = pvtPid->desiredPos[index] - posPid->actualPos;
+				posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
+				posErrLast = posErr;
+			}
+			else
+			{
+				index++;
+				cnt = 0;
+			}
+		}	
+		else if(index == 20)
 		{
-			index++;
-			cnt = 0;
+			if(pvtPid->desiredPos == track)
+			{			
+				if(cnt < pvtPid->desiredTime[index - 1])
+				{
+					velPidOut = (MP[1][0] - MP[0][1]) / (pvtPid->desiredTime[index-1]);
+					posErr = MP[1][0] - posPid->actualPos;
+					posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
+					posErrLast = posErr;
+					cnt++;
+				}
+				else
+				{
+					pvtPid->desiredPos = track2;
+					pvtPid->desiredTime = time2;
+					pvtPid->flag |= 0x00000001;
+					index=1;
+					cnt = 0;
+				}
+			}
+			else if(pvtPid->desiredPos == track2)
+			{
+				if(cnt < pvtPid->desiredTime[index - 1])
+				{
+					velPidOut = (MP[0][0] - MP[1][1]) / (pvtPid->desiredTime[index-1]);
+					posErr = MP[0][0] - posPid->actualPos;
+					posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
+					posErrLast = posErr;
+					cnt++;
+				}
+				else
+				{
+					pvtPid->desiredPos = track;
+					pvtPid->desiredTime = time;
+					pvtPid->flag |= 0x00000000;
+					index=1;
+					cnt = 0;
+				}			
+			}
+	//		velPidOut = 0;
 		}
 	}
-
-	posErr = pvtPid->desiredPos[index] - posPid->actualPos;
-	posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
-	posErrLast = posErr;
-	
-	if(index == 20)
+	else
 	{
-		index = 0;
-		if(pvtPid->desiredPos == track)
-		{
-			pvtPid->desiredPos = track2;
-			pvtPid->flag = 0x00000001;
-		}
-		else if(pvtPid->desiredPos == track2)
-		{
-			pvtPid->desiredPos = track;
-			pvtPid->flag = 0x00000000;
-		}
-		
-//		velPidOut = 0;
 		cnt = 0;
+		velPidOut = 0;
+		posPidOut = 0;
 	}
-	
 	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)velPid->desiredVel[CMD],(int)velPid->speed,(int)pvtPid->desiredPos[index-1],(int)posPid->actualPos);	
 	
 //	DMA_Send_Data(signVel,(int)pvtPid->desiredPos);
