@@ -93,10 +93,16 @@ void CANRespond(void)
 				CanSendData(Driver[i].command.canId,txData);
 				Driver[i].command.can_status = 0;
 				break;
-
+			case 0x40004742:
+				if(CheckPtFlag(RECEIVE_BEGIN))
+				{
+					PtSecondBufferHandle();
+				}
+				break;
 			default: break;
 		}
 	}
+
 }
 
 /**
@@ -124,4 +130,93 @@ void CanSendData(int id,UnionDataType txData)
 	mbox= CAN_Transmit(CAN2, &TxMessage);         //1.4us	
 	while((CAN_TransmitStatus(CAN2, mbox)!= CAN_TxStatus_Ok));//�ȴ�238us
 }
+
+/**
+  * @brief  CanSendData
+  * @param 
+  * @param 
+  * @retval 
+  */
+void PtCanHandle(int id,UnionDataType RxData)
+{
+	static uint8_t status = 1;
+	static uint8_t N = 0;
+	if(!CheckPtFlag(RECEIVE_START_AND_MP|RECEIVE_QN))
+	{
+		status = 1;
+	}
+	switch(status)
+	{
+		case 1: 
+			SetPtFlag(SECOND_BUFFER_LOADING_CAN_BUFFER);
+			SetPtFlag(RECEIVE_START_AND_MP);
+			Driver[0].ptCtrl.MP[1] = RxData.data32[1];
+			status = 2;
+			SetPtFlag(~RECEIVE_START_AND_MP);
+			SetPtFlag(RECEIVE_QN);
+			break;
+		case 2:
+			
+			if(RxData.data32[0] & 0xB0000000)
+			{
+				Driver[0].ptCtrl.desiredPos[2][N] = ((RxData.data32[0] << 4) | ( RxData.data32[1] >> 28));  
+				N++;
+				if(N < Driver[0].ptCtrl.MP[1])
+				{
+					Driver[0].ptCtrl.desiredPos[2][N] = (RxData.data32[1] << 4) >> 4;  
+					N++;
+				}
+				else//若是在接收数组的过程当中重新从START开始，则二级缓存可以被擦写
+				{
+					status = 0;
+					N = 0;
+					SetPtFlag(~RECEIVE_QN);
+					SetPtFlag(RECEIVE_BEGIN);
+					SetPtFlag(~SECOND_BUFFER_LOADING_CAN_BUFFER);
+					SetPtFlag(FIRST_BUFFER_LOADING_SECOND_BUFFER);
+					Driver[0].ptCtrl.MP[0] = Driver[0].ptCtrl.MP[1];	
+					Driver[0].ptCtrl.MP[1] = 0;	
+				}
+			}	
+			else //做错误判断用
+			{
+		
+			}				
+			break;
+		default:
+			break;
+	}
+}
+
+void PtSecondBufferHandle(void)
+{
+	if(CheckPtFlag(FIRST_BUFFER_LOADING_SECOND_BUFFER))
+	{
+		for(int i = 0; i< Driver[0].ptCtrl.MP[1]; i++)
+		{
+			Driver[0].ptCtrl.desiredPos[1][i] = Driver[0].ptCtrl.desiredPos[2][i];
+			Driver[0].ptCtrl.desiredPos[2][i] = 0;
+		}
+		SetPtFlag(~RECEIVE_BEGIN);
+		SetPtFlag(~FIRST_BUFFER_LOADING_SECOND_BUFFER);
+		SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
+	}
+}
+
+void PtFirstBufferHandler(void)//接收完上级数组后将上级数组清空
+{
+	if(CheckPtFlag(EXECUTOR_LOADING_FIRST_BUFFER))
+	{
+		for(int i = 0; i< Driver[0].ptCtrl.MP[1]; i++)
+		{
+			Driver[0].ptCtrl.desiredPos[0][i] = Driver[0].ptCtrl.desiredPos[1][i];
+			Driver[0].ptCtrl.desiredPos[1][i] = 0;
+		}
+		Driver[0].ptCtrl.desiredTime =  Driver[0].ptCtrl.MP[0];
+		Driver[0].ptCtrl.MP[0] = 0;
+		SetPtFlag(NEW_DATA);
+		SetPtFlag(~EXECUTOR_LOADING_FIRST_BUFFER);
+	}
+}
+
 /************************ (C) COPYRIGHT 2017 ACTION *****END OF FILE****/

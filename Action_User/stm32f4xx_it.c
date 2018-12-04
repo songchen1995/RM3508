@@ -133,6 +133,15 @@ void CAN2_RX0_IRQHandler(void)
 				case 0x00005250:						//PR相对位置
 					Driver[j].posCtrl.desiredPos = Driver[j].posCtrl.actualPos + (float)(Msg1.data32[1]);
 					break;
+				case 0x00005450:  //PT
+					PtCanHandle(j,Msg1); 
+					break;
+				case 0x40004742:
+					if(CheckPtFlag(RECEIVE_BEGIN))
+					{
+						Driver[j].command.can_status = 0x40004742;	
+					}
+					break;
 				case 0x40005149:						//IQ	 读取电流
 					Driver[j].command.can_status = 0x40005149;					
 					break;

@@ -147,9 +147,7 @@ void DriverInit(void)
 	//自动车俯仰正转归位
 	Driver[0].homingMode.vel = 160.f;
 	Driver[1].homingMode.vel = 160.f;
-	Driver[0].pvtCtrl.velLimit = VEL_MAX_3508;
-	Driver[0].pvtCtrl.pos_kp = POS_KP_3508;
-	Driver[0].pvtCtrl.pos_kd = POS_KD_3508;
+
 //	Driver[0].unitMode = HOMING_MODE;
 #elif BOARD == AUTO_2006
 	Driver[0].unitMode = HOMING_MODE;
@@ -235,8 +233,8 @@ void MotorCtrl(void)
 				Driver[i].output = Driver[i].homingMode.output;
 				break;
 			case PVT_MODE:
-			  PVTCtrl(&Driver[i].pvtCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
-				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].pvtCtrl.output;
+			  PTCtrl(&Driver[i].ptCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
+				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].ptCtrl.output;
 				VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);		
 						
@@ -424,86 +422,151 @@ float PosCtrl(PosCtrlType *posPid)
 //delp,delv寮傚彿娌℃湁鎰忎箟
 extern float track[20], track2[20],MP[2][2];
 extern float time[20], time2[20];
-float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid)
+float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
 	static float posPidOut = 0.0f, velPidOut  = 0, pvtPidOut = 0;
 	static float desiredVel = 0.0f,signVel = 1.0f;
 	static int index = 1,cnt = 0;
 	static float kp = 0.01,ki = 0.35,posErr = 0,posErrLast = 0;
-	if(pvtPid->flag & 0x00001000)
-	{
-		if(index < 20)
-		{
-			if(cnt < pvtPid->desiredTime[index])
-			{
-				velPidOut = (pvtPid->desiredPos[index] - pvtPid->desiredPos[index-1]) / (pvtPid->desiredTime[index-1]);
-				cnt++;
-				posErr = pvtPid->desiredPos[index] - posPid->actualPos;
-				posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
-				posErrLast = posErr;
-			}
-			else
-			{
-				index++;
-				cnt = 0;
-			}
-		}	
-		else if(index == 20)
-		{
-			if(pvtPid->desiredPos == track)
-			{			
-				if(cnt < pvtPid->desiredTime[index - 1])
-				{
-					velPidOut = (MP[1][0] - MP[0][1]) / (pvtPid->desiredTime[index-1]);
-					posErr = MP[1][0] - posPid->actualPos;
-					posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
-					posErrLast = posErr;
-					cnt++;
-				}
-				else
-				{
-					pvtPid->desiredPos = track2;
-					pvtPid->desiredTime = time2;
-					pvtPid->flag |= 0x00000001;
-					index=1;
-					cnt = 0;
-				}
-			}
-			else if(pvtPid->desiredPos == track2)
-			{
-				if(cnt < pvtPid->desiredTime[index - 1])
-				{
-					velPidOut = (MP[0][0] - MP[1][1]) / (pvtPid->desiredTime[index-1]);
-					posErr = MP[0][0] - posPid->actualPos;
-					posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
-					posErrLast = posErr;
-					cnt++;
-				}
-				else
-				{
-					pvtPid->desiredPos = track;
-					pvtPid->desiredTime = time;
-					pvtPid->flag |= 0x00000000;
-					index=1;
-					cnt = 0;
-				}			
-			}
+	
+//	{
+//		if(index < 20)
+//		{
+//			if(cnt < ptPid->desiredTime[index])
+//			{
+//				velPidOut = (ptPid->desiredPos[0][index] - ptPid->desiredPos[index-1]) / (ptPid->desiredTime[index-1]);
+//				cnt++;
+//				posErr = ptPid->desiredPos[index] - posPid->actualPos;
+//				posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
+//				posErrLast = posErr;
+//			}
+//			else
+//			{
+//				index++;
+//				cnt = 0;
+//			}
+//		}	
+//		else if(index == 20)
+//		{
+//			if(ptPid->desiredPos == track)
+//			{			
+//				if(cnt < ptPid->desiredTime[index - 1])
+//				{
+//					velPidOut = (MP[1][0] - MP[0][1]) / (ptPid->desiredTime[index-1]);
+//					posErr = MP[1][0] - posPid->actualPos;
+//					posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
+//					posErrLast = posErr;
+//					cnt++;
+//				}
+//				else
+//				{
+//					ptPid->desiredPos[0] = track2;
+//					ptPid->desiredTime[0] = time2;
+//					ptPid->flag |= 0x00000001;
+//					index=1;
+//					cnt = 0;
+//				}
+//			}
+//			else if(pvtPid->desiredPos == track2)
+//			{
+//				if(cnt < pvtPid->desiredTime[index - 1])
+//				{
+//					velPidOut = (MP[0][0] - MP[1][1]) / (pvtPid->desiredTime[index-1]);
+//					posErr = MP[0][0] - posPid->actualPos;
+//					posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
+//					posErrLast = posErr;
+//					cnt++;
+//				}
+//				else
+//				{
+//					pvtPid->desiredPos = track;
+//					pvtPid->desiredTime = time;
+//					pvtPid->flag |= 0x00000000;
+//					index=1;
+//					cnt = 0;
+//				}			
+//			}
 	//		velPidOut = 0;
-		}
-	}
-	else
-	{
-		cnt = 0;
-		velPidOut = 0;
-		posPidOut = 0;
-	}
-	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)velPid->desiredVel[CMD],(int)velPid->speed,(int)pvtPid->desiredPos[index-1],(int)posPid->actualPos);	
+//		}
+//	}
+//	else
+//	{
+//		cnt = 0;
+//		velPidOut = 0;
+//		posPidOut = 0;
+//	}
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)velPid->desiredVel[CMD],(int)velPid->speed,(int)ptPid->desiredPos[index-1],(int)posPid->actualPos);	
 	
 //	DMA_Send_Data(signVel,(int)pvtPid->desiredPos);
-	pvtPid->output = MaxMinLimit(velPidOut + posPidOut,pvtPid -> velLimit);
+	ptPid->output = MaxMinLimit(velPidOut + posPidOut,ptPid -> velLimit);
 
-	return pvtPid->output;
+	return ptPid->output;
 }
+
+/**
+  * @brief PT FlagManagement
+  * @param  None
+  * @retval 
+  */
+void SetPtFlag(uint32_t flag)
+{
+	switch(flag)
+	{
+		case SECOND_BUFFER_LOADING_CAN_BUFFER:
+			Driver[0].ptCtrl.executeFlag |= SECOND_BUFFER_LOADING_CAN_BUFFER;
+			break;
+		case ~SECOND_BUFFER_LOADING_CAN_BUFFER:
+			Driver[0].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
+			break;
+		case FIRST_BUFFER_LOADING_SECOND_BUFFER:
+			Driver[0].ptCtrl.executeFlag |= SECOND_BUFFER_LOADING_CAN_BUFFER;
+			break;
+		case ~FIRST_BUFFER_LOADING_SECOND_BUFFER:
+			Driver[0].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
+			break;	
+		case EXECUTOR_LOADING_FIRST_BUFFER:
+			Driver[0].ptCtrl.executeFlag |= SECOND_BUFFER_LOADING_CAN_BUFFER;
+			break;
+		case ~EXECUTOR_LOADING_FIRST_BUFFER:
+			Driver[0].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
+			break;
+		case RECEIVE_START_AND_MP:
+			Driver[0].ptCtrl.executeFlag |= RECEIVE_START_AND_MP;
+			break;
+		case ~RECEIVE_START_AND_MP:
+			Driver[0].ptCtrl.executeFlag &= ~RECEIVE_START_AND_MP;
+			break;		
+		case RECEIVE_QN:
+			Driver[0].ptCtrl.executeFlag |= RECEIVE_QN;
+			break;
+		case ~RECEIVE_QN:
+			Driver[0].ptCtrl.executeFlag &= ~RECEIVE_QN;
+			break;	
+		case RECEIVE_BEGIN:
+			Driver[0].ptCtrl.executeFlag |= RECEIVE_BEGIN;
+			break;
+		case ~RECEIVE_BEGIN:
+			Driver[0].ptCtrl.executeFlag &= ~RECEIVE_BEGIN;
+			break;
+		case NEW_DATA:
+			Driver[0].ptCtrl.executeFlag |= NEW_DATA;
+			break;
+		case ~NEW_DATA:
+			Driver[0].ptCtrl.executeFlag &= ~NEW_DATA;
+			break;
+	}
+}
+
+uint8_t CheckPtFlag(uint32_t flag)
+{
+	if(Driver[0].ptCtrl.executeFlag & flag)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+
 /**
   * @brief  Homing mode
   * @param  None

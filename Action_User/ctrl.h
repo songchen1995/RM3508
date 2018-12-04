@@ -146,36 +146,28 @@ typedef struct
   * @note     
   */
 typedef struct
-{
-	float desiredVel[4];
+{	
+	int *desiredPos[3];
 	
-	float *desiredPos;
+	int desiredTime;
 	
-	float *desiredTime;
+	uint8_t cnt;
 	
-	int flag;
+	uint32_t MP[2];//[]
 	
-	float desiredVelLast;
-	
-	float desiredPosLast;
-	
-	float velLimit;
-	
-	float posErr,posErrLast;
-	
-	float velErr, velErrLast;
-	
-	float vel_kp;
-	
-	float vel_kd;
-	
-	float pos_kp;
-	
-	float pos_kd;
+	uint32_t executeFlag; 
+	//[31：29] 执行器状态；[28：26] 一级缓存区状态； [25：23] 二级缓存区状态
+	// 
+	uint8_t executeStatus;
+	//执行任务步数
 	
 	float output;
 	
-}PVTCtrlType;
+	float velLimit;
+	
+	float index;
+	
+}PTCtrlType;
 
 
 /** 
@@ -234,7 +226,7 @@ typedef struct
 	
 	PosCtrlType posCtrl;
 	
-	PVTCtrlType pvtCtrl;
+	PTCtrlType ptCtrl;
 	
 	ZeroPosInitType zeroCtrl;
 	
@@ -308,13 +300,21 @@ typedef struct
 #define  CAN_ID_NUM     5
 //�Զ�5�ų�ʼ  ����Ϊ2.5����Ϊ1.5
 
-
+/*PT模式下的Flag*****************************88*******/
+#define SECOND_BUFFER_LOADING_CAN_BUFFER 0x00000001
+#define FIRST_BUFFER_LOADING_SECOND_BUFFER  0x00000002
+#define EXECUTOR_LOADING_FIRST_BUFFER				0x00000004
+#define RECEIVE_START_AND_MP								0x00000008
+#define RECEIVE_QN													0x00000010
+#define RECEIVE_BEGIN												0x00000020//手动清除标志位
+#define NEW_DATA														0x00000080
+/*Author: Oliver********************************/
 /* Exported functions ------------------------------------------------------- */
 float 	OutPutLim(float val);
 float   VelSlope(VelCtrlType *velPid);
 float   VelPidCtrl(VelCtrlType *velPid);
 float   PosCtrl(PosCtrlType *posPid);
-float PVTCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid);
+float PTCtrl(PTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid);
 //float 	VelCtrl(float cmdVel);
 void 		VelCtrlInit(void);
 void		PosCtrlInit(void);
@@ -332,7 +332,8 @@ void    MotorOn(int n);
 void    MotorOff(int n);
 void    VelCtrlTest(float vel,int tim);
 void 		ZeroPosInit(void);
-
+void 		SetPtFlag(uint32_t flag);
+uint8_t CheckPtFlag(uint32_t flag);
 #endif
 
 /****************** (C) COPYRIGHT 2016 ACTION *****END OF FILE*************/
