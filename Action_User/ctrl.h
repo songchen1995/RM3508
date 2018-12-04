@@ -149,9 +149,13 @@ typedef struct
 {	
 	int *desiredPos[3];
 	
-	int desiredTime;
+	uint8_t desiredTime;
 	
 	uint8_t cnt;
+	
+	uint8_t runMode;
+	
+	uint8_t size;
 	
 	uint32_t MP[2];//[]
 	
@@ -163,9 +167,14 @@ typedef struct
 	
 	float output;
 	
+	float velOutput;
+	
+	float posOutput;
+	
 	float velLimit;
 	
-	float index;
+	uint8_t index;
+	
 	
 }PTCtrlType;
 
@@ -307,7 +316,15 @@ typedef struct
 #define RECEIVE_START_AND_MP								0x00000008
 #define RECEIVE_QN													0x00000010
 #define RECEIVE_BEGIN												0x00000020//手动清除标志位
+#define BEGIN_MOTION												0x00000040
 #define NEW_DATA														0x00000080
+/*Author: Oliver********************************/
+
+/*PT模式下的runMode*****************************88*******/
+#define	RUN_AND_STOP_CONTROL_MODE						0x01
+#define CIRCULAR_MODE												0x02
+#define	RUN_AND_STOP_MOTION_MODE						0x03
+#define IDLE_MODE														0x00
 /*Author: Oliver********************************/
 /* Exported functions ------------------------------------------------------- */
 float 	OutPutLim(float val);

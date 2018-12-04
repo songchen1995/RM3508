@@ -205,17 +205,42 @@ void PtSecondBufferHandle(void)
 
 void PtFirstBufferHandler(void)//接收完上级数组后将上级数组清空
 {
-	if(CheckPtFlag(EXECUTOR_LOADING_FIRST_BUFFER))
+	if(!CheckPtFlag(BEGIN_MOTION))
 	{
-		for(int i = 0; i< Driver[0].ptCtrl.MP[1]; i++)
+		if(CheckPtFlag(EXECUTOR_LOADING_FIRST_BUFFER))
 		{
-			Driver[0].ptCtrl.desiredPos[0][i] = Driver[0].ptCtrl.desiredPos[1][i];
-			Driver[0].ptCtrl.desiredPos[1][i] = 0;
+			for(int i = 0; i< Driver[0].ptCtrl.MP[1]; i++)
+			{
+				Driver[0].ptCtrl.desiredPos[0][i] = Driver[0].ptCtrl.desiredPos[1][i];
+				Driver[0].ptCtrl.desiredPos[1][i] = 0;
+			}
+			Driver[0].ptCtrl.size =  Driver[0].ptCtrl.MP[0] >> 24;
+			Driver[0].ptCtrl.runMode =  (Driver[0].ptCtrl.MP[0]<<8) >> 24;
+			Driver[0].ptCtrl.desiredTime =  (Driver[0].ptCtrl.MP[0]<<16) >> 24;
+			Driver[0].ptCtrl.MP[0] = 0;
+			SetPtFlag(BEGIN_MOTION);
+			SetPtFlag(~EXECUTOR_LOADING_FIRST_BUFFER);		
 		}
-		Driver[0].ptCtrl.desiredTime =  Driver[0].ptCtrl.MP[0];
-		Driver[0].ptCtrl.MP[0] = 0;
-		SetPtFlag(NEW_DATA);
-		SetPtFlag(~EXECUTOR_LOADING_FIRST_BUFFER);
+		else
+		{
+			if(Driver[0].ptCtrl.runMode == CIRCULAR_MODE)//循环走
+			{
+				SetPtFlag(BEGIN_MOTION);
+				Driver[0].ptCtrl.index = 0;
+				Driver[0].ptCtrl.cnt = 0;
+			}
+			else if(Driver[0].ptCtrl.runMode == RUN_AND_STOP_CONTROL_MODE)//运行完后以原速度继续向前跑
+			{
+//				SetPtFlag(BEGIN_MOTION);
+				
+			}
+			else if(Driver[0].ptCtrl.runMode == RUN_AND_STOP_MOTION_MODE)//运行完后立即停下；
+			{
+				Driver[0].ptCtrl.velOutput = 0;
+				Driver[0].ptCtrl.posOutput = 0;
+				Driver[0].ptCtrl.output = 0;
+			}
+		}
 	}
 }
 

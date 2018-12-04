@@ -41,6 +41,7 @@ void CanSendData(int id,UnionDataType txData);
 void CANRespond(void);
 void PtCanHandle(int id,UnionDataType txData);
 void PtSecondBufferHandle(void);
+void PtFirstBufferHandler(void);
 #endif
 
 /****************** (C) COPYRIGHT 2017 ACTION *****END OF FILE*************/

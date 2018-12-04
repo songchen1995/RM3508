@@ -424,81 +424,35 @@ extern float track[20], track2[20],MP[2][2];
 extern float time[20], time2[20];
 float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
-	static float posPidOut = 0.0f, velPidOut  = 0, pvtPidOut = 0;
-	static float desiredVel = 0.0f,signVel = 1.0f;
-	static int index = 1,cnt = 0;
 	static float kp = 0.01,ki = 0.35,posErr = 0,posErrLast = 0;
 	
-//	{
-//		if(index < 20)
-//		{
-//			if(cnt < ptPid->desiredTime[index])
-//			{
-//				velPidOut = (ptPid->desiredPos[0][index] - ptPid->desiredPos[index-1]) / (ptPid->desiredTime[index-1]);
-//				cnt++;
-//				posErr = ptPid->desiredPos[index] - posPid->actualPos;
-//				posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
-//				posErrLast = posErr;
-//			}
-//			else
-//			{
-//				index++;
-//				cnt = 0;
-//			}
-//		}	
-//		else if(index == 20)
-//		{
-//			if(ptPid->desiredPos == track)
-//			{			
-//				if(cnt < ptPid->desiredTime[index - 1])
-//				{
-//					velPidOut = (MP[1][0] - MP[0][1]) / (ptPid->desiredTime[index-1]);
-//					posErr = MP[1][0] - posPid->actualPos;
-//					posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
-//					posErrLast = posErr;
-//					cnt++;
-//				}
-//				else
-//				{
-//					ptPid->desiredPos[0] = track2;
-//					ptPid->desiredTime[0] = time2;
-//					ptPid->flag |= 0x00000001;
-//					index=1;
-//					cnt = 0;
-//				}
-//			}
-//			else if(pvtPid->desiredPos == track2)
-//			{
-//				if(cnt < pvtPid->desiredTime[index - 1])
-//				{
-//					velPidOut = (MP[0][0] - MP[1][1]) / (pvtPid->desiredTime[index-1]);
-//					posErr = MP[0][0] - posPid->actualPos;
-//					posPidOut = posErr * kp + (posErr - posErrLast) * ki;  
-//					posErrLast = posErr;
-//					cnt++;
-//				}
-//				else
-//				{
-//					pvtPid->desiredPos = track;
-//					pvtPid->desiredTime = time;
-//					pvtPid->flag |= 0x00000000;
-//					index=1;
-//					cnt = 0;
-//				}			
-//			}
-	//		velPidOut = 0;
-//		}
-//	}
-//	else
-//	{
-//		cnt = 0;
-//		velPidOut = 0;
-//		posPidOut = 0;
-//	}
-	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)velPid->desiredVel[CMD],(int)velPid->speed,(int)ptPid->desiredPos[index-1],(int)posPid->actualPos);	
+	if(CheckPtFlag(BEGIN_MOTION))
+	{
+		if(ptPid->index < ptPid->size)
+		{
+			if(ptPid->cnt < ptPid->desiredTime)
+			{
+				ptPid->velOutput = (ptPid->desiredPos[0][ptPid->index] - ptPid->desiredPos[0][ptPid->index-1]) / (ptPid->desiredTime);
+				ptPid->cnt++;
+				posErr = ptPid->desiredPos[0][ptPid->index] - posPid->actualPos;
+				ptPid->velOutput = posErr * kp + (posErr - posErrLast) * ki;  
+				posErrLast = posErr;				
+			}
+			else
+			{
+				ptPid->index++;
+				ptPid->cnt = 0;
+				if(ptPid->index == ptPid->size)
+				{
+					SetPtFlag(~BEGIN_MOTION);
+				}
+			}
+		}	
+	}
+	PtFirstBufferHandler();	
+//	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)velPid->desiredVel[CMD],(int)velPid->speed,(int)ptPid->desiredPos[index-1],(int)posPid->actualPos);	
 	
-//	DMA_Send_Data(signVel,(int)pvtPid->desiredPos);
-	ptPid->output = MaxMinLimit(velPidOut + posPidOut,ptPid -> velLimit);
+	ptPid->output = MaxMinLimit(ptPid->velOutput + ptPid->posOutput,ptPid -> velLimit);
 
 	return ptPid->output;
 }
