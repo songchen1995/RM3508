@@ -39,8 +39,8 @@ typedef union
 void SetCur(float* cur);
 void CanSendData(int id,UnionDataType txData);
 void CANRespond(void);
-void PtCanHandle(int id,UnionDataType txData);
-void PtSecondBufferHandle(void);
+void PtCanHandler(int id,UnionDataType txData);
+void PtSecondBufferHandler(void);
 void PtFirstBufferHandler(void);
 #endif
 

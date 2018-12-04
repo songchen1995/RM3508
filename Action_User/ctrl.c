@@ -377,51 +377,11 @@ float PosCtrl(PosCtrlType *posPid)
 }
 
 
-
-
-
-
 /**
-  * @brief PVTPos
+  * @brief PT插值运行（最大二十个点）
   * @param  None
   * @retval 
   */
-//float PVTPosCtrl(PVTCtrlType *pvtPid, PosCtrlType *posPid)
-//{
-//	float posPidOut = 0.0f;
-//	float desiredVel = 0.0f,signVel = 1.0f;
-//	
-//	/******************************݆̣λ׃۷ˤԶ**************************************/
-//	pvtPid->posErr = pvtPid->desiredPos - posPid->actualPos;				
-//	posPidOut = pvtPid->posErr * pvtPid->pos_kp + pvtPid->pos_kd * (pvtPid->posErr-pvtPid->posErrLast);		
-//	pvtPid->posErrLast = posPid->posErr;
-//	
-//	if(pvtPid->posErr < 0.0f) signVel = -1.0f;	
-//	
-//	
-//	desiredVel = signVel*__sqrtf(2.0f*0.7f*posPid->acc*signVel*pvtPid->posErr);
-//		
-//	if(fabsf(desiredVel) < fabsf(posPidOut))
-//		posPidOut = desiredVel;
-
-////	if(fabsf(posPid->posErr) <= 200.0f)		posPidOut = 0.0f;
-//	
-//	posPid->output = MaxMinLimit(posPidOut,posPid->posVel);
-//	
-//	return posPid->output;
-//}
-
-
-/**
-  * @brief PVT
-  * @param  None
-  * @retval 
-  */
-//速度和位置的闭环(时间分段，PID平滑)
-//CIRCULAR MODE
-//delp,delv异号没有意义
-extern float track[20], track2[20],MP[2][2];
-extern float time[20], time2[20];
 float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
 	static float kp = 0.01,ki = 0.35,posErr = 0,posErrLast = 0;

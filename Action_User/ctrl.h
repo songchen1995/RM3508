@@ -321,10 +321,9 @@ typedef struct
 /*Author: Oliver********************************/
 
 /*PT模式下的runMode*****************************88*******/
-#define	RUN_AND_STOP_CONTROL_MODE						0x01
-#define CIRCULAR_MODE												0x02
-#define	RUN_AND_STOP_MOTION_MODE						0x03
-#define IDLE_MODE														0x00
+#define	SINGLE_MODE						0x00
+#define CIRCULAR_MODE												0x01
+#define	RUN_AND_STOP_MOTION_MODE						0x02
 /*Author: Oliver********************************/
 /* Exported functions ------------------------------------------------------- */
 float 	OutPutLim(float val);

@@ -167,7 +167,6 @@ int main(void)
 		CANRespond();
 
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
-		TIM_Delayms(TIM3,1);
 //		Driver[0].posCtrl.desiredPos = 0; 
 //		TIM_Delayms(TIM3,500);
 //		VelCtrlTest(300.0f,200);

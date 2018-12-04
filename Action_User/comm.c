@@ -96,8 +96,9 @@ void CANRespond(void)
 			case 0x40004742:
 				if(CheckPtFlag(RECEIVE_BEGIN))
 				{
-					PtSecondBufferHandle();
+					PtSecondBufferHandler();
 				}
+				Driver[i].command.can_status = 0;
 				break;
 			default: break;
 		}
@@ -137,7 +138,7 @@ void CanSendData(int id,UnionDataType txData)
   * @param 
   * @retval 
   */
-void PtCanHandle(int id,UnionDataType RxData)
+void PtCanHandler(int id,UnionDataType RxData)
 {
 	static uint8_t status = 1;
 	static uint8_t N = 0;
@@ -188,7 +189,7 @@ void PtCanHandle(int id,UnionDataType RxData)
 	}
 }
 
-void PtSecondBufferHandle(void)
+void PtSecondBufferHandler(void)
 {
 	if(CheckPtFlag(FIRST_BUFFER_LOADING_SECOND_BUFFER))
 	{
@@ -229,7 +230,7 @@ void PtFirstBufferHandler(void)//接收完上级数组后将上级数组清空
 				Driver[0].ptCtrl.index = 0;
 				Driver[0].ptCtrl.cnt = 0;
 			}
-			else if(Driver[0].ptCtrl.runMode == RUN_AND_STOP_CONTROL_MODE)//运行完后以原速度继续向前跑
+			else if(Driver[0].ptCtrl.runMode == SINGLE_MODE)//运行完后以原速度继续向前跑
 			{
 //				SetPtFlag(BEGIN_MOTION);
 				
@@ -243,5 +244,7 @@ void PtFirstBufferHandler(void)//接收完上级数组后将上级数组清空
 		}
 	}
 }
+
+
 
 /************************ (C) COPYRIGHT 2017 ACTION *****END OF FILE****/
