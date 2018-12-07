@@ -88,8 +88,8 @@ void DriverInit(void)
 		{
 			//Driver[i].unitMode = HOMING_MODE;
 		 // Driver[i].unitMode = POSITION_CONTROL_MODE;
-		 // Driver[i].unitMode = SPEED_CONTROL_MODE;
-			Driver[i].unitMode = PVT_MODE;
+		  Driver[i].unitMode = SPEED_CONTROL_MODE;
+			//Driver[i].unitMode = PVT_MODE;
 			Driver[i].velCtrl.kp = VEL_KP_3508;
 			Driver[i].velCtrl.ki = VEL_KI_3508 * 1;
 			Driver[i].velCtrl.maxOutput = CURRENT_MAX_3508;
@@ -100,7 +100,7 @@ void DriverInit(void)
 			
 			Driver[i].velCtrl.acc = 100.0f;
 			Driver[i].velCtrl.dec = 100.0f;
-			Driver[i].velCtrl.desiredVel[CMD] = 250.0f;
+			Driver[i].velCtrl.desiredVel[CMD] = 0.0f;
 			Driver[i].posCtrl.desiredPos = 0.0f;
 			Driver[i].posCtrl.acc = Driver[i].velCtrl.dec;
 			Driver[i].posCtrl.posVel = 250.0f;
