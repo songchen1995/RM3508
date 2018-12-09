@@ -88,8 +88,8 @@ void DriverInit(void)
 		{
 			//Driver[i].unitMode = HOMING_MODE;
 		 // Driver[i].unitMode = POSITION_CONTROL_MODE;
-		  Driver[i].unitMode = SPEED_CONTROL_MODE;
-			//Driver[i].unitMode = PVT_MODE;
+		 // Driver[i].unitMode = SPEED_CONTROL_MODE;
+			Driver[i].unitMode = PT_MODE;
 			Driver[i].velCtrl.kp = VEL_KP_3508;
 			Driver[i].velCtrl.ki = VEL_KI_3508 * 1;
 			Driver[i].velCtrl.maxOutput = CURRENT_MAX_3508;
@@ -147,7 +147,7 @@ void DriverInit(void)
 	//自动车俯仰正转归位
 	Driver[0].homingMode.vel = 160.f;
 	Driver[1].homingMode.vel = 160.f;
-
+	Driver[0].ptCtrl.velLimit = 100.f;
 //	Driver[0].unitMode = HOMING_MODE;
 #elif BOARD == AUTO_2006
 	Driver[0].unitMode = HOMING_MODE;
@@ -224,7 +224,8 @@ void MotorCtrl(void)
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);
 				break;
 			case SPEED_CONTROL_MODE:
-	//			Driver[i].output = VelCtrl(VelSlope(Driver[i].velCtrl.desiredVel[CMD]));
+//				Driver[i].output = VelCtrl(VelSlope(Driver[i].velCtrl.desiredVel[CMD]));
+				USART_OUT(USART3,(uint8_t*)"%d\r\n",(int)Driver[0].posCtrl.actualPos);
 				VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);
 				break;
@@ -232,7 +233,7 @@ void MotorCtrl(void)
 				HomingMode(&Driver[i]);
 				Driver[i].output = Driver[i].homingMode.output;
 				break;
-			case PVT_MODE:
+			case PT_MODE:
 			  PTCtrl(&Driver[i].ptCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
 				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].ptCtrl.output;
 				VelSlope(&Driver[i].velCtrl);

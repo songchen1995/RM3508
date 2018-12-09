@@ -147,7 +147,7 @@ typedef struct
   */
 typedef struct
 {	
-	int *desiredPos[3];
+	int desiredPos[3][20];
 	
 	uint8_t desiredTime;
 	
@@ -295,7 +295,7 @@ typedef struct
 #define  TORQUE_CONTROL_MODE			3
 #define  ZERO_POSITION_INIT_MODE       4
 #define  HOMING_MODE							6
-#define  PVT_MODE									7
+#define  PT_MODE									7
 
 //区别使用斜坡前后的速度
 #define  CMD   0
