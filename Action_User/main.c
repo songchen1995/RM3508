@@ -53,25 +53,24 @@ void init(void)
 
 
 
-//float MP[2][2];
-//float time2[20]=
-//{
-//	7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
-//};
-//float time[20]={
-//	5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
-//};
+
 int status;
 int main(void)
 {
 //	Driver[0].ptCtrl.desiredPos[]
-//	init();
+	init();
   PtStructInit();
-	RaiseTest();
-	while(1)
+//	RaiseTest();
+//	ExecutorLoadingFirstBufferTest();
+//	Driver[0].velCtrl.desiredVel[SOFT] = -VEL_MAX_3508; 
+//	TIM_Delayms(TIM3,100);
+//	Driver[0].velCtrl.desiredVel[SOFT] = 0;
+
+ 	while(1)
 	{
 		
 		CANRespond();
+		BufferExchangeTest();
 //		Driver[0].velCtrl.desiredVel[CMD] = 0;
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
 //		Driver[0].posCtrl.desiredPos = 0; 

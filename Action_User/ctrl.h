@@ -318,12 +318,19 @@ typedef struct
 #define RECEIVE_BEGIN												0x00000020//手动清除标志位
 #define BEGIN_MOTION												0x00000040
 #define NEW_DATA														0x00000080
+#define ACTION_READY_TO_COMPLETE						0x00000100//即将完成一次动作
+#define ACTION_COMPLETE											0x00000200//完成一次动作,手动清除标志位（接收到一次新指令清除标志位）
 /*Author: Oliver********************************/
 
-/*PT模式下的runMode*****************************88*******/
+/*PT模式下的runMode************************************/
 #define	SINGLE_MODE						0x00
 #define CIRCULAR_MODE												0x01
 #define	RUN_AND_STOP_MOTION_MODE						0x02
+
+/*PT模式下的位置信息的data buf************************************/
+#define POS_SECOND_BUFFER	0x02
+#define POS_FIRST_BUFFER 0x01
+#define POS_EXECUTOR 0x00
 /*Author: Oliver********************************/
 /* Exported functions ------------------------------------------------------- */
 float 	OutPutLim(float val);

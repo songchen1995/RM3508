@@ -149,6 +149,7 @@ void PtCanHandler(int id,UnionDataType RxData)
 	switch(status)
 	{
 		case 1: 
+			SetPtFlag(~ACTION_COMPLETE);
 			SetPtFlag(SECOND_BUFFER_LOADING_CAN_BUFFER);
 			SetPtFlag(RECEIVE_START_AND_MP);
 			Driver[0].ptCtrl.MP[1] = RxData.data32[1];
@@ -160,11 +161,11 @@ void PtCanHandler(int id,UnionDataType RxData)
 			
 			if(RxData.data32[0] & 0xB0000000)
 			{
-				Driver[0].ptCtrl.desiredPos[2][N] = ((RxData.data32[0] << 4) | ( RxData.data32[1] >> 28));  
+				Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][N] = ((RxData.data32[0] << 4) | ( RxData.data32[1] >> 28));  
 				N++;
 				if(N < Driver[0].ptCtrl.MP[1])
 				{
-					Driver[0].ptCtrl.desiredPos[2][N] = (RxData.data32[1] << 4) >> 4;  
+					Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][N] = (RxData.data32[1] << 4) >> 4;  
 					N++;
 				}
 				else//若是在接收数组的过程当中重新从START开始，则二级缓存可以被擦写
@@ -195,8 +196,8 @@ void PtSecondBufferHandler(void)
 	{
 		for(int i = 0; i< Driver[0].ptCtrl.MP[1]; i++)
 		{
-			Driver[0].ptCtrl.desiredPos[1][i] = Driver[0].ptCtrl.desiredPos[2][i];
-			Driver[0].ptCtrl.desiredPos[2][i] = 0;
+			Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][i];
+			Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][i] = 0;
 		}
 		SetPtFlag(~RECEIVE_BEGIN);
 		SetPtFlag(~FIRST_BUFFER_LOADING_SECOND_BUFFER);
@@ -210,17 +211,19 @@ void PtFirstBufferHandler(void)//接收完上级数组后将上级数组清空
 	{
 		if(CheckPtFlag(EXECUTOR_LOADING_FIRST_BUFFER))
 		{
-			for(int i = 0; i< Driver[0].ptCtrl.MP[1]; i++)
-			{
-				Driver[0].ptCtrl.desiredPos[0][i] = Driver[0].ptCtrl.desiredPos[1][i];
-				Driver[0].ptCtrl.desiredPos[1][i] = 0;
-			}
 			Driver[0].ptCtrl.size =  Driver[0].ptCtrl.MP[0] >> 24;
 			Driver[0].ptCtrl.runMode =  (Driver[0].ptCtrl.MP[0]<<8) >> 24;
 			Driver[0].ptCtrl.desiredTime =  (Driver[0].ptCtrl.MP[0]<<16) >> 24;
 			Driver[0].ptCtrl.MP[0] = 0;
-			SetPtFlag(BEGIN_MOTION);
-			SetPtFlag(~EXECUTOR_LOADING_FIRST_BUFFER);		
+			for(int i = 0; i< Driver[0].ptCtrl.size; i++)//一级缓冲加载
+			{
+				Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i];
+				Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = 0;
+			}
+			SetPtFlag(BEGIN_MOTION);//执行器执行
+			SetPtFlag(~EXECUTOR_LOADING_FIRST_BUFFER);	
+			SetPtFlag(~ACTION_READY_TO_COMPLETE);
+			Driver[0].ptCtrl.index = 0;
 		}
 		else
 		{
@@ -240,8 +243,10 @@ void PtFirstBufferHandler(void)//接收完上级数组后将上级数组清空
 				Driver[0].ptCtrl.velOutput = 0;
 				Driver[0].ptCtrl.posOutput = 0;
 				Driver[0].ptCtrl.output = 0;
+				Driver[0].ptCtrl.index = 0;
 			}
 		}
+		SetPtFlag(~ACTION_READY_TO_COMPLETE);
 	}
 }
 

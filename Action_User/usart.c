@@ -344,9 +344,11 @@ void DMA_Send_Data(int dat1,int dat2)
 			"%d"	十进制	   USART_OUT(USART1, "a=%d",10)
 * 调用方法：无 
 ****************************************************************************/
+
 void USART_OUT(USART_TypeDef* USARTx,const uint8_t *Data,...){ 
 	const char *s;
     int d;
+		uint32_t x;
     char buf[16];
     va_list ap;
     va_start(ap, Data);
@@ -388,6 +390,17 @@ void USART_OUT(USART_TypeDef* USARTx,const uint8_t *Data,...){
 					}
 					Data++;
                 	break;
+				case 'x':
+					x = va_arg(ap, int);
+				
+					itoa((x >> 24), buf, 10);
+					
+					itoa(d, buf, 10);
+//					USART_SendData(USARTx,(x >> 24));
+//					USART_SendData(USARTx,(x << 8) >> 24);	
+//					USART_SendData(USARTx,(x << 16) >> 24);
+//					USART_SendData(USARTx,(x << 24) >> 24);
+				break;
 				default:
 					Data++;
 				    break;

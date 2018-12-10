@@ -88,7 +88,7 @@ void DriverInit(void)
 		{
 			//Driver[i].unitMode = HOMING_MODE;
 		 // Driver[i].unitMode = POSITION_CONTROL_MODE;
-		 // Driver[i].unitMode = SPEED_CONTROL_MODE;
+		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
 			Driver[i].unitMode = PT_MODE;
 			Driver[i].velCtrl.kp = VEL_KP_3508;
 			Driver[i].velCtrl.ki = VEL_KI_3508 * 1;
@@ -225,8 +225,8 @@ void MotorCtrl(void)
 				break;
 			case SPEED_CONTROL_MODE:
 //				Driver[i].output = VelCtrl(VelSlope(Driver[i].velCtrl.desiredVel[CMD]));
-				USART_OUT(USART3,(uint8_t*)"%d\r\n",(int)Driver[0].posCtrl.actualPos);
-				VelSlope(&Driver[i].velCtrl);
+				USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Motor[0].cur);
+//				VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);
 				break;
 			case HOMING_MODE:
@@ -393,10 +393,18 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 		{
 			if(ptPid->cnt < ptPid->desiredTime)
 			{
-				ptPid->velOutput = (ptPid->desiredPos[0][ptPid->index] - ptPid->desiredPos[0][ptPid->index-1]) / (ptPid->desiredTime);
+				if(ptPid->index == 0)
+				{
+					ptPid->velOutput = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos) / ptPid->desiredTime;
+				}
+				else
+				{
+					ptPid->velOutput = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - ptPid->desiredPos[POS_EXECUTOR][ptPid->index-1]) / (ptPid->desiredTime);
+				}	
+				
 				ptPid->cnt++;
-				posErr = ptPid->desiredPos[0][ptPid->index] - posPid->actualPos;
-				ptPid->velOutput = posErr * kp + (posErr - posErrLast) * ki;  
+				posErr = ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos;
+				ptPid->posOutput = posErr * kp + (posErr - posErrLast) * ki;  
 				posErrLast = posErr;				
 			}
 			else
@@ -406,12 +414,18 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 				if(ptPid->index == ptPid->size)
 				{
 					SetPtFlag(~BEGIN_MOTION);
+					SetPtFlag(ACTION_COMPLETE); //完成标志位被置上
+				}
+				if(ptPid->index >= ptPid->size - 1)//即将完成标志位被置上
+				{
+					SetPtFlag(ACTION_READY_TO_COMPLETE);
 				}
 			}
 		}	
 	}
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)Driver[0].ptCtrl.executeFlag,(int)Driver[0].ptCtrl.index);	
 	PtFirstBufferHandler();	
-//	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)velPid->desiredVel[CMD],(int)velPid->speed,(int)ptPid->desiredPos[index-1],(int)posPid->actualPos);	
+	
 	
 	ptPid->output = MaxMinLimit(ptPid->velOutput + ptPid->posOutput,ptPid -> velLimit);
 
@@ -440,10 +454,10 @@ void SetPtFlag(uint32_t flag)
 			Driver[0].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
 			break;	
 		case EXECUTOR_LOADING_FIRST_BUFFER:
-			Driver[0].ptCtrl.executeFlag |= SECOND_BUFFER_LOADING_CAN_BUFFER;
+			Driver[0].ptCtrl.executeFlag |= EXECUTOR_LOADING_FIRST_BUFFER;
 			break;
 		case ~EXECUTOR_LOADING_FIRST_BUFFER:
-			Driver[0].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
+			Driver[0].ptCtrl.executeFlag &= ~EXECUTOR_LOADING_FIRST_BUFFER;
 			break;
 		case RECEIVE_START_AND_MP:
 			Driver[0].ptCtrl.executeFlag |= RECEIVE_START_AND_MP;
@@ -468,6 +482,24 @@ void SetPtFlag(uint32_t flag)
 			break;
 		case ~NEW_DATA:
 			Driver[0].ptCtrl.executeFlag &= ~NEW_DATA;
+			break;
+		case BEGIN_MOTION:
+			Driver[0].ptCtrl.executeFlag |= BEGIN_MOTION;
+			break;
+		case ~BEGIN_MOTION:
+			Driver[0].ptCtrl.executeFlag &= ~BEGIN_MOTION;
+			break;
+		case ACTION_COMPLETE:
+			Driver[0].ptCtrl.executeFlag |= ACTION_COMPLETE;
+			break;
+		case ~ACTION_COMPLETE:
+			Driver[0].ptCtrl.executeFlag &= ~ACTION_COMPLETE;
+			break;		
+		case ACTION_READY_TO_COMPLETE:
+			Driver[0].ptCtrl.executeFlag |= ACTION_READY_TO_COMPLETE;
+			break;
+		case ~ACTION_READY_TO_COMPLETE:
+			Driver[0].ptCtrl.executeFlag &= ~ACTION_READY_TO_COMPLETE;
 			break;
 	}
 }

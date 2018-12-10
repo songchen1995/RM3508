@@ -1,6 +1,8 @@
 #include "four_leg.h"
 #include "ctrl.h"
 #include "string.h"
+#include "timer.h"
+#include "usart.h"
 float track2[20]={
 -27125.08277	,
 -23599.66297	,
@@ -48,52 +50,124 @@ float track[20] = {
 };
 
 
-float RaiseUp[] = 
+float RaiseUp[] = //单位：角度
 {
-	0,
-	5,
-	10,
-	15,
-	20,
-	25,
-	30,
-	35,
-	40,
-	45,
-	45,
-	40,
-	35,
-	30,
-	25,
-	20,
-	15,
-	10,
-	5,
-	0
+0,	3,	6,	9,	12,
+15,	18,	21,	24,	27,
+30,	33,	36,	39,	42,
+45,	48,	51,	54,	57,
+};
+float RaiseDown[] = 
+{
+59,	54,	51,	48,	45,
+42,	39,	36,	33,	30,
+27,	24,	21,	18,	15,
+12,	9,	6,	3,	0,
+
 };
 
-extern DriverType *Driver;
+
+extern DriverType Driver[8];
 
 /*进行四足机器人的单腿测试，模拟主控*******************************/
 
 void PtStructInit(void)
 {
 	memset(&Driver[0].ptCtrl,0,sizeof(Driver[0].ptCtrl));
-	Driver[0].ptCtrl.velLimit = 100.f;
+	Driver[0].ptCtrl.velLimit = VEL_MAX_3508;
+	Driver[0].ptCtrl.index = 0;
 }
 
 void RaiseTest(void)
 {
 	for(int i = 0; i < 20;i++)
 	{
-		Driver[0].ptCtrl.desiredPos[0][i] = -RaiseUp[i] / KNEE_RATIO / M3508_RATIO;	
+		Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360 * 8192)/ KNEE_RATIO / M3508_RATIO;	
 	}
-	Driver[0].ptCtrl.desiredTime = 200;
+	Driver[0].ptCtrl.desiredTime = 50;
 	Driver[0].ptCtrl.runMode = CIRCULAR_MODE;
 	Driver[0].ptCtrl.size = 20;
+	Driver[0].ptCtrl.index = 0;
 	SetPtFlag(BEGIN_MOTION);
 }
 
+void ExecutorLoadingFirstBufferTest(void)
+{
+	for(int i = 0; i < 20;i++)
+	{
+		Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360 * 8192)/ KNEE_RATIO / M3508_RATIO;	
+	}
+	Driver[0].ptCtrl.MP[0] = 0x14003200;//20 size   50 周期
+	Driver[0].ptCtrl.index = 0;
+	SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
+}
+//放于while循环当中,测试数组衔接是否正常
+void BufferExchangeTest(void)
+{
+	static int status = 0;
+	switch(status)
+	{
+		case 0:
+			Driver[0].ptCtrl.desiredTime = 50;
+			Driver[0].ptCtrl.runMode = SINGLE_MODE;
+			Driver[0].ptCtrl.size = 20;
+			for(int i = 0; i < Driver[0].ptCtrl.size;i++)
+			{
+				Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseUp[i] / 360.f * 8192.f)/ KNEE_RATIO / M3508_RATIO;	
+			}
+//			Driver[0].ptCtrl.MP[0] = 0x14003200;//20 size  SINGLE_MODE 50 周期
+			SetPtFlag(BEGIN_MOTION);			
+			status =1 ;
+			break;
+		case 1:
+			if(CheckPtFlag(ACTION_READY_TO_COMPLETE))	
+			{
+				for(int i = 0; i < 20;i++)
+				{
+					Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseDown[i] / 360.f * 8192.f)/ KNEE_RATIO / M3508_RATIO;	
+				}
+				Driver[0].ptCtrl.MP[0] = 0x14003200;
+				SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
+			}
+			if(CheckPtFlag(ACTION_COMPLETE))
+			{
+				status = 2;
+				SetPtFlag(~ACTION_COMPLETE);
+			}
+			break;
+		case 2:
+			if(CheckPtFlag(ACTION_READY_TO_COMPLETE))	
+			{
+				for(int i = 0; i < 20;i++)
+				{
+					Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360.f * 8192.f)/ KNEE_RATIO / M3508_RATIO;	
+				}
+				Driver[0].ptCtrl.MP[0] = 0x14013200;
+				SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
+			}			
+			if(CheckPtFlag(ACTION_COMPLETE))
+			{
+				status = 1;
+				SetPtFlag(~ACTION_COMPLETE);
+			}
+			break;
+	}
+	TIM_Delayms(TIM3,10);
+//	USART_OUT(USART3,(uint8_t*)"%d\r\n",(int)status);
+}
+
+//void FirstBufferLoadingSecondBufferTest(void)
+//{
+//	for(int i = 0; i < 20;i++)
+//	{
+//		Driver[0].ptCtrl.desiredPos[1][i] = -(RaiseUp[i] / 360 * 8192)/ KNEE_RATIO / M3508_RATIO;	
+//	}
+//	Driver[0].ptCtrl.MP[0] = 0x14013200;//20 size  CIRCULAR_MODE 50 周期
+////	Driver[0].ptCtrl.runMode = CIRCULAR_MODE;
+////	Driver[0].ptCtrl.size = 20;
+//	Driver[0].ptCtrl.index = 1;
+//	SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
+//}
 
 void FourLegTest(void)
 {
