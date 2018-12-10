@@ -1,9 +1,9 @@
 #ifndef __FOUR_LEG__H
 #define __FOUR_LEG__H
 
-#define COAXE_RATIO 0.294f
-#define	KNEE_RATIO  0.406f
-#define M3508_RATIO  0.0502f
+#define COAXE_RATIO 3.4f
+#define	KNEE_RATIO  2.9f
+#define M3508_RATIO  19.2f
 
 
 

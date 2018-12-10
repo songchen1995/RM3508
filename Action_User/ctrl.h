@@ -269,10 +269,10 @@ typedef struct
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /********************FOC参数******************************/
-#define	 VOL_AMP					8.0f				//Voltage amplitude 作用于电流的电压幅值约0.8--13.6A
+#define	 VOL_AMP					12.0f				//Voltage amplitude 作用于电流的电压幅值约0.8--13.6A
 #define  VOL_MAX 					18.00f			//电压最大值
 #define  VOL_BLIND_AREA		0.80f				//输出盲区，电机不动的最大矢量电压值
-#define	 EMF_CONSTANT			0.020926f		//电动势常数，电机本身参数 = 电压矢量(V)/速度(pulse/ms)
+#define	 EMF_CONSTANT			0.50926f		//电动势常数，电机本身参数 = 电压矢量(V)/速度(pulse/ms)
 
 #define  CURRENT_MAX_3508    20.0f
 #define  CURRENT_MAX_2006    6.0f

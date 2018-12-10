@@ -88,10 +88,10 @@ void DriverInit(void)
 		{
 			//Driver[i].unitMode = HOMING_MODE;
 		 // Driver[i].unitMode = POSITION_CONTROL_MODE;
-		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
+		 // Driver[i].unitMode = SPEED_CONTROL_MODE;
 			Driver[i].unitMode = PT_MODE;
 			Driver[i].velCtrl.kp = VEL_KP_3508;
-			Driver[i].velCtrl.ki = VEL_KI_3508 * 1;
+			Driver[i].velCtrl.ki = VEL_KI_3508 * 4;
 			Driver[i].velCtrl.maxOutput = CURRENT_MAX_3508;
 			Driver[i].velCtrl.desiredVel[MAX_V] = VEL_MAX_3508;
 			Driver[i].posCtrl.kd = POS_KD_3508;
@@ -235,8 +235,8 @@ void MotorCtrl(void)
 				break;
 			case PT_MODE:
 			  PTCtrl(&Driver[i].ptCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
-				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].ptCtrl.output;
-				VelSlope(&Driver[i].velCtrl);
+				Driver[i].velCtrl.desiredVel[SOFT] = Driver[i].ptCtrl.output;
+	//			VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);		
 						
 //				DMA_Send_Data('\r','\n');
@@ -385,7 +385,7 @@ float PosCtrl(PosCtrlType *posPid)
   */
 float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
-	static float kp = 0.01,ki = 0.35,posErr = 0,posErrLast = 0;
+	static float kp = 0.001,kd = 0.01,ki= 0.001,posErr = 0,posErrLast = 0,iout = 0;
 	
 	if(CheckPtFlag(BEGIN_MOTION))
 	{
@@ -399,12 +399,14 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 				}
 				else
 				{
-					ptPid->velOutput = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - ptPid->desiredPos[POS_EXECUTOR][ptPid->index-1]) / (ptPid->desiredTime);
+					ptPid->velOutput = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos)/*ptPid->desiredPos[POS_EXECUTOR][ptPid->index-1]) *// (ptPid->desiredTime);
 				}	
 				
+				iout = MaxMinLimit(iout,VEL_MAX_3508 / 2.f);
 				ptPid->cnt++;
 				posErr = ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos;
-				ptPid->posOutput = posErr * kp + (posErr - posErrLast) * ki;  
+				iout += ki * posErr;
+				ptPid->posOutput = posErr * kp + (posErr - posErrLast) * kd + iout;  
 				posErrLast = posErr;				
 			}
 			else
@@ -423,7 +425,7 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 			}
 		}	
 	}
-	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)Driver[0].ptCtrl.executeFlag,(int)Driver[0].ptCtrl.index);	
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)posPid->actualPos,(int)velPid->desiredVel[SOFT],(int)velPid->speed,(int)Driver[0].output);	
 	PtFirstBufferHandler();	
 	
 	

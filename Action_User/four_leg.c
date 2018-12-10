@@ -49,6 +49,11 @@ float track[20] = {
 -28296.95024,
 };
 
+float RaiseTestBuf[16]=
+{
+	0,0.5,2,4.5,8,12.5,18,24.5,31,36.5,
+	41,44.5,47,48.5,49,49
+};
 
 float RaiseUp[] = //单位：角度
 {
@@ -59,7 +64,7 @@ float RaiseUp[] = //单位：角度
 };
 float RaiseDown[] = 
 {
-59,	54,	51,	48,	45,
+57,	54,	51,	48,	45,
 42,	39,	36,	33,	30,
 27,	24,	21,	18,	15,
 12,	9,	6,	3,	0,
@@ -80,13 +85,13 @@ void PtStructInit(void)
 
 void RaiseTest(void)
 {
-	for(int i = 0; i < 20;i++)
+	for(int i = 0; i < 16;i++)
 	{
-		Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360 * 8192)/ KNEE_RATIO / M3508_RATIO;	
+		Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseTestBuf[i] / 360 * 8192) * COAXE_RATIO * M3508_RATIO;	
 	}
-	Driver[0].ptCtrl.desiredTime = 50;
-	Driver[0].ptCtrl.runMode = CIRCULAR_MODE;
-	Driver[0].ptCtrl.size = 20;
+	Driver[0].ptCtrl.desiredTime = 10;
+	Driver[0].ptCtrl.runMode = SINGLE_MODE;
+	Driver[0].ptCtrl.size = 16;
 	Driver[0].ptCtrl.index = 0;
 	SetPtFlag(BEGIN_MOTION);
 }
@@ -95,7 +100,7 @@ void ExecutorLoadingFirstBufferTest(void)
 {
 	for(int i = 0; i < 20;i++)
 	{
-		Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360 * 8192)/ KNEE_RATIO / M3508_RATIO;	
+		Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360 * 8192) * COAXE_RATIO * M3508_RATIO;	
 	}
 	Driver[0].ptCtrl.MP[0] = 0x14003200;//20 size   50 周期
 	Driver[0].ptCtrl.index = 0;
@@ -108,12 +113,12 @@ void BufferExchangeTest(void)
 	switch(status)
 	{
 		case 0:
-			Driver[0].ptCtrl.desiredTime = 50;
+			Driver[0].ptCtrl.desiredTime = 10;
 			Driver[0].ptCtrl.runMode = SINGLE_MODE;
 			Driver[0].ptCtrl.size = 20;
 			for(int i = 0; i < Driver[0].ptCtrl.size;i++)
 			{
-				Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseUp[i] / 360.f * 8192.f)/ KNEE_RATIO / M3508_RATIO;	
+				Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseUp[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
 			}
 //			Driver[0].ptCtrl.MP[0] = 0x14003200;//20 size  SINGLE_MODE 50 周期
 			SetPtFlag(BEGIN_MOTION);			
@@ -124,12 +129,12 @@ void BufferExchangeTest(void)
 			{
 				for(int i = 0; i < 20;i++)
 				{
-					Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseDown[i] / 360.f * 8192.f)/ KNEE_RATIO / M3508_RATIO;	
+					Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseDown[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
 				}
 				Driver[0].ptCtrl.MP[0] = 0x14003200;
 				SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
 			}
-			if(CheckPtFlag(ACTION_COMPLETE))
+			if(CheckPtFlag(ACTION_COMPLETE ))
 			{
 				status = 2;
 				SetPtFlag(~ACTION_COMPLETE);
@@ -140,9 +145,9 @@ void BufferExchangeTest(void)
 			{
 				for(int i = 0; i < 20;i++)
 				{
-					Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360.f * 8192.f)/ KNEE_RATIO / M3508_RATIO;	
+					Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
 				}
-				Driver[0].ptCtrl.MP[0] = 0x14013200;
+				Driver[0].ptCtrl.MP[0] = 0x14000A00;
 				SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
 			}			
 			if(CheckPtFlag(ACTION_COMPLETE))
