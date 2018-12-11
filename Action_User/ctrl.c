@@ -91,15 +91,15 @@ void DriverInit(void)
 		 // Driver[i].unitMode = SPEED_CONTROL_MODE;
 			Driver[i].unitMode = PT_MODE;
 			Driver[i].velCtrl.kp = VEL_KP_3508;
-			Driver[i].velCtrl.ki = VEL_KI_3508 * 4;
+			Driver[i].velCtrl.ki = VEL_KI_3508 * 10;
 			Driver[i].velCtrl.maxOutput = CURRENT_MAX_3508;
 			Driver[i].velCtrl.desiredVel[MAX_V] = VEL_MAX_3508;
 			Driver[i].posCtrl.kd = POS_KD_3508;
 			Driver[i].posCtrl.kp = POS_KP_3508;
 			Driver[i].homingMode.current = 0.8f;
 			
-			Driver[i].velCtrl.acc = 100.0f;
-			Driver[i].velCtrl.dec = 100.0f;
+			Driver[i].velCtrl.acc = 1000.0f;
+			Driver[i].velCtrl.dec = 1000.0f;
 			Driver[i].velCtrl.desiredVel[CMD] = 0.0f;
 			Driver[i].posCtrl.desiredPos = 0.0f;
 			Driver[i].posCtrl.acc = Driver[i].velCtrl.dec;
@@ -225,7 +225,7 @@ void MotorCtrl(void)
 				break;
 			case SPEED_CONTROL_MODE:
 //				Driver[i].output = VelCtrl(VelSlope(Driver[i].velCtrl.desiredVel[CMD]));
-				USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Motor[0].cur);
+				USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);
 //				VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);
 				break;
@@ -235,8 +235,8 @@ void MotorCtrl(void)
 				break;
 			case PT_MODE:
 			  PTCtrl(&Driver[i].ptCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
-				Driver[i].velCtrl.desiredVel[SOFT] = Driver[i].ptCtrl.output;
-	//			VelSlope(&Driver[i].velCtrl);
+				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].ptCtrl.output;
+				VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);		
 						
 //				DMA_Send_Data('\r','\n');
@@ -297,7 +297,7 @@ float VelSlope(VelCtrlType *velPid)
 float VelPidCtrl(VelCtrlType *velPid)
 {
 	/*****************速度环PID*****************/
-	velPid->velErr = velPid->desiredVel[SOFT] - velPid->speed;	
+	velPid->velErr = velPid->desiredVel[SOFT] - (velPid->speed) ;	
 	//计算积分
 	velPid->iOut += velPid->ki * velPid->velErr;
 	//积分限幅
@@ -385,8 +385,8 @@ float PosCtrl(PosCtrlType *posPid)
   */
 float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
-	static float kp = 0.001,kd = 0.01,ki= 0.001,posErr = 0,posErrLast = 0,iout = 0;
-	
+	static float kp = 0.01,kd = 0.35,ki= 0.000,posErr = 0,posErrLast = 0,iout = 0;
+	static int a = 0;
 	if(CheckPtFlag(BEGIN_MOTION))
 	{
 		if(ptPid->index < ptPid->size)
@@ -395,14 +395,15 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 			{
 				if(ptPid->index == 0)
 				{
-					ptPid->velOutput = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos) / ptPid->desiredTime;
+					ptPid->velOutput = ((ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos)  / ptPid->desiredTime);
 				}
 				else
 				{
-					ptPid->velOutput = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos)/*ptPid->desiredPos[POS_EXECUTOR][ptPid->index-1]) *// (ptPid->desiredTime);
+					ptPid->velOutput = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - ptPid->desiredPos[POS_EXECUTOR][ptPid->index-1])/ (ptPid->desiredTime);
 				}	
+				a = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - ptPid->desiredPos[POS_EXECUTOR][ptPid->index-1])/ptPid->desiredTime;
 				
-				iout = MaxMinLimit(iout,VEL_MAX_3508 / 2.f);
+				iout = MaxMinLimit(iout,VEL_MAX_3508 / 1.5f);
 				ptPid->cnt++;
 				posErr = ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos;
 				iout += ki * posErr;
@@ -425,11 +426,12 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 			}
 		}	
 	}
-	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)posPid->actualPos,(int)velPid->desiredVel[SOFT],(int)velPid->speed,(int)Driver[0].output);	
+//	ptPid->output = -VEL_MAX_3508;	
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)posPid->actualPos,(int)(a),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
 	PtFirstBufferHandler();	
 	
 	
-	ptPid->output = MaxMinLimit(ptPid->velOutput + ptPid->posOutput,ptPid -> velLimit);
+	ptPid->output = MaxMinLimit(ptPid->velOutput + ptPid->posOutput,ptPid -> velLimit * 1.0f);
 
 	return ptPid->output;
 }

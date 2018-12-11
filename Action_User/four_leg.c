@@ -49,10 +49,18 @@ float track[20] = {
 -28296.95024,
 };
 
-float RaiseTestBuf[16]=
+float RaiseTestBuf[9]=
 {
-	0,0.5,2,4.5,8,12.5,18,24.5,31,36.5,
-	41,44.5,47,48.5,49,49
+0,
+2,
+8,
+18,
+31,
+41,
+47,
+49,
+49,
+
 };
 
 float RaiseUp[] = //单位：角度
@@ -85,13 +93,13 @@ void PtStructInit(void)
 
 void RaiseTest(void)
 {
-	for(int i = 0; i < 16;i++)
+	for(int i = 0; i < 9;i++)
 	{
 		Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseTestBuf[i] / 360 * 8192) * COAXE_RATIO * M3508_RATIO;	
 	}
-	Driver[0].ptCtrl.desiredTime = 10;
-	Driver[0].ptCtrl.runMode = SINGLE_MODE;
-	Driver[0].ptCtrl.size = 16;
+	Driver[0].ptCtrl.desiredTime = 20;
+	Driver[0].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
+	Driver[0].ptCtrl.size = 9;
 	Driver[0].ptCtrl.index = 0;
 	SetPtFlag(BEGIN_MOTION);
 }
@@ -113,8 +121,8 @@ void BufferExchangeTest(void)
 	switch(status)
 	{
 		case 0:
-			Driver[0].ptCtrl.desiredTime = 10;
-			Driver[0].ptCtrl.runMode = SINGLE_MODE;
+			Driver[0].ptCtrl.desiredTime = 40;
+			Driver[0].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
 			Driver[0].ptCtrl.size = 20;
 			for(int i = 0; i < Driver[0].ptCtrl.size;i++)
 			{
