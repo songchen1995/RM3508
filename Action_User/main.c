@@ -62,9 +62,9 @@ int main(void)
   PtStructInit();
 	RaiseTest();
 //	ExecutorLoadingFirstBufferTest();
-//	Driver[0].velCtrl.desiredVel[SOFT] = -VEL_MAX_3508; 
-//	TIM_Delayms(TIM3,300);
-//	Driver[0].velCtrl.desiredVel[SOFT] = 0;
+	Driver[0].velCtrl.desiredVel[SOFT] = -0; 
+	TIM_Delayms(TIM3,1000);
+	Driver[0].velCtrl.desiredVel[SOFT] = -VEL_MAX_3508;
 
  	while(1)
 	{

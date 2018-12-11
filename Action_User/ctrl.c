@@ -88,18 +88,18 @@ void DriverInit(void)
 		{
 			//Driver[i].unitMode = HOMING_MODE;
 		 // Driver[i].unitMode = POSITION_CONTROL_MODE;
-		 // Driver[i].unitMode = SPEED_CONTROL_MODE;
-			Driver[i].unitMode = PT_MODE;
-			Driver[i].velCtrl.kp = VEL_KP_3508;
-			Driver[i].velCtrl.ki = VEL_KI_3508 * 10;
+		  Driver[i].unitMode = SPEED_CONTROL_MODE;
+			//Driver[i].unitMode = PT_MODE;
+			Driver[i].velCtrl.kp = VEL_KP_3508 * 1;
+			Driver[i].velCtrl.ki = VEL_KI_3508 * 4;
 			Driver[i].velCtrl.maxOutput = CURRENT_MAX_3508;
 			Driver[i].velCtrl.desiredVel[MAX_V] = VEL_MAX_3508;
 			Driver[i].posCtrl.kd = POS_KD_3508;
 			Driver[i].posCtrl.kp = POS_KP_3508;
 			Driver[i].homingMode.current = 0.8f;
 			
-			Driver[i].velCtrl.acc = 1000.0f;
-			Driver[i].velCtrl.dec = 1000.0f;
+			Driver[i].velCtrl.acc = 3000.0f;
+			Driver[i].velCtrl.dec = 3000.0f;
 			Driver[i].velCtrl.desiredVel[CMD] = 0.0f;
 			Driver[i].posCtrl.desiredPos = 0.0f;
 			Driver[i].posCtrl.acc = Driver[i].velCtrl.dec;
@@ -236,7 +236,7 @@ void MotorCtrl(void)
 			case PT_MODE:
 			  PTCtrl(&Driver[i].ptCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
 				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].ptCtrl.output;
-				VelSlope(&Driver[i].velCtrl);
+				PtVelSlope(&Driver[i].velCtrl,&Driver[i].ptCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);		
 						
 //				DMA_Send_Data('\r','\n');
@@ -276,16 +276,41 @@ void MotorCtrl(void)
   * @param  None
   * @retval �ٶ��������
   */
-float VelSlope(VelCtrlType *velPid)
+#define DEAD_PERIOD 10
+float PtVelSlope(VelCtrlType *velPid, PTCtrlType *ptPid)
 {
+	static uint8_t signVel;
 	/*************����Ӽ��ٶ�б��**************/
-	if(velPid->desiredVel[SOFT] < (velPid->desiredVel[CMD] - velPid->acc)){
-		velPid->desiredVel[SOFT] +=velPid->acc;
-	}else if(velPid->desiredVel[SOFT] > (velPid->desiredVel[CMD] + velPid->dec)){
-		velPid->desiredVel[SOFT] -=velPid->dec;
-	}else{
-		velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
-	}	
+	if(CheckPtFlag(INDEX_JUMP))
+	{
+		signVel = 0;
+
+	}
+	switch(signVel)
+	{
+		case 0:	
+			
+			if(velPid->speed < (ptPid->velOutput - DEAD_PERIOD))
+			{
+				velPid->desiredVel[SOFT] = VEL_MAX_3508;
+			}
+			else if(velPid->speed > (ptPid->velOutput + DEAD_PERIOD))
+			{
+				velPid->desiredVel[SOFT] = -VEL_MAX_3508;
+			}
+			else 
+			{
+				velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
+				signVel = 1;
+				SetPtFlag(~INDEX_JUMP);
+			}		
+			break;
+		case 1:
+			velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
+			break;
+	}
+//	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)posPid->actualPos,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT],signVel);	
 	return velPid->desiredVel[SOFT];
 }
 
@@ -377,7 +402,23 @@ float PosCtrl(PosCtrlType *posPid)
 	return posPid->output;
 }
 
-
+/**
+  * @brief  ̙׈бǂˤɫ
+  * @param  None
+  * @retval ̙׈ǚλˤԶ
+  */
+float VelSlope(VelCtrlType *velPid)
+{
+	/*************݆̣ݓݵ̙׈бǂ**************/
+	if(velPid->desiredVel[SOFT] < (velPid->desiredVel[CMD] - velPid->acc)){
+		velPid->desiredVel[SOFT] +=velPid->acc;
+	}else if(velPid->desiredVel[SOFT] > (velPid->desiredVel[CMD] + velPid->dec)){
+		velPid->desiredVel[SOFT] -=velPid->dec;
+	}else{
+		velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
+	}	
+	return velPid->desiredVel[SOFT];
+}
 /**
   * @brief PT插值运行（最大二十个点）
   * @param  None
@@ -395,7 +436,7 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 			{
 				if(ptPid->index == 0)
 				{
-					ptPid->velOutput = ((ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos)  / ptPid->desiredTime);
+					ptPid->velOutput = ((ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - 0)  / ptPid->desiredTime);
 				}
 				else
 				{
@@ -413,6 +454,7 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 			else
 			{
 				ptPid->index++;
+				SetPtFlag(INDEX_JUMP);
 				ptPid->cnt = 0;
 				if(ptPid->index == ptPid->size)
 				{
@@ -427,7 +469,7 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 		}	
 	}
 //	ptPid->output = -VEL_MAX_3508;	
-	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)posPid->actualPos,(int)(a),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
+
 	PtFirstBufferHandler();	
 	
 	
@@ -504,6 +546,12 @@ void SetPtFlag(uint32_t flag)
 			break;
 		case ~ACTION_READY_TO_COMPLETE:
 			Driver[0].ptCtrl.executeFlag &= ~ACTION_READY_TO_COMPLETE;
+			break;
+		case INDEX_JUMP:
+			Driver[0].ptCtrl.executeFlag |= INDEX_JUMP;
+			break;
+		case ~INDEX_JUMP:
+			Driver[0].ptCtrl.executeFlag &= ~INDEX_JUMP;
 			break;
 	}
 }
