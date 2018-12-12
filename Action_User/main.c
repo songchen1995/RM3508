@@ -59,13 +59,20 @@ int main(void)
 {
 //	Driver[0].ptCtrl.desiredPos[]
 	init();
+	USART_OUT(USART3,(uint8_t*)"Start\r\n");
+	TIM_Delayms(TIM3,1000);
   PtStructInit();
+//	ResetTest();
+//	while(!CheckPtFlag(ACTION_COMPLETE)){};	
+//  ResetInit();
+	
+	PtStructInit();	
 	RaiseTest();
 //	ExecutorLoadingFirstBufferTest();
-	Driver[0].velCtrl.desiredVel[SOFT] = -0; 
-	TIM_Delayms(TIM3,1000);
-	Driver[0].velCtrl.desiredVel[SOFT] = -VEL_MAX_3508;
-
+//	Driver[0].velCtrl.desiredVel[SOFT] = -VEL_MAX_3508 ; 
+//	TIM_Delayms(TIM3,100);
+//	Driver[0].velCtrl.desiredVel[SOFT] = -0;
+//	ResetTest(); 
  	while(1)
 	{
 		

@@ -317,7 +317,7 @@ typedef struct
 #define RECEIVE_QN													0x00000010
 #define RECEIVE_BEGIN												0x00000020//手动清除标志位
 #define BEGIN_MOTION												0x00000040
-#define NEW_DATA														0x00000080
+#define NEW_DATA														0x00000080//新数据进入，手动清除标志位（pt斜坡中接收到新指令后第一次执行需要）
 #define ACTION_READY_TO_COMPLETE						0x00000100//即将完成一次动作
 #define ACTION_COMPLETE											0x00000200//完成一次动作,手动清除标志位（接收到一次新指令清除标志位）
 #define INDEX_JUMP													0x00000400//发生一次index跳变，手动清除标志位（PTVelSlope中清除）
