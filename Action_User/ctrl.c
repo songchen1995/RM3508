@@ -48,7 +48,9 @@ extern MotorType Motor[8];
 void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
-	Motor[1].type = NONE;
+	Motor[1].type = RM_3508;
+	Motor[2].type = RM_3508;
+	Motor[3].type = NONE;
 #if BOARD == AUTO_3508
 	Motor[2].type = M_2006;
 #elif BOARD == AUTO_2006
@@ -135,19 +137,12 @@ void DriverInit(void)
 		}
 	}
 	
-	//
-	
-  //���ó�ʼ״̬
-	Driver[0].homingMode.current = 2.8f;
-	Driver[1].homingMode.current = 2.8f;
-
-//	Driver[1].homingMode.vel = -60.0f;
-//	Driver[1].unitMode = SPEED_CONTROL_MODE;
 #if BOARD == AUTO_3508
 	//�Զ���������ת��λ
-	Driver[0].homingMode.vel = 160.f;
-	Driver[1].homingMode.vel = 160.f;
-	Driver[0].ptCtrl.velLimit = 100.f;
+	Driver[2].unitMode = POSITION_CONTROL_MODE;
+	Driver[1].ptCtrl.velLimit = VEL_MAX_3508;
+	Driver[0].ptCtrl.velLimit = VEL_MAX_3508;
+	Driver[0].ptCtrl.motorNum = 2;
 //	Driver[0].unitMode = HOMING_MODE;
 #elif BOARD == AUTO_2006
 	Driver[0].unitMode = HOMING_MODE;
@@ -226,7 +221,7 @@ void MotorCtrl(void)
 			case SPEED_CONTROL_MODE:
 //				Driver[i].output = VelCtrl(VelSlope(Driver[i].velCtrl.desiredVel[CMD]));
 				USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].velCtrl.desiredVel[SOFT]);
-//				VelSlope(&Driver[i].velCtrl);
+				VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);
 				break;
 			case HOMING_MODE:
@@ -237,7 +232,6 @@ void MotorCtrl(void)
 			  PTCtrl(&Driver[i].ptCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
 				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].ptCtrl.output;
 				//PtVelSlope(&Driver[i].velCtrl,&Driver[i].ptCtrl);
-				
 				VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);		
 						
@@ -266,7 +260,7 @@ void MotorCtrl(void)
 			PerCur[i] = 0.0f;
 	}
 	SetCur(PerCur);
-	USART_OUT(USART3,"%d\t",(int)PerCur[0]);
+//	USART_OUT(USART3,"%d\t",(int)PerCur[0]);
 //	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)PerCur[0]);	
 //	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*100.0f));
 //	DMA_Send_Data((int)(Driver[2].velCtrl.speed) ,(int)(Driver[2].posCtrl.actualPos/10.0f));
@@ -274,97 +268,25 @@ void MotorCtrl(void)
 //	DMA_Send_Data((int)(Driver[0].velCtrl.speed) ,(int)(Driver[0].output*10.0f));
 	
 }
-/**
-  * @brief  �ٶ�б������
-  * @param  None
-  * @retval �ٶ��������
-  */
-#define DEAD_PERIOD 10
-float PtVelSlope(VelCtrlType *velPid, PTCtrlType *ptPid)
-{
-	static uint8_t signVel,status;
-	/*************����Ӽ��ٶ�б��**************/
-	if(CheckPtFlag(BEGIN_MOTION))
-	{
-		//仅在索引发生跳变、或者有新的数据进入时
-		if(CheckPtFlag(INDEX_JUMP))
-		{
-			status = 0;
-			SetPtFlag(~INDEX_JUMP);
-//			USART_OUT(USART3,"JUMP\t");
-		}
-		
-		if( ptPid->index > 0)//不会数组越界，在PtCtrl中，越位后会被index会被置零
-		{
-			if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - ptPid->desiredPos[POS_EXECUTOR][ptPid->index - 1] > 0)
-			{
-				signVel = 1;
-			}
-			else if(ptPid->desiredPos[ptPid->index] - ptPid->desiredPos[ptPid->index - 1] < 0)
-			{
-				signVel = 2;
-			}
-			
-		}
-		else if(ptPid->index == 0)//仅需要考虑循环模式（因为该模式下BEGIN_MOTION会被置位）
-		{
-			if(ptPid->velOutput > 0)
-			{
-				signVel = 1;
-			}
-			else if(ptPid->velOutput < 0)
-			{
-				signVel = 2;
-			}
-		}
-		
 
-		
-			SetPtFlag(~INDEX_JUMP);
-			if(signVel == 1)
-			{
-				switch(status)
-				{
-					case 0:
-						velPid->desiredVel[SOFT] = VEL_MAX_3508 / 1.f ;
-						if(velPid->speed >= (ptPid->velOutput - DEAD_PERIOD) && ptPid -> cnt > 0)
-						{
-							velPid->desiredVel[SOFT] = velPid->desiredVel[CMD]; 
-							status = 1;
-						}
-						break;
-					case 1:
-						velPid->desiredVel[SOFT] = velPid->desiredVel[CMD]; 
-						break;
-				}
-			}
-			else if(signVel == 2)
-			{
-				switch(status)
-				{
-					case 0:
-						velPid->desiredVel[SOFT] = -VEL_MAX_3508 / 1.f ;
-						if(velPid->speed <=(ptPid->velOutput + DEAD_PERIOD) && ptPid -> cnt > 0)
-						{
-							velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
-							status = 1;
-						}
-						break;
-					case 1:
-						velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
-						break;
-				}
-			}
-		}
-		else
-		{
-			velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
-			SetPtFlag(~INDEX_JUMP);
-		}
-//	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)posPid->actualPos,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
-USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)Driver[0].posCtrl.actualPos,(int)(Driver[0].ptCtrl.velOutput),(int)Driver[0].velCtrl.speed,(int)Driver[0].velCtrl.desiredVel[SOFT]);				
+/**
+  * @brief  ̙׈бǂˤɫ
+  * @param  None
+  * @retval ̙׈ǚλˤԶ
+  */
+float VelSlope(VelCtrlType *velPid)
+{
+	/*************݆̣ݓݵ̙׈бǂ**************/
+	if(velPid->desiredVel[SOFT] < (velPid->desiredVel[CMD] - velPid->acc)){
+		velPid->desiredVel[SOFT] +=velPid->acc;
+	}else if(velPid->desiredVel[SOFT] > (velPid->desiredVel[CMD] + velPid->dec)){
+		velPid->desiredVel[SOFT] -=velPid->dec;
+	}else{
+		velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
+	}	
 	return velPid->desiredVel[SOFT];
 }
+
 
 /**
   * @brief  �ٶȿ���
@@ -455,33 +377,109 @@ float PosCtrl(PosCtrlType *posPid)
 }
 
 /**
-  * @brief  ̙׈бǂˤɫ
+  * @brief  BANG_BANG CONTROL FOR MAX VEL_LOOP OUTPUT
   * @param  None
   * @retval ̙׈ǚλˤԶ
   */
-float VelSlope(VelCtrlType *velPid)
+#define DEAD_PERIOD 10
+float PtVelSlope(uint8_t motorNum,VelCtrlType *velPid, PTCtrlType *ptPid)
 {
+	static uint8_t signVel,status;
 	/*************݆̣ݓݵ̙׈бǂ**************/
-	if(velPid->desiredVel[SOFT] < (velPid->desiredVel[CMD] - velPid->acc)){
-		velPid->desiredVel[SOFT] +=velPid->acc;
-	}else if(velPid->desiredVel[SOFT] > (velPid->desiredVel[CMD] + velPid->dec)){
-		velPid->desiredVel[SOFT] -=velPid->dec;
-	}else{
-		velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
-	}	
+	if(CheckPtFlag(motorNum,BEGIN_MOTION))
+	{
+		//仅在索引发生跳变、或者有新的数据进入时
+		if(CheckPtFlag(motorNum,INDEX_JUMP))
+		{
+			status = 0;
+			SetPtFlag(~INDEX_JUMP);
+//			USART_OUT(USART3,"JUMP\t");
+		}
+		
+		if( ptPid->index > 0)//不会数组越界，在PtCtrl中，越位后会被index会被置零
+		{
+			if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - ptPid->desiredPos[POS_EXECUTOR][ptPid->index - 1] > 0)
+			{
+				signVel = 1;
+			}
+			else if(ptPid->desiredPos[ptPid->index] - ptPid->desiredPos[ptPid->index - 1] < 0)
+			{
+				signVel = 2;
+			}
+			
+		}
+		else if(ptPid->index == 0)//仅需要考虑循环模式（因为该模式下BEGIN_MOTION会被置位）
+		{
+			if(ptPid->velOutput > 0)
+			{
+				signVel = 1;
+			}
+			else if(ptPid->velOutput < 0)
+			{
+				signVel = 2;
+			}
+		}
+		
+
+		
+			SetPtFlag(~INDEX_JUMP);
+			if(signVel == 1)
+			{
+				switch(status)
+				{
+					case 0:
+						velPid->desiredVel[SOFT] = VEL_MAX_3508 / 1.f ;
+						if(velPid->speed >= (ptPid->velOutput - DEAD_PERIOD) && ptPid -> cnt > 0)
+						{
+							velPid->desiredVel[SOFT] = velPid->desiredVel[CMD]; 
+							status = 1;
+						}
+						break;
+					case 1:
+						velPid->desiredVel[SOFT] = velPid->desiredVel[CMD]; 
+						break;
+				}
+			}
+			else if(signVel == 2)
+			{
+				switch(status)
+				{
+					case 0:
+						velPid->desiredVel[SOFT] = -VEL_MAX_3508 / 1.f ;
+						if(velPid->speed <=(ptPid->velOutput + DEAD_PERIOD) && ptPid -> cnt > 0)
+						{
+							velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
+							status = 1;
+						}
+						break;
+					case 1:
+						velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
+						break;
+				}
+			}
+		}
+		else
+		{
+			velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
+			SetPtFlag(~INDEX_JUMP);
+		}
+//	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)posPid->actualPos,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
+//USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)Driver[0].posCtrl.actualPos,(int)(Driver[0].ptCtrl.velOutput),(int)Driver[0].velCtrl.speed,(int)Driver[0].velCtrl.desiredVel[SOFT]);				
 	return velPid->desiredVel[SOFT];
 }
+
 /**
   * @brief PT插值运行（最大二十个点）
-  * @param  None
-  * @retval 
+  * @param  
+  * @retval 速度输出
   */
-float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
+
+float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
 	static float kp = 0.05,kd = 0.15,ki= 0.000010,posErr = 0,posErrLast = 0,iout = 0;
 	static int a = 0;
 	static int safety = 0;
-	if(CheckPtFlag(BEGIN_MOTION))
+	if(CheckPtFlag(motorNum,BEGIN_MOTION))
 	{
 		if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] >= COAXE_MAX_ANGLE_PULSE)
 		{
@@ -531,7 +529,7 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 	}
 
 //	ptPid->output = -VEL_MAX_3508;	
-	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",ptPid->index,(int)posPid->actualPos,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
+//	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",ptPid->index,(int)posPid->actualPos,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
 	PtFirstBufferHandler();	
 	
 	if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] > COAXE_MAX_ANGLE_PULSE)
@@ -561,86 +559,85 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
   * @param  None
   * @retval 
   */
-void SetPtFlag(uint32_t flag)
+void SetPtFlag(uint8_t motorNum,uint32_t flag)
 {
 	switch(flag)
 	{
 		case SECOND_BUFFER_LOADING_CAN_BUFFER:
-			Driver[0].ptCtrl.executeFlag |= SECOND_BUFFER_LOADING_CAN_BUFFER;
+			Driver[motorNum].ptCtrl.executeFlag |= SECOND_BUFFER_LOADING_CAN_BUFFER;
 			break;
 		case ~SECOND_BUFFER_LOADING_CAN_BUFFER:
-			Driver[0].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
+			Driver[motorNum].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
 			break;
 		case FIRST_BUFFER_LOADING_SECOND_BUFFER:
-			Driver[0].ptCtrl.executeFlag |= SECOND_BUFFER_LOADING_CAN_BUFFER;
+			Driver[motorNum].ptCtrl.executeFlag |= SECOND_BUFFER_LOADING_CAN_BUFFER;
 			break;
 		case ~FIRST_BUFFER_LOADING_SECOND_BUFFER:
-			Driver[0].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
+			Driver[motorNum].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
 			break;	
 		case EXECUTOR_LOADING_FIRST_BUFFER:
-			Driver[0].ptCtrl.executeFlag |= EXECUTOR_LOADING_FIRST_BUFFER;
+			Driver[motorNum].ptCtrl.executeFlag |= EXECUTOR_LOADING_FIRST_BUFFER;
 			break;
 		case ~EXECUTOR_LOADING_FIRST_BUFFER:
-			Driver[0].ptCtrl.executeFlag &= ~EXECUTOR_LOADING_FIRST_BUFFER;
+			Driver[motorNum].ptCtrl.executeFlag &= ~EXECUTOR_LOADING_FIRST_BUFFER;
 			break;
 		case RECEIVE_START_AND_MP:
-			Driver[0].ptCtrl.executeFlag |= RECEIVE_START_AND_MP;
+			Driver[motorNum].ptCtrl.executeFlag |= RECEIVE_START_AND_MP;
 			break;
 		case ~RECEIVE_START_AND_MP:
-			Driver[0].ptCtrl.executeFlag &= ~RECEIVE_START_AND_MP;
+			Driver[motorNum].ptCtrl.executeFlag &= ~RECEIVE_START_AND_MP;
 			break;		
 		case RECEIVE_QN:
-			Driver[0].ptCtrl.executeFlag |= RECEIVE_QN;
+			Driver[motorNum].ptCtrl.executeFlag |= RECEIVE_QN;
 			break;
 		case ~RECEIVE_QN:
-			Driver[0].ptCtrl.executeFlag &= ~RECEIVE_QN;
+			Driver[motorNum].ptCtrl.executeFlag &= ~RECEIVE_QN;
 			break;	
 		case RECEIVE_BEGIN:
-			Driver[0].ptCtrl.executeFlag |= RECEIVE_BEGIN;
+			Driver[motorNum].ptCtrl.executeFlag |= RECEIVE_BEGIN;
 			break;
 		case ~RECEIVE_BEGIN:
-			Driver[0].ptCtrl.executeFlag &= ~RECEIVE_BEGIN;
+			Driver[motorNum].ptCtrl.executeFlag &= ~RECEIVE_BEGIN;
 			break;
 		case NEW_DATA:
-			Driver[0].ptCtrl.executeFlag |= NEW_DATA;
+			Driver[motorNum].ptCtrl.executeFlag |= NEW_DATA;
 			break;
 		case ~NEW_DATA:
-			Driver[0].ptCtrl.executeFlag &= ~NEW_DATA;
+			Driver[motorNum].ptCtrl.executeFlag &= ~NEW_DATA;
 			break;
 		case BEGIN_MOTION:
-			Driver[0].ptCtrl.executeFlag |= BEGIN_MOTION;
+			Driver[motorNum].ptCtrl.executeFlag |= BEGIN_MOTION;
 			break;
 		case ~BEGIN_MOTION:
-			Driver[0].ptCtrl.executeFlag &= ~BEGIN_MOTION;
+			Driver[motorNum].ptCtrl.executeFlag &= ~BEGIN_MOTION;
 			break;
 		case ACTION_COMPLETE:
-			Driver[0].ptCtrl.executeFlag |= ACTION_COMPLETE;
+			Driver[motorNum].ptCtrl.executeFlag |= ACTION_COMPLETE;
 			break;
 		case ~ACTION_COMPLETE:
-			Driver[0].ptCtrl.executeFlag &= ~ACTION_COMPLETE;
+			Driver[motorNum].ptCtrl.executeFlag &= ~ACTION_COMPLETE;
 			break;		
 		case ACTION_READY_TO_COMPLETE:
-			Driver[0].ptCtrl.executeFlag |= ACTION_READY_TO_COMPLETE;
+			Driver[motorNum].ptCtrl.executeFlag |= ACTION_READY_TO_COMPLETE;
 			break;
 		case ~ACTION_READY_TO_COMPLETE:
-			Driver[0].ptCtrl.executeFlag &= ~ACTION_READY_TO_COMPLETE;
+			Driver[motorNum].ptCtrl.executeFlag &= ~ACTION_READY_TO_COMPLETE;
 			break;
 		case INDEX_JUMP:
-			Driver[0].ptCtrl.executeFlag |= INDEX_JUMP;
+			Driver[motorNum].ptCtrl.executeFlag |= INDEX_JUMP;
 			break;
 		case ~INDEX_JUMP:
-			Driver[0].ptCtrl.executeFlag &= ~INDEX_JUMP;
-			break;
+			Driver[motorNum].ptCtrl.executeFlag &= ~INDEX_JUMP;
+			break;			
 	}
 }
-
-uint8_t CheckPtFlag(uint32_t flag)
-{
-	if(Driver[0].ptCtrl.executeFlag & flag)
+uint8_t CheckPtFlag(uint8_t motorNum ,uint32_t flag)
 	{
-		return 1;
-	}
-	return 0;
+		if(Driver[motorNum].ptCtrl.executeFlag & flag)
+		{
+			return 1;
+		}
+		return 0;
 }
 
 

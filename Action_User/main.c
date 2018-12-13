@@ -21,22 +21,16 @@ extern MotorType Motor[8];
 
 void init(void)
 {
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	
-	    
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);		    
 	USART3_DMA_Init(921600);
-//	SPI
 	CAN_Config(CAN1,1000,GPIOB,GPIO_Pin_8, GPIO_Pin_9); 
 	CAN_Config(CAN2, 500,GPIOB,GPIO_Pin_5, GPIO_Pin_6);
-
 	SpiInit();
 	delay_ms(1);
-	TIM_Init(TIM2,999,83,0,0);					//主周期定时1ms	
-	
+	TIM_Init(TIM2,999,83,0,0);					
   TIM_Cmd(TIM2,DISABLE);	
   	
 	DriverInit();
-		
-  	
   TIM_Cmd(TIM2,ENABLE);
 	
 	TIM_Delayms(TIM3,200);
@@ -57,7 +51,6 @@ void init(void)
 int status;
 int main(void)
 {
-//	Driver[0].ptCtrl.desiredPos[]
 	init();
 	USART_OUT(USART3,(uint8_t*)"Start\r\n");
 	TIM_Delayms(TIM3,1000);
@@ -65,7 +58,6 @@ int main(void)
 //	ResetTest();
 //	while(!CheckPtFlag(ACTION_COMPLETE)){};	
 //  ResetInit();
-	
 	PtStructInit();	
 	RaiseTest();
 //	ExecutorLoadingFirstBufferTest();

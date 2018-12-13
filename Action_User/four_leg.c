@@ -3,6 +3,10 @@
 #include "string.h"
 #include "timer.h"
 #include "usart.h"
+#include "comm.h"
+
+
+
 float track2[20]={
 -27125.08277	,
 -23599.66297	,
@@ -260,6 +264,126 @@ extern DriverType Driver[8];
 
 /*进行四足机器人的单腿测试，模拟主控*******************************/
 
+
+/**
+  * @brief  CanSendData
+  * @param 
+  * @param 
+  * @retval 
+  */
+void PtCanHandler(uint8_t motorNum,UnionDataType RxData)
+{
+	static uint8_t status = 1;
+	static uint8_t N = 0;
+	if(!CheckPtFlag(RECEIVE_START_AND_MP|RECEIVE_QN))
+	{
+		status = 1;
+	}
+	switch(status)
+	{
+		case 1: 
+			SetPtFlag(~ACTION_COMPLETE);
+			SetPtFlag(SECOND_BUFFER_LOADING_CAN_BUFFER);
+			SetPtFlag(RECEIVE_START_AND_MP);
+			Driver[0].ptCtrl.MP[1] = RxData.data32[1];
+			status = 2;
+			SetPtFlag(~RECEIVE_START_AND_MP);
+			SetPtFlag(RECEIVE_QN);
+			break;
+		case 2:
+			
+			if(RxData.data32[0] & 0xB0000000)
+			{
+				Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][N] = ((RxData.data32[0] << 4) | ( RxData.data32[1] >> 28));  
+				N++;
+				if(N < Driver[0].ptCtrl.MP[1])
+				{
+					Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][N] = (RxData.data32[1] << 4) >> 4;  
+					N++;
+				}
+				else//若是在接收数组的过程当中重新从START开始，则二级缓存可以被擦写
+				{
+					status = 0;
+					N = 0;
+					SetPtFlag(~RECEIVE_QN);
+					SetPtFlag(RECEIVE_BEGIN);
+					SetPtFlag(~SECOND_BUFFER_LOADING_CAN_BUFFER);
+					SetPtFlag(FIRST_BUFFER_LOADING_SECOND_BUFFER);
+					Driver[0].ptCtrl.MP[0] = Driver[0].ptCtrl.MP[1];	
+					Driver[0].ptCtrl.MP[1] = 0;	
+				}
+			}	
+			else //做错误判断用
+			{
+		
+			}				
+			break;
+		default:
+			break;
+	}
+}
+
+void PtSecondBufferHandler(uint8_t motorNum)
+{
+	if(CheckPtFlag(motorNum,FIRST_BUFFER_LOADING_SECOND_BUFFER))
+	{
+		for(int i = 0; i< Driver[motorNum].ptCtrl.MP[1]; i++)
+		{
+			Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][i];
+			Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][i] = 0;
+		}
+		SetPtFlag(motorNum,~RECEIVE_BEGIN);
+		SetPtFlag(motorNum,~FIRST_BUFFER_LOADING_SECOND_BUFFER);
+		SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+	}
+}
+
+void PtFirstBufferHandler(uint8_t motorNum)//接收完上级数组后将上级数组清空
+{
+	if(!CheckPtFlag(motorNum,BEGIN_MOTION))
+	{
+		if(CheckPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER))
+		{
+			Driver[motorNum].ptCtrl.size =  Driver[motorNum].ptCtrl.MP[0] >> 24;
+			Driver[motorNum].ptCtrl.runMode =  (Driver[motorNum].ptCtrl.MP[0]<<8) >> 24;
+			Driver[motorNum].ptCtrl.desiredTime =  (Driver[motorNum].ptCtrl.MP[0]<<16) >> 24;
+			Driver[motorNum].ptCtrl.MP[0] = 0;
+			for(int i = 0; i< Driver[motorNum].ptCtrl.size; i++)//一级缓冲加载
+			{
+				Driver[motorNum].ptCtrl.desiredPos[POS_EXECUTOR][i] = Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i];
+				Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = 0;
+			}
+			SetPtFlag(motorNum,BEGIN_MOTION);//执行器执行
+			SetPtFlag(motorNum,~EXECUTOR_LOADING_FIRST_BUFFER);	
+			SetPtFlag(motorNum,~ACTION_READY_TO_COMPLETE);
+			Driver[motorNum].ptCtrl.index = 0;
+		}
+		else
+		{
+			if(Driver[motorNum].ptCtrl.runMode == CIRCULAR_MODE)//循环走
+			{
+				SetPtFlag(motorNum,BEGIN_MOTION);
+				Driver[motorNum].ptCtrl.index = 0;
+				Driver[motorNum].ptCtrl.cnt = 0;
+			}
+			else if(Driver[motorNum].ptCtrl.runMode == SINGLE_MODE)//运行完后以原速度继续向前跑
+			{
+//				SetPtFlag(BEGIN_MOTION);
+				
+			}
+			else if(Driver[motorNum].ptCtrl.runMode == RUN_AND_STOP_MOTION_MODE)//运行完后立即停下；
+			{
+				Driver[motorNum].ptCtrl.velOutput = 0;
+				Driver[motorNum].ptCtrl.posOutput = 0;
+				Driver[motorNum].ptCtrl.output = 0;
+				Driver[motorNum].ptCtrl.index = 0;
+			}
+		}
+		SetPtFlag(motorNum,~ACTION_READY_TO_COMPLETE);
+	}
+}
+
+
 void PtStructInit(void)
 {
 	memset(&Driver[0].ptCtrl,0,sizeof(Driver[0].ptCtrl));
@@ -267,28 +391,34 @@ void PtStructInit(void)
 	Driver[0].posCtrl.desiredPos = 0;
 	Driver[0].ptCtrl.velLimit = 100;
 	Driver[0].ptCtrl.index = 0;
+	
+	memset(&Driver[1].ptCtrl,1,sizeof(Driver[1].ptCtrl));
+	Driver[1].posCtrl.actualPos = 0;
+	Driver[1].posCtrl.desiredPos = 0;
+	Driver[1].ptCtrl.velLimit = 100;
+	Driver[1].ptCtrl.index = 0;
 }
 
-void RaiseTest(void)
+void RaiseTest(uint8_t motorNum)
 {
-	Driver[0].ptCtrl.desiredTime = 10;
-	Driver[0].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
-	Driver[0].ptCtrl.size = 12;
-	Driver[0].ptCtrl.index = 0;
-	Driver[0].ptCtrl.velLimit = VEL_MAX_3508;	
+	Driver[motorNum].ptCtrl.desiredTime = 10;
+	Driver[motorNum].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
+	Driver[motorNum].ptCtrl.size = 12;
+	Driver[motorNum].ptCtrl.index = 0;
+	Driver[motorNum].ptCtrl.velLimit = VEL_MAX_3508;	
 	for(int i = 0; i < Driver[0].ptCtrl.size 	;i++)
 	{
 		Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseTestBuf[i] / 360 * 8192) * COAXE_RATIO * M3508_RATIO;	
 //		Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseTestBuf[i] / 360 * 8192) * KNEE_RATIO * M3508_RATIO;			
 	}
 
-	SetPtFlag(BEGIN_MOTION);
-	SetPtFlag(NEW_DATA);
+	SetPtFlag(motorNum,BEGIN_MOTION);
+	SetPtFlag(motorNum,NEW_DATA);
 }
 
 
 
-void ExecutorLoadingFirstBufferTest(void)
+void ExecutorLoadingFirstBufferTest(uint8_t motorNum)
 {
 	for(int i = 0; i < 20;i++)
 	{
@@ -296,10 +426,10 @@ void ExecutorLoadingFirstBufferTest(void)
 	}
 	Driver[0].ptCtrl.MP[0] = 0x14003200;//20 size   50 周期
 	Driver[0].ptCtrl.index = 0;
-	SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
+	SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
 }
 //放于while循环当中,测试数组衔接是否正常
-void BufferExchangeTest(void)
+void BufferExchangeTest(uint8_t motorNum)
 {
 	static int status = 0;
 	switch(status)
@@ -313,39 +443,39 @@ void BufferExchangeTest(void)
 				Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseUp[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
 			}
 //			Driver[0].ptCtrl.MP[0] = 0x14003200;//20 size  SINGLE_MODE 50 周期
-			SetPtFlag(BEGIN_MOTION);			
+			SetPtFlag(motorNum,BEGIN_MOTION);			
 			status =1 ;
 			break;
 		case 1:
-			if(CheckPtFlag(ACTION_READY_TO_COMPLETE))	
+			if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
 			{
 				for(int i = 0; i < 20;i++)
 				{
 					Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseDown[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
 				}
 				Driver[0].ptCtrl.MP[0] = 0x14003200;
-				SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
+				SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
 			}
-			if(CheckPtFlag(ACTION_COMPLETE ))
+			if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
 			{
 				status = 2;
-				SetPtFlag(~ACTION_COMPLETE);
+				SetPtFlag(motorNum,~ACTION_COMPLETE);
 			}
 			break;
 		case 2:
-			if(CheckPtFlag(ACTION_READY_TO_COMPLETE))	
+			if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
 			{
 				for(int i = 0; i < 20;i++)
 				{
 					Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
 				}
 				Driver[0].ptCtrl.MP[0] = 0x14000A00;
-				SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
+				SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
 			}			
-			if(CheckPtFlag(ACTION_COMPLETE))
+			if(CheckPtFlag(motorNum,ACTION_COMPLETE))
 			{
 				status = 1;
-				SetPtFlag(~ACTION_COMPLETE);
+				SetPtFlag(motorNum,~ACTION_COMPLETE);
 			}
 			break;
 	}
@@ -355,7 +485,7 @@ void BufferExchangeTest(void)
 
 
 
-void ResetTest()
+void ResetTest(uint8_t motorNum)
 {
 	Driver[0].ptCtrl.velLimit = 100;
 	Driver[0].ptCtrl.desiredTime = 200;
@@ -365,11 +495,11 @@ void ResetTest()
 	{
 		Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(ResetBuffer[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
 	}
-	SetPtFlag(BEGIN_MOTION);
-	SetPtFlag(NEW_DATA);
+	SetPtFlag(motorNum,BEGIN_MOTION);
+	SetPtFlag(motorNum,NEW_DATA);
 }
 
-void ResetInit(void)
+void ResetInit(uint8_t motorNum)
 {
 	Driver[0].ptCtrl.desiredTime = 0;
 	Driver[0].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
@@ -380,14 +510,5 @@ void ResetInit(void)
 }
 
 
-void FourLegTest(void)
-{
-//	for(int i = 0; i < 20; i++)
-//	{
-//		Driver[0].ptCtrl.desiredPos[2][i] = track[i];	
-//	}
-//	Driver[0].ptCtrl.desiredTime = 100;
-//	Driver[0].ptCtrl.
-	
-}
+
 

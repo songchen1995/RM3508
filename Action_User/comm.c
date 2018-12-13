@@ -15,7 +15,7 @@
 #include "can.h"
 #include "ctrl.h"
 #include "rm_motor.h"
-
+#include "four_leg.h"
 extern MotorType Motor[8];
 extern DriverType Driver[8];
 
@@ -94,9 +94,9 @@ void CANRespond(void)
 				Driver[i].command.can_status = 0;
 				break;
 			case 0x40004742:
-				if(CheckPtFlag(RECEIVE_BEGIN))
+				if(CheckPtFlag(i,RECEIVE_BEGIN))
 				{
-					PtSecondBufferHandler();
+					PtSecondBufferHandler(i,txData);
 				}
 				Driver[i].command.can_status = 0;
 				break;
@@ -132,123 +132,6 @@ void CanSendData(int id,UnionDataType txData)
 	while((CAN_TransmitStatus(CAN2, mbox)!= CAN_TxStatus_Ok));//�ȴ�238us
 }
 
-/**
-  * @brief  CanSendData
-  * @param 
-  * @param 
-  * @retval 
-  */
-void PtCanHandler(int id,UnionDataType RxData)
-{
-	static uint8_t status = 1;
-	static uint8_t N = 0;
-	if(!CheckPtFlag(RECEIVE_START_AND_MP|RECEIVE_QN))
-	{
-		status = 1;
-	}
-	switch(status)
-	{
-		case 1: 
-			SetPtFlag(~ACTION_COMPLETE);
-			SetPtFlag(SECOND_BUFFER_LOADING_CAN_BUFFER);
-			SetPtFlag(RECEIVE_START_AND_MP);
-			Driver[0].ptCtrl.MP[1] = RxData.data32[1];
-			status = 2;
-			SetPtFlag(~RECEIVE_START_AND_MP);
-			SetPtFlag(RECEIVE_QN);
-			break;
-		case 2:
-			
-			if(RxData.data32[0] & 0xB0000000)
-			{
-				Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][N] = ((RxData.data32[0] << 4) | ( RxData.data32[1] >> 28));  
-				N++;
-				if(N < Driver[0].ptCtrl.MP[1])
-				{
-					Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][N] = (RxData.data32[1] << 4) >> 4;  
-					N++;
-				}
-				else//若是在接收数组的过程当中重新从START开始，则二级缓存可以被擦写
-				{
-					status = 0;
-					N = 0;
-					SetPtFlag(~RECEIVE_QN);
-					SetPtFlag(RECEIVE_BEGIN);
-					SetPtFlag(~SECOND_BUFFER_LOADING_CAN_BUFFER);
-					SetPtFlag(FIRST_BUFFER_LOADING_SECOND_BUFFER);
-					Driver[0].ptCtrl.MP[0] = Driver[0].ptCtrl.MP[1];	
-					Driver[0].ptCtrl.MP[1] = 0;	
-				}
-			}	
-			else //做错误判断用
-			{
-		
-			}				
-			break;
-		default:
-			break;
-	}
-}
-
-void PtSecondBufferHandler(void)
-{
-	if(CheckPtFlag(FIRST_BUFFER_LOADING_SECOND_BUFFER))
-	{
-		for(int i = 0; i< Driver[0].ptCtrl.MP[1]; i++)
-		{
-			Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][i];
-			Driver[0].ptCtrl.desiredPos[POS_SECOND_BUFFER][i] = 0;
-		}
-		SetPtFlag(~RECEIVE_BEGIN);
-		SetPtFlag(~FIRST_BUFFER_LOADING_SECOND_BUFFER);
-		SetPtFlag(EXECUTOR_LOADING_FIRST_BUFFER);
-	}
-}
-
-void PtFirstBufferHandler(void)//接收完上级数组后将上级数组清空
-{
-	if(!CheckPtFlag(BEGIN_MOTION))
-	{
-		if(CheckPtFlag(EXECUTOR_LOADING_FIRST_BUFFER))
-		{
-			Driver[0].ptCtrl.size =  Driver[0].ptCtrl.MP[0] >> 24;
-			Driver[0].ptCtrl.runMode =  (Driver[0].ptCtrl.MP[0]<<8) >> 24;
-			Driver[0].ptCtrl.desiredTime =  (Driver[0].ptCtrl.MP[0]<<16) >> 24;
-			Driver[0].ptCtrl.MP[0] = 0;
-			for(int i = 0; i< Driver[0].ptCtrl.size; i++)//一级缓冲加载
-			{
-				Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i];
-				Driver[0].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = 0;
-			}
-			SetPtFlag(BEGIN_MOTION);//执行器执行
-			SetPtFlag(~EXECUTOR_LOADING_FIRST_BUFFER);	
-			SetPtFlag(~ACTION_READY_TO_COMPLETE);
-			Driver[0].ptCtrl.index = 0;
-		}
-		else
-		{
-			if(Driver[0].ptCtrl.runMode == CIRCULAR_MODE)//循环走
-			{
-				SetPtFlag(BEGIN_MOTION);
-				Driver[0].ptCtrl.index = 0;
-				Driver[0].ptCtrl.cnt = 0;
-			}
-			else if(Driver[0].ptCtrl.runMode == SINGLE_MODE)//运行完后以原速度继续向前跑
-			{
-//				SetPtFlag(BEGIN_MOTION);
-				
-			}
-			else if(Driver[0].ptCtrl.runMode == RUN_AND_STOP_MOTION_MODE)//运行完后立即停下；
-			{
-				Driver[0].ptCtrl.velOutput = 0;
-				Driver[0].ptCtrl.posOutput = 0;
-				Driver[0].ptCtrl.output = 0;
-				Driver[0].ptCtrl.index = 0;
-			}
-		}
-		SetPtFlag(~ACTION_READY_TO_COMPLETE);
-	}
-}
 
 
 

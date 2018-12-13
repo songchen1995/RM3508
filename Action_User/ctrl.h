@@ -160,10 +160,8 @@ typedef struct
 	uint32_t MP[2];//[]
 	
 	uint32_t executeFlag; 
-	//[31：29] 执行器状态；[28：26] 一级缓存区状态； [25：23] 二级缓存区状态
-	// 
-	uint8_t executeStatus;
-	//执行任务步数
+
+	uint8_t motorNum;
 	
 	float output;
 	
@@ -338,7 +336,7 @@ float 	OutPutLim(float val);
 float   VelSlope(VelCtrlType *velPid);
 float   VelPidCtrl(VelCtrlType *velPid);
 float   PosCtrl(PosCtrlType *posPid);
-float PTCtrl(PTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid);
+float PTCtrl(uint8_t motorNum, PTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid);
 //float 	VelCtrl(float cmdVel);
 void 		VelCtrlInit(void);
 void		PosCtrlInit(void);
@@ -356,9 +354,9 @@ void    MotorOn(int n);
 void    MotorOff(int n);
 void    VelCtrlTest(float vel,int tim);
 void 		ZeroPosInit(void);
-void 		SetPtFlag(uint32_t flag);
-uint8_t CheckPtFlag(uint32_t flag);
-float PtVelSlope(VelCtrlType *velPid,PTCtrlType *ptPid);
+void 		SetPtFlag(uint8_t motorNum, uint32_t flag);
+uint8_t CheckPtFlag(uint8_t motorNum, uint32_t flag);
+float PtVelSlope(uint8_t motorNum,VelCtrlType *velPid,PTCtrlType *ptPid);
 #endif
 
 /****************** (C) COPYRIGHT 2016 ACTION *****END OF FILE*************/
