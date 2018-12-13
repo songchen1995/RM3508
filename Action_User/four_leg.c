@@ -49,22 +49,38 @@ float track[20] = {
 -28296.95024,
 };
 
-float RaiseTestBuf[13]=
+float RaiseTestBuf[12]=
 {
-	0.4,
-	1.6,
-	3.6,
-	6.4,
-	10,
-	14.4,
-	18.8,
-	22.4,
-	25.2,
-	27.2,
-	28.4,
-	28.8,
-	28.8
+	0.355,
+	1.34,
+	3.0151,
+	5.36,
+	8.375,
+	12.06,
+	15.74,
+	18.76,
+	21.105,
+	22.78,
+	23.785,
+	24.12,
 };
+
+//float RaiseTestBuf[13]=
+//{
+//	0.4,
+//	1.6,
+//	3.6,
+//	6.4,
+//	10,
+//	14.4,
+//	18.8,
+//	22.4,
+//	25.2,
+//	27.2,
+//	28.4,
+//	28.8,
+//	28.8
+//};
 
 //float RaiseTestBuf[12]=
 //{
@@ -257,13 +273,13 @@ void RaiseTest(void)
 {
 	Driver[0].ptCtrl.desiredTime = 10;
 	Driver[0].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
-	Driver[0].ptCtrl.size = 13;
+	Driver[0].ptCtrl.size = 12;
 	Driver[0].ptCtrl.index = 0;
 	Driver[0].ptCtrl.velLimit = VEL_MAX_3508;	
 	for(int i = 0; i < Driver[0].ptCtrl.size 	;i++)
 	{
-//		Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseTestBuf[i] / 360 * 8192) * COAXE_RATIO * M3508_RATIO;	
-		Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseTestBuf[i] / 360 * 8192) * KNEE_RATIO * M3508_RATIO;			
+		Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseTestBuf[i] / 360 * 8192) * COAXE_RATIO * M3508_RATIO;	
+//		Driver[0].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseTestBuf[i] / 360 * 8192) * KNEE_RATIO * M3508_RATIO;			
 	}
 
 	SetPtFlag(BEGIN_MOTION);

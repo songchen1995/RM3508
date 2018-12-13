@@ -91,7 +91,7 @@ void DriverInit(void)
 		 // Driver[i].unitMode = SPEED_CONTROL_MODE;
 			Driver[i].unitMode = PT_MODE;
 			Driver[i].velCtrl.kp = VEL_KP_3508 * 1;
-			Driver[i].velCtrl.ki = 0.0005;//VEL_KI_3508 * 0.75;
+			Driver[i].velCtrl.ki = VEL_KI_3508 * 1;
 			Driver[i].velCtrl.maxOutput = CURRENT_MAX_3508;
 			Driver[i].velCtrl.desiredVel[MAX_V] = VEL_MAX_3508;
 			Driver[i].posCtrl.kd = POS_KD_3508;
@@ -478,7 +478,7 @@ float VelSlope(VelCtrlType *velPid)
   */
 float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
-	static float kp = 0.01,kd = 0.30,ki= 0.0000001,posErr = 0,posErrLast = 0,iout = 0;
+	static float kp = 0.05,kd = 0.15,ki= 0.000010,posErr = 0,posErrLast = 0,iout = 0;
 	static int a = 0;
 	static int safety = 0;
 	if(CheckPtFlag(BEGIN_MOTION))
@@ -505,7 +505,7 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 				}	
 				a = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - ptPid->desiredPos[POS_EXECUTOR][ptPid->index-1])/ptPid->desiredTime;
 				
-				iout = MaxMinLimit(iout,VEL_MAX_3508 / 1.5f);
+				iout = MaxMinLimit(iout,VEL_MAX_3508 / 3.f);
 				ptPid->cnt++;
 				posErr = ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos;
 				iout += ki * posErr;
@@ -531,7 +531,7 @@ float PTCtrl(PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 	}
 
 //	ptPid->output = -VEL_MAX_3508;	
-//	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",ptPid->index,(int)posPid->actualPos,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",ptPid->index,(int)posPid->actualPos,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
 	PtFirstBufferHandler();	
 	
 	if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] > COAXE_MAX_ANGLE_PULSE)
