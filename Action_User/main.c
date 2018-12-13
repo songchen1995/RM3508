@@ -52,9 +52,11 @@ void init(void)
 int main(void)
 {
 	init();
-	ZeroPosInit();
+//	ZeroPosInit();
 
-	
+	Driver[0].velCtrl.desiredVel[CMD] = -2000.f;
+//	TIM_Delayms(TIM3,300);
+//	Driver[0].velCtrl.desiredVel[CMD] = 0.f;
 	while(1)
 	{
 		

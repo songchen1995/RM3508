@@ -47,8 +47,8 @@ extern MotorType Motor[8];
   */
 void DriverInit(void)
 {
-	Motor[0].type = RM_3508;
-	Motor[1].type = RM_3508;
+	Motor[0].type = M_2006;
+	Motor[1].type = NONE;
 #if BOARD == AUTO_3508
 	Motor[2].type = M_2006;
 #elif BOARD == AUTO_2006
@@ -87,8 +87,8 @@ void DriverInit(void)
 	  if(Motor[i].type == RM_3508)
 		{
 			//Driver[i].unitMode = HOMING_MODE;
-		  Driver[i].unitMode = POSITION_CONTROL_MODE;
-		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
+		//  Driver[i].unitMode = POSITION_CONTROL_MODE;
+		  Driver[i].unitMode = SPEED_CONTROL_MODE;
 			
 			Driver[i].velCtrl.kp = VEL_KP_3508;
 			Driver[i].velCtrl.ki = VEL_KI_3508;
@@ -109,9 +109,9 @@ void DriverInit(void)
 		}
 		else if(Motor[i].type == M_2006)  //M2006µÄ²ÎÊý
 		{
-			Driver[i].unitMode = HOMING_MODE;
+		//	Driver[i].unitMode = HOMING_MODE;
 		//  Driver[i].unitMode = POSITION_CONTROL_MODE;
-		//  Driver[i].unitMode = SPEED_CONTROL_MODE;
+		  Driver[i].unitMode = SPEED_CONTROL_MODE;
 			
 			Driver[i].velCtrl.kp = VEL_KP_2006;
 			Driver[i].velCtrl.ki = VEL_KI_2006;
