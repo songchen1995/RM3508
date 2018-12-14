@@ -171,7 +171,17 @@ typedef struct
 	
 	float velLimit;
 	
+	float pulseMaxLimit;
+	
+	float pulseMinLimit;
+	
 	float posMec;
+	
+	float kp;
+	
+	float kd;
+	
+	float ki;
 	
 	uint8_t index;
 	

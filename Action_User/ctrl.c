@@ -469,32 +469,54 @@ float PtVelSlope(uint8_t motorNum,VelCtrlType *velPid, PTCtrlType *ptPid)
 }
 
 /**
+  * @brief safety check
+  * @param  
+  * @retval 閫熷害杈撳嚭
+  */
+void PTSafetyCheck(uint8_t motorNum, PTCtrlType *ptPid)
+{
+	static int safety[8] = {0};
+	if(ptPid->posMec > ptPid->pulseMaxLimit)
+	{
+		safety[motorNum]++;
+	}
+	else if(ptPid->posMec < ptPid->pulseMinLimit)
+	{
+		safety[motorNum]++;
+	}
+	if(safety[motorNum] > 30)	
+	{
+		ptPid->output = 0;
+		ptPid->velOutput = 0;
+		ptPid->posOutput = 0;
+		Driver[motorNum].status = DISABLE;
+		Driver[motorNum].output = 0;
+	}		
+}
+	
+	
+
+
+/**
   * @brief PT鎻掑�艰繍琛岋紙鏈�澶т簩鍗佷釜鐐癸級
   * @param  
   * @retval 閫熷害杈撳嚭
   */
-
+#define SATURATE(val,max,min)  ((val > max ? max : (val < min ? min : val)))
 float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
-	static float kp[3] = {0.01,0.01,0.01},kd[3] = {0.35,0.35,0.35},ki= 0.000000,posErr[3] = {0},posErrLast[3] = {0} ,iout = 0;
-	static int safety[3] = {0};
+	static float kp[3] = {0.01,0.01,0.01},kd[3] = {0.01,0.01,0.01},ki= 0.0000001,posErr[3] = {0},posErrLast[3] = {0} ,iout = 0;
+
 	if(CheckPtFlag(motorNum,BEGIN_MOTION))
-	{
-		if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] >= COAXE_MAX_ANGLE_PULSE)
-		{
-			ptPid->desiredPos[POS_EXECUTOR][ptPid->index] = COAXE_MAX_ANGLE_PULSE;
-		}
-		if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] <= COAXE_MIN_ANGLE_PULSE)
-		{
-			ptPid->desiredPos[POS_EXECUTOR][ptPid->index] = COAXE_MIN_ANGLE_PULSE;
-		}
+	{		
+//		ptPid->desiredPos[POS_EXECUTOR][ptPid->index] = SATURATE(ptPid->desiredPos[POS_EXECUTOR][ptPid->index],ptPid->pulseMaxLimit,ptPid->pulseMinLimit);
 		if(ptPid->index < ptPid->size)
 		{
 			if(ptPid->cnt < ptPid->desiredTime)
 			{
 				if(ptPid->index == 0)
 				{
-					ptPid->velOutput = ((ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - 0)  / ptPid->desiredTime);
+					ptPid->velOutput = ((ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos)  / ptPid->desiredTime);
 				}
 				else
 				{
@@ -524,44 +546,15 @@ float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlTy
 			}
 		}	
 	}
-
-//	ptPid->output = -VEL_MAX_3508;	
-	if(motorNum == COAXE_MOTOR_NUM)
-		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",ptPid->index,(int)ptPid->posMec ,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
 	PtFirstBufferHandler(motorNum);	
 	if(motorNum == KNEE_MOTOR_NUM)
-	{
-		if(ptPid->posMec > KNEE_MAX_ANGLE_PULSE)
-		{
-			safety[motorNum]++;
-		}
-		if(ptPid->posMec <= KNEE_MIN_ANGLE_PULSE)
-		{
-			safety[motorNum]++;
-		}	
-	}
-	else if(motorNum == COAXE_MOTOR_NUM)
-	{
-		if(ptPid->posMec > COAXE_MAX_ANGLE_PULSE)
-		{
-			safety[motorNum]++;
-		}
-		if(ptPid->posMec <= COAXE_MIN_ANGLE_PULSE)
-		{
-			safety[motorNum]++;
-		}	
-	}
-
-	if(safety[motorNum] > 10)	
-	{
-		ptPid->output = 0;
-		ptPid->velOutput = 0;
-		ptPid->posOutput = 0;
-		Driver[motorNum].status = DISABLE;
-		Driver[motorNum].output = 0;
-	}	
+		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);
 	
-	ptPid->output = MaxMinLimit(ptPid->velOutput + ptPid->posOutput,ptPid -> velLimit * 1.0f);
+
+	PTSafetyCheck(motorNum,ptPid);
+
+	
+	ptPid->output = MaxMinLimit(ptPid->velOutput + ptPid->posOutput,ptPid -> velLimit);
 
 	return ptPid->output;
 }
@@ -732,7 +725,7 @@ float CalculSpeed_Pos(DriverType *driver,MotorType *motor)
 	if(deltaPos <-(driver->encoder.period/2)) deltaPos += driver->encoder.period;
 	
 	driver->posCtrl.actualPos += deltaPos;
-//	driver->ptCtrl.posMec += deltaPos;
+	driver->ptCtrl.posMec += deltaPos;
 	//用反馈速度输入
 	driver->velCtrl.speed = (float)(motor->vel)*0.1365333f;					//1/60*8192/1000=0.136533
 	//用位置差分出的速度输入
@@ -772,6 +765,8 @@ float MaxMinLimit(float val,float limit)
 	
 	return val;
 }
+
+
 
 /**
   * @brief  电机使能

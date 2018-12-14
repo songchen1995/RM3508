@@ -69,6 +69,9 @@ float RaiseTestBuf[12]=
 	24.12,
 };
 
+
+
+
 //float RaiseTestBuf[13]=
 //{
 //	0.4,
@@ -105,19 +108,19 @@ float RaiseTestBuf[12]=
 
 float RaiseUp[] = //单位：角度
 {
-0,	3,	6,	9,	12,
-15,	18,	21,	24,	27,
-30,	33,	36,	39,	42,
-45,	48,	51,	54,	57,
+1,	2,	3,	4,	5,
+6,	7,	8,	9,	10,
+11,	12,	13,	14,	15,
+16,	17,	18,	19,	20,
+
 };
 float RaiseDown[] = 
 {
-57,	54,	51,	48,	45,
-42,	39,	36,	33,	30,
-27,	24,	21,	18,	15,
-12,	9,	6,	3,	0,
-
-};
+20,	19,	18,	17,	16,
+15,	14,	13,	12,	11,
+10,	9,	8,	7,	6,
+5,	4,	3,	2,	1,
+};	
 
 float coaxe_resetBuffer[]=
 {
@@ -264,8 +267,9 @@ float slf2_3[]=
 -0.4005	,
 -0.1127	,
 0	,
-
 };
+
+
 
 
 
@@ -357,10 +361,10 @@ void PtFirstBufferHandler(uint8_t motorNum)//接收完上级数组后将上级�
 			Driver[motorNum].ptCtrl.runMode =  (Driver[motorNum].ptCtrl.MP[0]<<8) >> 24;
 			Driver[motorNum].ptCtrl.desiredTime =  (Driver[motorNum].ptCtrl.MP[0]<<16) >> 24;
 			Driver[motorNum].ptCtrl.MP[0] = 0;
-			for(int i = 0; i< Driver[motorNum].ptCtrl.size; i++)//一级缓冲加载
+			for(int i = 0; i< Driver[motorNum].ptCtrl.size; i++)
 			{
-				Driver[motorNum].ptCtrl.desiredPos[POS_EXECUTOR][i] = Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i];
-				Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = 0;
+				Driver[motorNum].ptCtrl.desiredPos[POS_EXECUTOR][i] = Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i];//一级缓冲加载
+				Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = 0;//一级缓存数组清空
 			}
 			SetPtFlag(motorNum,BEGIN_MOTION);//执行器执行
 			SetPtFlag(motorNum,~EXECUTOR_LOADING_FIRST_BUFFER);	
@@ -383,7 +387,10 @@ void PtFirstBufferHandler(uint8_t motorNum)//接收完上级数组后将上级�
 			else if(Driver[motorNum].ptCtrl.runMode == RUN_AND_STOP_MOTION_MODE)//运行完后立即停下；
 			{
 				Driver[motorNum].ptCtrl.velOutput = 0;
-				Driver[motorNum].ptCtrl.posOutput = 0;
+				
+//				if(Driver[motorNum].ptCtrl.size > 0)
+					Driver[motorNum].ptCtrl.posOutput = (Driver[motorNum].ptCtrl.kp * 4.f * (Driver[motorNum].ptCtrl.desiredPos[POS_EXECUTOR][Driver[motorNum].ptCtrl.size - 1] - Driver[motorNum].posCtrl.actualPos)) ;
+				
 				Driver[motorNum].ptCtrl.output = 0;
 				Driver[motorNum].ptCtrl.index = 0;
 			}
@@ -400,14 +407,25 @@ void PtStructInit(void)
 	Driver[COAXE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.index = 0;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.size = 0;
+	Driver[COAXE_MOTOR_NUM].ptCtrl.kp = 0.01f;
+	Driver[COAXE_MOTOR_NUM].ptCtrl.kd = 0.35f;
+	Driver[COAXE_MOTOR_NUM].ptCtrl.ki = 0.0f;
 	Driver[COAXE_MOTOR_NUM].velCtrl.desiredVel[CMD] = 0;
+	Driver[COAXE_MOTOR_NUM].ptCtrl.pulseMaxLimit = COAXE_MAX_ANGLE_PULSE;
+	Driver[COAXE_MOTOR_NUM].ptCtrl.pulseMinLimit = COAXE_MIN_ANGLE_PULSE;
 	
-	memset(&Driver[KNEE_MOTOR_NUM].ptCtrl,1,sizeof(Driver[KNEE_MOTOR_NUM].ptCtrl));
+	memset(&Driver[KNEE_MOTOR_NUM].ptCtrl,0,sizeof(Driver[KNEE_MOTOR_NUM].ptCtrl));
 	Driver[KNEE_MOTOR_NUM].posCtrl.actualPos = 0;
 	Driver[KNEE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508;
 	Driver[KNEE_MOTOR_NUM].ptCtrl.index = 0;
 	Driver[KNEE_MOTOR_NUM].ptCtrl.size = 0;
+	Driver[KNEE_MOTOR_NUM].ptCtrl.kp = 0.01f;
+	Driver[KNEE_MOTOR_NUM].ptCtrl.kd = 0.35f;
+	Driver[KNEE_MOTOR_NUM].ptCtrl.ki = 0.0f;
 	Driver[KNEE_MOTOR_NUM].velCtrl.desiredVel[CMD] = 0;
+	
+	Driver[KNEE_MOTOR_NUM].ptCtrl.pulseMaxLimit = KNEE_MAX_ANGLE_PULSE;
+	Driver[KNEE_MOTOR_NUM].ptCtrl.pulseMinLimit = KNEE_MIN_ANGLE_PULSE;
 }
 
 void RaiseTest(uint8_t motorNum)
@@ -442,56 +460,244 @@ void ExecutorLoadingFirstBufferTest(uint8_t motorNum)
 //放于while循环当中,测试数组衔接是否正常
 void BufferExchangeTest(uint8_t motorNum)
 {
-	static int status = 0;
-	switch(status)
+	static int status_coaxe= 0, status_knee = 0;
+	if(motorNum == COAXE_MOTOR_NUM)
 	{
-		case 0:
-			Driver[motorNum].ptCtrl.desiredTime = 10;
-			Driver[motorNum].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
-			Driver[motorNum].ptCtrl.size = 20;
-			for(int i = 0; i < Driver[0].ptCtrl.size;i++)
-			{
-				Driver[motorNum].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseUp[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
-			}
-//			Driver[0].ptCtrl.MP[0] = 0x14003200;//20 size  SINGLE_MODE 50 周期
-			SetPtFlag(motorNum,BEGIN_MOTION);			
-			status =1 ;
-			break;
-		case 1:
-			if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
-			{
-				for(int i = 0; i < 20;i++)
+		switch(status_coaxe)
+		{
+			case 0:
+				Driver[motorNum].ptCtrl.desiredTime = 20;
+				Driver[motorNum].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
+				Driver[motorNum].ptCtrl.size = 20;
+				for(int i = 0; i < Driver[0].ptCtrl.size;i++)
 				{
-					Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseDown[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					Driver[motorNum].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseUp[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
 				}
-				Driver[motorNum].ptCtrl.MP[0] = 0x14003200;
-				SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
-			}
-			if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
-			{
-				status = 2;
-				SetPtFlag(motorNum,~ACTION_COMPLETE);
-			}
-			break;
-		case 2:
-			if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
-			{
-				for(int i = 0; i < 20;i++)
+				SetPtFlag(motorNum,BEGIN_MOTION);			
+				status_coaxe =1 ;
+				break;
+			case 1:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
 				{
-					Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					for(int i = 0; i < 20;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseDown[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14001400;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
 				}
-				Driver[motorNum].ptCtrl.MP[0] = 0x14000A00;
-				SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
-			}			
-			if(CheckPtFlag(motorNum,ACTION_COMPLETE))
-			{
-				status = 1;
-				SetPtFlag(motorNum,~ACTION_COMPLETE);
-			}
-			break;
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_coaxe= 2;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 2:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 20;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14001400;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_coaxe= 1;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+		}
 	}
-	TIM_Delayms(TIM3,10);
-//	USART_OUT(USART3,(uint8_t*)"%d\r\n",(int)status);
+	else if(motorNum == KNEE_MOTOR_NUM)
+	{
+		switch(status_knee)
+		{
+			case 0:
+				Driver[motorNum].ptCtrl.desiredTime = 50;
+				Driver[motorNum].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
+				Driver[motorNum].ptCtrl.size = 20;
+				for(int i = 0; i < Driver[0].ptCtrl.size;i++)
+				{
+					Driver[motorNum].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(RaiseUp[i] / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+				}
+				SetPtFlag(motorNum,BEGIN_MOTION);			
+				status_knee=1 ;
+				break;
+			case 1:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 20;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseDown[i] / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14001400;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_knee= 2;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 2:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 20;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(RaiseUp[i] / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14001400;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_knee= 1;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+		}		
+	}
+
+//	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)status_coaxe,(int)status_knee);
+}
+
+
+void SlfTest(uint8_t motorNum)//学弟给的曲线
+{
+	static int status_coaxe= 0, status_knee = 0;
+	static int start_flag_coaxe = 0,start_flag_knee = 0;
+	if(start_flag_coaxe == 0 && motorNum == COAXE_MOTOR_NUM)
+	{
+		start_flag_coaxe = 1;
+		for(int i = 0; i < 20;i++)
+		{
+			Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(slf2_1[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+		}
+		Driver[motorNum].ptCtrl.MP[0] = 0x14000A00;
+		SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+	}
+	if(start_flag_knee == 0 && motorNum == KNEE_MOTOR_NUM)
+	{
+		for(int i = 0; i < 0x14;i++)
+		{
+			Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(slf1_1[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+		}
+		Driver[motorNum].ptCtrl.MP[0] = 0x14000A00;
+		SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+		start_flag_knee = 1;
+	}	
+	if(motorNum == COAXE_MOTOR_NUM)
+	{
+		switch(status_coaxe)
+		{
+			case 0:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x14;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(slf2_2[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14000A00;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_coaxe= 1;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 1:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x0B;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(slf2_3[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x0B000A00;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_coaxe= 2;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 2:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x14;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(slf2_1[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14000A00;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_coaxe= 0;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+		}
+	}
+	else if(motorNum == KNEE_MOTOR_NUM)
+	{
+		switch(status_knee)
+		{
+			case 0:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x14;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(slf1_2[i] / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14000A00;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_knee= 1;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 1:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x0B;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(slf1_3[i] / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x0B000A00;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_knee= 2;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 2:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x14;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -(slf1_1[i] / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14000A00;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_knee= 0;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+		}		
+	}
+
+//	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)status_coaxe,(int)CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE));
 }
 
 
@@ -512,7 +718,7 @@ void ResetTest(uint8_t motorNum)
 
 void ResetInit(void)
 {
-	
+	PtStructInit();
 	Driver[COAXE_MOTOR_NUM].ptCtrl.desiredTime = 0;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.runMode = RUN_AND_STOP_MOTION_MODE;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.size = 0;
@@ -548,15 +754,25 @@ void ResetInit(void)
 	}
 	SetPtFlag(KNEE_MOTOR_NUM,BEGIN_MOTION);
 	SetPtFlag(KNEE_MOTOR_NUM,NEW_DATA);	
+	
 	while(!CheckPtFlag(COAXE_MOTOR_NUM,ACTION_COMPLETE) || !CheckPtFlag(KNEE_MOTOR_NUM,ACTION_COMPLETE)){};
 		
 	SetPtFlag(COAXE_MOTOR_NUM,~ACTION_COMPLETE);
 	SetPtFlag(KNEE_MOTOR_NUM,~ACTION_COMPLETE);	
 	SetPtFlag(COAXE_MOTOR_NUM,~BEGIN_MOTION);	
 	SetPtFlag(KNEE_MOTOR_NUM,~BEGIN_MOTION);
+	
+	Driver[COAXE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508;
+	Driver[KNEE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508;	
+	Driver[KNEE_MOTOR_NUM].posCtrl.actualPos = 0;		
 	Driver[COAXE_MOTOR_NUM].posCtrl.actualPos = 0;
 	Driver[KNEE_MOTOR_NUM].posCtrl.actualPos = 0;
-	PtStructInit();
+	for(int i = 0; i < Driver[0].ptCtrl.size;i++)
+	{
+		Driver[KNEE_MOTOR_NUM].ptCtrl.desiredPos[POS_EXECUTOR][i] = 0;
+		Driver[COAXE_MOTOR_NUM].ptCtrl.desiredPos[POS_EXECUTOR][i] = 0;		
+	}
+	
 }
 
 
