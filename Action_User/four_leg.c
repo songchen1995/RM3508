@@ -509,7 +509,7 @@ void PtStructInit(void)
 {
 	memset(&Driver[COAXE_MOTOR_NUM].ptCtrl,0,sizeof(Driver[COAXE_MOTOR_NUM].ptCtrl));
 	Driver[COAXE_MOTOR_NUM].posCtrl.actualPos = 0;
-	Driver[COAXE_MOTOR_NUM].ptCtrl.velLimit = 800;//VEL_MAX_3508;
+	Driver[COAXE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.index = 0;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.size = 0;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.kp = 0.01f;
@@ -521,7 +521,7 @@ void PtStructInit(void)
 	
 	memset(&Driver[KNEE_MOTOR_NUM].ptCtrl,0,sizeof(Driver[KNEE_MOTOR_NUM].ptCtrl));
 	Driver[KNEE_MOTOR_NUM].posCtrl.actualPos = 0;
-	Driver[KNEE_MOTOR_NUM].ptCtrl.velLimit = 800.f;//VEL_MAX_3508;
+	Driver[KNEE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508;
 	Driver[KNEE_MOTOR_NUM].ptCtrl.index = 0;
 	Driver[KNEE_MOTOR_NUM].ptCtrl.size = 0;
 	Driver[KNEE_MOTOR_NUM].ptCtrl.kp = 0.01f;
