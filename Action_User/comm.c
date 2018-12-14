@@ -100,6 +100,10 @@ void CANRespond(void)
 				}
 				Driver[i].command.can_status = 0;
 				break;
+			case 0x4000534D:  //MS
+				txData.data32[0] = 0x0000534D;
+//				txData.data8[0]  = CheckPtFlag 
+				break;
 			default: break;
 		}
 	}

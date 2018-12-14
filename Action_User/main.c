@@ -72,6 +72,7 @@ int main(void)
 	{
 		
 		CANRespond();
+		
 //		BufferExchangeTest(COAXE_MOTOR_NUM);
 //		BufferExchangeTest(KNEE_MOTOR_NUM);
 //		BufferExchangeTest();

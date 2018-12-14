@@ -63,9 +63,9 @@ void DriverInit(void)
 	Driver[1].command.canId = 5;
 	Driver[2].command.canId = 6;
 #elif BOARD == LEFT_BACKWARD_LEG
-	Driver[0].command.canId = 7;
-	Driver[1].command.canId = 8;
-	Driver[2].command.canId = 9;	
+	Driver[SHOULDER_MOTOR_NUM].command.canId = 7;
+	Driver[COAXE_MOTOR_NUM].command.canId = 8;
+	Driver[KNEE_MOTOR_NUM].command.canId = 9;	
 #elif BOARD == RIGHT_BACKWARD_LEG
 	Driver[0].command.canId = 10;
 	Driver[1].command.canId = 11;
@@ -191,7 +191,7 @@ void MotorCtrl(void)
 			Driver[i].output = 0.0f;		
 			continue;
 		}
-			
+		USART_OUT(USART3,(uint8_t*)"%d\r\n",Driver[KNEE_MOTOR_NUM].ptCtrl.executeFlag,Driver[KNEE_MOTOR_NUM].ptCtrl.executeFlag);	
 		switch(Driver[i].unitMode)
 		{
 			case POSITION_CONTROL_MODE:
@@ -528,8 +528,8 @@ float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlTy
 		}	
 	}
 	PtFirstBufferHandler(motorNum);	
-	if(motorNum == KNEE_MOTOR_NUM)
-		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);
+//	if(motorNum == KNEE_MOTOR_NUM)
+//		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);
 	
 
 	PTSafetyCheck(motorNum,ptPid);
