@@ -273,6 +273,12 @@ float slf2_3[]=
 
 
 
+
+
+float thigh[20]=
+{
+
+}
 extern DriverType Driver[8];
 
 /*进行四足机器人的单腿测试，模拟主控*******************************/
