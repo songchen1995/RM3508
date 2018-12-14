@@ -331,6 +331,7 @@ typedef struct
 #define ACTION_READY_TO_COMPLETE						0x00000100//即将完成一次动作
 #define ACTION_COMPLETE											0x00000200//完成一次动作,手动清除标志位（接收到一次新指令清除标志位）
 #define INDEX_JUMP													0x00000400//发生一次index跳变，手动清除标志位（PTVelSlope中清除）
+#define CAN_RECEIVING												0x00000800
 /*Author: Oliver********************************/
 
 /*PT模式下的runMode************************************/

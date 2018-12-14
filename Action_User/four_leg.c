@@ -332,61 +332,120 @@ extern DriverType Driver[8];
   */
 void PtCanHandler(uint8_t motorNum,UnionDataType RxData)
 {
-	static uint8_t status = 1;
-	static uint8_t N = 0;
-	if(!CheckPtFlag(motorNum,RECEIVE_START_AND_MP|RECEIVE_QN))
-	{
-		status = 1;
-	}
-	switch(status)
-	{
-		case 1: 
-			SetPtFlag(motorNum,~ACTION_COMPLETE);
-			SetPtFlag(motorNum,SECOND_BUFFER_LOADING_CAN_BUFFER);
-			SetPtFlag(motorNum,RECEIVE_START_AND_MP);
-			Driver[motorNum].ptCtrl.MP[1] = RxData.data32[1];
-			status = 2;
-			SetPtFlag(motorNum,~RECEIVE_START_AND_MP);
-			SetPtFlag(motorNum,RECEIVE_QN);
-			break;
-		case 2:
-			
-			if(RxData.data32[0] & 0xB0000000)
+	static uint8_t status_knee = 1,status_coaxe = 1;
+	static uint8_t N_knee = 0 , N_coaxe = 0;
+//	if(!CheckPtFlag(motorNum,RECEIVE_START_AND_MP|RECEIVE_QN))
+//	{
+//		status = 1;
+//	}
+		if(motorNum == KNEE_MOTOR_NUM)
+		{
+			switch(status_knee)
 			{
-				Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][N] = ((RxData.data32[0] << 4) | ( RxData.data32[1] >> 28));  
-				N++;
-				if(N < Driver[motorNum].ptCtrl.MP[1])
-				{
-					Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][N] = (RxData.data32[1] << 4) >> 4;  
-					N++;
-				}
-				else//若是在接收数组的过程当中重新从START开始，则二级缓存可以被擦写
-				{
-					status = 0;
-					N = 0;
-					SetPtFlag(motorNum,~RECEIVE_QN);
-					SetPtFlag(motorNum,RECEIVE_BEGIN);
-					SetPtFlag(motorNum,~SECOND_BUFFER_LOADING_CAN_BUFFER);
-					SetPtFlag(motorNum,FIRST_BUFFER_LOADING_SECOND_BUFFER);
-					Driver[motorNum].ptCtrl.MP[0] = Driver[0].ptCtrl.MP[1];	
-					Driver[motorNum].ptCtrl.MP[1] = 0;	
-				}
-			}	
-			else //做错误判断用
+				case 1: 
+					if(CheckPtFlag(motorNum,RECEIVE_START_AND_MP))
+					{
+						SetPtFlag(motorNum,~ACTION_COMPLETE);
+						SetPtFlag(motorNum,SECOND_BUFFER_LOADING_CAN_BUFFER);
+						Driver[motorNum].ptCtrl.MP[1] = RxData.data32[1];
+						status_knee = 2;
+						SetPtFlag(motorNum,~RECEIVE_START_AND_MP);
+						SetPtFlag(motorNum,RECEIVE_QN);
+					}
+					break;
+				case 2:
+					if(CheckPtFlag(motorNum,CheckPtFlag(motorNum,RECEIVE_QN)))
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][N_knee] = RxData.data32[0] ;
+						N_knee++;
+						if(N_knee < Driver[motorNum].ptCtrl.MP[1] >> 24)
+						{
+							Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][N_knee] = RxData.data32[1];
+							N_knee++;
+						}
+						if(N_knee == Driver[motorNum].ptCtrl.MP[1] >> 24)
+						{
+							SetPtFlag(motorNum,~CAN_RECEIVING);
+							SetPtFlag(motorNum,~RECEIVE_QN);
+							SetPtFlag(motorNum,RECEIVE_BEGIN);
+							SetPtFlag(motorNum,~SECOND_BUFFER_LOADING_CAN_BUFFER);
+							SetPtFlag(motorNum,FIRST_BUFFER_LOADING_SECOND_BUFFER);
+							Driver[motorNum].ptCtrl.MP[0] = Driver[KNEE_MOTOR_NUM].ptCtrl.MP[1];	
+							Driver[motorNum].ptCtrl.MP[1] = 0;	
+							N_knee = 0;
+						}
+					}
+						if(CheckPtFlag(motorNum,RECEIVE_BEGIN))
+							status_knee = 1;
+		//			else//若是在接收数组的过程当中重新从START开始，则二级缓存可以被擦写
+		//			{
+		//				status = 0;
+		//				N = 0;
+		//				SetPtFlag(motorNum,~RECEIVE_QN);
+		//				SetPtFlag(motorNum,RECEIVE_BEGIN);
+		//				SetPtFlag(motorNum,~SECOND_BUFFER_LOADING_CAN_BUFFER);
+		//				SetPtFlag(motorNum,FIRST_BUFFER_LOADING_SECOND_BUFFER);
+		//				Driver[motorNum].ptCtrl.MP[0] = Driver[0].ptCtrl.MP[1];	
+		//				Driver[motorNum].ptCtrl.MP[1] = 0;	
+		//			}	
+						
+					break;
+				default:
+					break;
+			}
+		}
+		else if(motorNum == COAXE_MOTOR_NUM)
+		{
+			switch(status_coaxe)
 			{
-		
-			}				
-			break;
-		default:
-			break;
-	}
+				case 1: 
+					if(CheckPtFlag(motorNum,RECEIVE_START_AND_MP))
+					{
+						SetPtFlag(motorNum,~ACTION_COMPLETE);
+						SetPtFlag(motorNum,SECOND_BUFFER_LOADING_CAN_BUFFER);
+						Driver[motorNum].ptCtrl.MP[1] = RxData.data32[1];
+						status_coaxe = 2;
+						SetPtFlag(motorNum,~RECEIVE_START_AND_MP);
+						SetPtFlag(motorNum,RECEIVE_QN);
+					}
+					break;
+				case 2:
+					if(CheckPtFlag(motorNum,CheckPtFlag(motorNum,RECEIVE_QN)))
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][N_coaxe] = RxData.data32[0] ;
+						N_coaxe++;
+						if(N_coaxe < Driver[motorNum].ptCtrl.MP[1] >> 24)
+						{
+							Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][N_coaxe] = RxData.data32[1];
+							N_coaxe++;
+						}
+						if(N_coaxe == Driver[motorNum].ptCtrl.MP[1] >> 24)
+						{
+							SetPtFlag(motorNum,~CAN_RECEIVING);
+							SetPtFlag(motorNum,~RECEIVE_QN);
+							SetPtFlag(motorNum,RECEIVE_BEGIN);
+							SetPtFlag(motorNum,~SECOND_BUFFER_LOADING_CAN_BUFFER);
+							SetPtFlag(motorNum,FIRST_BUFFER_LOADING_SECOND_BUFFER);
+							Driver[motorNum].ptCtrl.MP[0] = Driver[motorNum].ptCtrl.MP[1];	
+							Driver[motorNum].ptCtrl.MP[1] = 0;	
+							N_coaxe = 0;
+						}
+					}
+						if(CheckPtFlag(motorNum,RECEIVE_BEGIN))
+							status_coaxe = 1;
+					break;
+				default:
+					break;
+			}
+		}
 }
+
 
 void PtSecondBufferHandler(uint8_t motorNum)
 {
 	if(CheckPtFlag(motorNum,FIRST_BUFFER_LOADING_SECOND_BUFFER))
 	{
-		for(int i = 0; i< Driver[motorNum].ptCtrl.MP[1]; i++)
+		for(int i = 0; i< Driver[motorNum].ptCtrl.MP[0] >> 24; i++)
 		{
 			Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][i];
 			Driver[motorNum].ptCtrl.desiredPos[POS_SECOND_BUFFER][i] = 0;
@@ -450,7 +509,7 @@ void PtStructInit(void)
 {
 	memset(&Driver[COAXE_MOTOR_NUM].ptCtrl,0,sizeof(Driver[COAXE_MOTOR_NUM].ptCtrl));
 	Driver[COAXE_MOTOR_NUM].posCtrl.actualPos = 0;
-	Driver[COAXE_MOTOR_NUM].ptCtrl.velLimit = 100;//VEL_MAX_3508;
+	Driver[COAXE_MOTOR_NUM].ptCtrl.velLimit = 800;//VEL_MAX_3508;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.index = 0;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.size = 0;
 	Driver[COAXE_MOTOR_NUM].ptCtrl.kp = 0.01f;
@@ -462,7 +521,7 @@ void PtStructInit(void)
 	
 	memset(&Driver[KNEE_MOTOR_NUM].ptCtrl,0,sizeof(Driver[KNEE_MOTOR_NUM].ptCtrl));
 	Driver[KNEE_MOTOR_NUM].posCtrl.actualPos = 0;
-	Driver[KNEE_MOTOR_NUM].ptCtrl.velLimit = 100.f;//VEL_MAX_3508;
+	Driver[KNEE_MOTOR_NUM].ptCtrl.velLimit = 800.f;//VEL_MAX_3508;
 	Driver[KNEE_MOTOR_NUM].ptCtrl.index = 0;
 	Driver[KNEE_MOTOR_NUM].ptCtrl.size = 0;
 	Driver[KNEE_MOTOR_NUM].ptCtrl.kp = 0.01f;

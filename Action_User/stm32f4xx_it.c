@@ -105,76 +105,80 @@ void CAN2_RX0_IRQHandler(void)
 
 		if(StdId == (0x300 + Driver[j].command.canId))
 		{		
-			switch(Msg1.data32[0])
+			if(!CheckPtFlag(j,RECEIVE_QN))
 			{
-				case 0x00004F4D:						//MO 
-					if(Msg1.data32[1] == 1){
-						MotorOn(j);
-					}else{
-						MotorOff(j);
-					}
-					break; 
-				case 0x0000564A:						//JV
-					Driver[j].velCtrl.desiredVel[CMD] = (float)(Msg1.data32[1])/1000.0f;
-					Driver[j].velCtrl.desiredVel[CMD] = MaxMinLimit(Driver[j].velCtrl.desiredVel[CMD],Driver[j].velCtrl.desiredVel[MAX_V]);
-					break;
-				case 0x00004341:						//AC
-					Driver[j].velCtrl.acc = (float)(Msg1.data32[1])/1000000.0f;
-				  Driver[j].posCtrl.acc = Driver[j].velCtrl.acc;
-					break;
-				case 0x00004344:						//DC
-					Driver[j].velCtrl.dec = (float)(Msg1.data32[1])/1000000.0f;
-					break;
-				case 0x00005053:						//SP
-					Driver[j].posCtrl.posVel  = (float)(Msg1.data32[1])/1000.0f;
-					break;
-				case 0x00004150:						//PA绝对位置
-					Driver[j].posCtrl.desiredPos = (float)(Msg1.data32[1]);
-					break;
-				case 0x00005250:						//PR相对位置
-					Driver[j].posCtrl.desiredPos = Driver[j].posCtrl.actualPos + (float)(Msg1.data32[1]);
-					break;
-				case 0x00005450:  //PT
-					PtCanHandler(j,Msg1); 
-					break;
-				case 0x40004742:
-					if(CheckPtFlag(j,RECEIVE_BEGIN))
-					{
-						Driver[j].command.can_status = 0x40004742;	
-					}
-					break;
-				case 0x40005149:						//IQ	 读取电流
-					Driver[j].command.can_status = 0x40005149;					
-					break;
-				case 0x40005856:						//VX   读取速度
-					Driver[j].command.can_status = 0x40005856;
-					break;
-				case 0x40005850:						//PX   读取位置
-					Driver[j].command.can_status = 0x40005850;
-					break;
-				case 0x4000534D:						//IQ	 讈取支路
-					Driver[j].command.can_status = 0x4000534D;					
-					break;
-				default:break;
+				switch(Msg1.data32[0])
+				{
+					case 0x00004F4D:						//MO 
+						if(Msg1.data32[1] == 1){
+							MotorOn(j);
+						}else{
+							MotorOff(j);
+						}
+						break; 
+					case 0x0000564A:						//JV
+						Driver[j].velCtrl.desiredVel[CMD] = (float)(Msg1.data32[1])/1000.0f;
+						Driver[j].velCtrl.desiredVel[CMD] = MaxMinLimit(Driver[j].velCtrl.desiredVel[CMD],Driver[j].velCtrl.desiredVel[MAX_V]);
+						break;
+					case 0x00004341:						//AC
+						Driver[j].velCtrl.acc = (float)(Msg1.data32[1])/1000000.0f;
+						Driver[j].posCtrl.acc = Driver[j].velCtrl.acc;
+						break;
+					case 0x00004344:						//DC
+						Driver[j].velCtrl.dec = (float)(Msg1.data32[1])/1000000.0f;
+						break;
+					case 0x00005053:						//SP
+						Driver[j].posCtrl.posVel  = (float)(Msg1.data32[1])/1000.0f;
+						break;
+					case 0x00004150:						//PA绝对位置
+						Driver[j].posCtrl.desiredPos = (float)(Msg1.data32[1]);
+						break;
+					case 0x00005250:						//PR相对位置
+						Driver[j].posCtrl.desiredPos = Driver[j].posCtrl.actualPos + (float)(Msg1.data32[1]);
+						break;
+					case 0x00005450:  //PT
+						SetPtFlag(j,RECEIVE_START_AND_MP);
+						break;
+					case 0x40004742:
+						if(!CheckPtFlag(j,RECEIVE_QN))
+						{
+							SetPtFlag(j,RECEIVE_BEGIN);
+						}
+						break;
+					case 0x40005149:						//IQ	 读取电流
+						Driver[j].command.can_status = 0x40005149;					
+						break;
+					case 0x40005856:						//VX   读取速度
+						Driver[j].command.can_status = 0x40005856;
+						break;
+					case 0x40005850:						//PX   读取位置
+						Driver[j].command.can_status = 0x40005850;
+						break;
+					case 0x4000534D:						//IQ	 讈取支路
+						Driver[j].command.can_status = 0x4000534D;					
+						break;
+					default:break;
+				} 
 			}
+			PtCanHandler(j,Msg1);
 		}
-		else if(StdId == (0x300+0))
-		{
-			
-			switch(Msg1.data32[0])
+			else if(StdId == (0x300+0))
 			{
-				case 0x40005149:						//IQ	 读取电流
-					Driver[j].command.can_status = 0x40005149;					
-					break;
-				case 0x40005856:						//VX   读取速度
-					Driver[j].command.can_status = 0x40005856;
-					break;
-				case 0x40005850:						//PX   读取位置
-					Driver[j].command.can_status = 0x40005850;
-					break;
-				default:break;
+				
+				switch(Msg1.data32[0])
+				{
+					case 0x40005149:						//IQ	 读取电流
+						Driver[j].command.can_status = 0x40005149;					
+						break;
+					case 0x40005856:						//VX   读取速度
+						Driver[j].command.can_status = 0x40005856;
+						break;
+					case 0x40005850:						//PX   读取位置
+						Driver[j].command.can_status = 0x40005850;
+						break;
+					default:break;
+				}
 			}
-		}
 	}	
 
 	CAN_ClearFlag(CAN2,CAN_FLAG_EWG);

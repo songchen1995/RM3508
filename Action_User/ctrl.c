@@ -55,9 +55,9 @@ void DriverInit(void)
 	
 	
 #if BOARD == LEFT_FORWARD_LEG
-	Driver[0].command.canId = 1;
-	Driver[1].command.canId = 2;
-	Driver[2].command.canId = 3;
+	Driver[SHOULDER_MOTOR_NUM].command.canId = 1;
+	Driver[COAXE_MOTOR_NUM].command.canId = 2;
+	Driver[COAXE_MOTOR_NUM].command.canId = 3;
 #elif BOARD == RIGHT_FORWARD_LEG
 	Driver[0].command.canId = 4;
 	Driver[1].command.canId = 5;
@@ -138,8 +138,7 @@ void DriverInit(void)
 //	Driver[0].unitMode = HOMING_MODE;
 #elif BOARD == AUTO_2006
 	Driver[0].unitMode = HOMING_MODE;
-#else
-	Driver[0].unitMode = POSITION_CONTROL_MODE;
+;
 #endif
 	
 
@@ -191,7 +190,7 @@ void MotorCtrl(void)
 			Driver[i].output = 0.0f;		
 			continue;
 		}
-		USART_OUT(USART3,(uint8_t*)"%d\r\n",Driver[KNEE_MOTOR_NUM].ptCtrl.executeFlag,Driver[KNEE_MOTOR_NUM].ptCtrl.executeFlag);	
+		//USART_OUT(USART3,(uint8_t*)"%d\r\n",Driver[KNEE_MOTOR_NUM].ptCtrl.executeFlag);	
 		switch(Driver[i].unitMode)
 		{
 			case POSITION_CONTROL_MODE:
@@ -528,8 +527,9 @@ float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlTy
 		}	
 	}
 	PtFirstBufferHandler(motorNum);	
-//	if(motorNum == KNEE_MOTOR_NUM)
-//		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);
+	if(motorNum == COAXE_MOTOR_NUM)
+//		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)pPid->actualPos,(int)ptPid->cnt);
+		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)(ptPid->velOutput),(int)velPid->speed,(int)ptPid->velLimit);
 	
 
 	PTSafetyCheck(motorNum,ptPid);
@@ -556,10 +556,10 @@ void SetPtFlag(uint8_t motorNum,uint32_t flag)
 			Driver[motorNum].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
 			break;
 		case FIRST_BUFFER_LOADING_SECOND_BUFFER:
-			Driver[motorNum].ptCtrl.executeFlag |= SECOND_BUFFER_LOADING_CAN_BUFFER;
+			Driver[motorNum].ptCtrl.executeFlag |= FIRST_BUFFER_LOADING_SECOND_BUFFER;
 			break;
 		case ~FIRST_BUFFER_LOADING_SECOND_BUFFER:
-			Driver[motorNum].ptCtrl.executeFlag &= ~SECOND_BUFFER_LOADING_CAN_BUFFER;
+			Driver[motorNum].ptCtrl.executeFlag &= ~FIRST_BUFFER_LOADING_SECOND_BUFFER;
 			break;	
 		case EXECUTOR_LOADING_FIRST_BUFFER:
 			Driver[motorNum].ptCtrl.executeFlag |= EXECUTOR_LOADING_FIRST_BUFFER;
@@ -615,6 +615,12 @@ void SetPtFlag(uint8_t motorNum,uint32_t flag)
 		case ~INDEX_JUMP:
 			Driver[motorNum].ptCtrl.executeFlag &= ~INDEX_JUMP;
 			break;			
+		case CAN_RECEIVING:
+			Driver[motorNum].ptCtrl.executeFlag |= CAN_RECEIVING;
+			break;
+		case ~CAN_RECEIVING:
+			Driver[motorNum].ptCtrl.executeFlag &= ~CAN_RECEIVING;
+			break;
 	}
 }
 uint8_t CheckPtFlag(uint8_t motorNum ,uint32_t flag)
