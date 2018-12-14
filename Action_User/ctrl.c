@@ -34,12 +34,12 @@ extern MotorType Motor[8];
 /* Private  function prototypes -----------------------------------------------*/
 /* Private  functions ---------------------------------------------------------*/
 
-#define AUTO_3508 1
-#define AUTO_2006 2
-#define MANUAL    3
+#define LEFT_FORWARD_LEG 1
+#define RIGHT_FORWARD_LEG 2
+#define LEFT_BACKWARD_LEG 3
+#define RIGHT_BACKWARD_LEG 4
 
-#define BOARD  AUTO_3508
-
+#define BOARD LEFT_BACKWARD_LEG
 /**
   * @brief  Çý¶¯Æ÷³õÊ¼»¯
   * @param  None
@@ -47,38 +47,30 @@ extern MotorType Motor[8];
   */
 void DriverInit(void)
 {
-	Motor[0].type = RM_3508;
-	Motor[1].type = RM_3508;
-	Motor[2].type = RM_3508;
+	Motor[COAXE_MOTOR_NUM].type = RM_3508;
+	Motor[KNEE_MOTOR_NUM].type = RM_3508;
+	Motor[SHOULDER_MOTOR_NUM].type = RM_3508;
 	Motor[3].type = NONE;
-#if BOARD == AUTO_3508
-	Motor[2].type = M_2006;
-#elif BOARD == AUTO_2006
-	Motor[2].type = M_2006;
-#else
-	Motor[2].type = NONE;
-#endif
-	Motor[3].type = M_2006;
-	Motor[4].type = NONE;
-	Motor[5].type = RM_3508;
-	Motor[6].type = M_2006;
-	Motor[7].type = M_2006;
+
 	
-#if BOARD == AUTO_3508
-	Driver[0].command.canId = 5;
-	Driver[1].command.canId = 6;
-	Driver[2].command.canId = 7;
-	Driver[3].command.canId = 8;
-#elif BOARD == AUTO_2006
-	Driver[0].command.canId = 15;
-	Driver[1].command.canId = 16;
-	Driver[2].command.canId = 7;
-	Driver[3].command.canId = 8;
-#else
-	Driver[0].command.canId = 5;
-	Driver[1].command.canId = 7;
-	Driver[2].command.canId = 17;
-	Driver[3].command.canId = 18;
+	
+#if BOARD == LEFT_FORWARD_LEG
+	Driver[0].command.canId = 1;
+	Driver[1].command.canId = 2;
+	Driver[2].command.canId = 3;
+#elif BOARD == RIGHT_FORWARD_LEG
+	Driver[0].command.canId = 4;
+	Driver[1].command.canId = 5;
+	Driver[2].command.canId = 6;
+#elif BOARD == LEFT_BACKWARD_LEG
+	Driver[0].command.canId = 7;
+	Driver[1].command.canId = 8;
+	Driver[2].command.canId = 9;	
+#elif BOARD == RIGHT_BACKWARD_LEG
+	Driver[0].command.canId = 10;
+	Driver[1].command.canId = 11;
+	Driver[2].command.canId = 12;
+	Driver[3].command.canId = 13;
 #endif
 	
 	for(int i = 0; i < 8; i++)
@@ -161,20 +153,10 @@ void DriverInit(void)
   */
 void ZeroPosInit(void)
 {
-	Driver[0].target5012B = 6000;
-	for(int i = 0; i < 8; i++)
-	{
-		if(Motor[i].type == RM_3508)
-		{
-			Driver[i].encoder5012B = TLE5012B_GetPos14bit();
-			Driver[i].posCtrl.actualPos =(( Driver[i].encoder5012B) - Driver[i].target5012B); 
-			Driver[i].posCtrl.desiredPos = Driver[i].posCtrl.actualPos;
-		}
-		else
-		{
-			break;
-		}
-	}
+	Driver[SHOULDER_MOTOR_NUM].target5012B = 6000;
+	Driver[SHOULDER_MOTOR_NUM].encoder5012B = TLE5012B_GetPos14bit();
+	Driver[SHOULDER_MOTOR_NUM].posCtrl.actualPos =(( Driver[SHOULDER_MOTOR_NUM].encoder5012B) - Driver[SHOULDER_MOTOR_NUM].target5012B); 
+	Driver[SHOULDER_MOTOR_NUM].posCtrl.desiredPos = Driver[SHOULDER_MOTOR_NUM].posCtrl.actualPos;
 }
 
 void ZeroPosCtrl(DriverType* driver)
@@ -194,8 +176,9 @@ float PerCur[4] = {0.0f};
 void MotorCtrl(void)
 {
 //	CalculSpeed();
-//	TLE5012B_UpateData();
-//	Driver[0].encoder5012B = TLE5012B_GetPos14bit();
+	
+	TLE5012B_UpateData();
+	Driver[SHOULDER_MOTOR_NUM].encoder5012B = TLE5012B_GetPos14bit();
 	for(int i = 0; i < 8; i++)
 	{
 		if(Motor[i].type == NONE)
@@ -234,8 +217,6 @@ void MotorCtrl(void)
 				//PtVelSlope(i,&Driver[i].velCtrl,&Driver[i].ptCtrl);
 				VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);		
-						
-//				DMA_Send_Data('\r','\n');
 				break;
 			default:break;
 		}

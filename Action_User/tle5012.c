@@ -134,10 +134,6 @@ void SpiInit(void)
 void TLE5012B_UpateData(void)
 {
 	TLE5012B_AccessRegister();
-	//To do: Add Code to compensate the mechanical Position error depending on speed
-	//TLE5012B_SpdCompensate();
-	//TLE5012BData.posMec = util_norm_float(TLE5012BData.pos15bit + TLE5012BData.spdCompen,
-	//																			0, ENCODER_POS_PER_REV, ENCODER_POS_PER_REV);
 }
 
 int32_t TLE5012B_GetPos15bit(void)

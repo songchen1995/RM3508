@@ -6,53 +6,6 @@
 #include "comm.h"
 
 
-
-float track2[20]={
--27125.08277	,
--23599.66297	,
--18139.60693	,
--11424.32704	,
--4117.808369	,
-3201.759508	,
-10025.33561	,
-15895.64892	,
-20415.97921	,
-23287.96307	,
-24361.83954	,
-23675.04886	,
-21453.51303	,
-18073.89066	,
-14005.8922	,
-9757.400043	,
-5830.442761	,
-2680.218116	,
-664.1158085	,
--18.89426166	,
-};
-
-float track[20] = {
-0.008793576	,
-128.3666364	,
-450.6942171	,
-991.8703953	,
-1686.527187	,
-2369.110414	,
-2795.160888	,
-2688.937913	,
-1804.031017	,
--18.89426166	,
--2811.668229	,
--6462.579928	,
--10723.51151	,
--15234.39027	,
--19562.09232	,
--23261.72512	,
--25977.11852	,
--27570.0363	,
--28203.59354	,
--28296.95024,
-};
-
 float RaiseTestBuf[12]=
 {
 	0.355,
@@ -68,42 +21,6 @@ float RaiseTestBuf[12]=
 	23.785,
 	24.12,
 };
-
-
-
-
-//float RaiseTestBuf[13]=
-//{
-//	0.4,
-//	1.6,
-//	3.6,
-//	6.4,
-//	10,
-//	14.4,
-//	18.8,
-//	22.4,
-//	25.2,
-//	27.2,
-//	28.4,
-//	28.8,
-//	28.8
-//};
-
-//float RaiseTestBuf[12]=
-//{
-//	0.5,
-//	2,
-//	4.5,
-//	8,
-//	12.5,
-//	18,
-//	23.5,
-//	28,
-//	31.5,
-//	34,
-//	35.5,
-//	36,
-//};
 
 
 float RaiseUp[] = //单位：角度
@@ -140,7 +57,7 @@ float knee_resetBuffer[]=
 	35.41,
 };
 
-
+//需要复位
 float slf1_1[] = 
 {
 0	,
@@ -274,11 +191,134 @@ float slf2_3[]=
 
 
 
-
-float thigh[20]=
+//老师的轨迹点（low_acceleration）
+float coaxe_low_acc_reset_buffer[5]=
 {
+	10.f,
+	20.f,
+	25.f,
+	26.914f,
+	26.914f
+};
 
-}
+float knee_low_acc_reset_buffer[5]=
+{
+	10.f,
+	25.f,
+	40.f,
+	57.312f,
+	57.312f,
+};
+//注意，以下点位相对于机械限位而不是初始复位
+float coaxe_start_1[20]=
+{
+26.914,	26.942,	27.025,	27.163,	27.354,
+27.599,	27.896,	28.243,	28.639,	29.078,
+29.562,	30.084,	30.644,	31.235,	31.855,
+32.499,	33.159,	33.833,	34.513,	35.191,
+};
+float  coaxe_start_2[6]=
+{
+35.86,
+36.51,
+37.132,
+37.714,
+38.242,
+38.694,
+};
+float coaxe_move_1[20] = 
+{
+38.694,	39.03,	39.27,	39.462,	39.627,
+39.766,	39.85,	39.837,	39.608,	38.923,
+37.732,	35.876,	33.345,	30.152,	26.641,
+22.473,	18.299,	14.309,	10.589,	7.244,
+};
+float coaxe_move_2[6] = 
+{
+4.424,
+2.408,
+1.292,
+1.328,
+2.482,
+4.545,
+};
+float coaxe_move_3[20]=
+{
+4.545,	6.756,	8.876,	10.914,	12.876,
+14.768,	16.592,	18.352,	20.048,	21.682,
+23.254,	24.765,	26.213,	27.599,	28.921,
+30.179,	31.369,	32.492,	33.544,	34.524,
+};
+float coaxe_move_4[5]=
+{
+35.429,
+36.255,
+36.999,
+37.657,
+38.224,
+};
+
+float knee_start_1[20]=
+{
+57.312,	57.311,	57.308,	57.302,	57.292,
+57.276,	57.25,	57.212,	57.157,	57.081,
+56.979,	56.845,	56.673,	56.456,	56.186,
+55.855,	55.454,	54.971,	54.398,	53.722,
+};
+
+float knee_start_2[6]=
+{
+52.928,
+52.003,
+50.93,
+49.689,
+48.258,
+46.636,
+};
+
+
+float knee_move_1[20]=
+{
+46.636,	45.436,	44.862,	44.862,	45.262,
+45.962,	47.112,	48.712,	50.962,	53.962,
+56.962,	59.762,	62.012,	63.512,	64.132,
+63.882,	62.692,	60.562,	57.83,	54.758,
+	
+};
+
+float knee_move_2[6]=
+{
+51.626,
+48.866,
+46.715,
+45.588,
+45.52,
+46.678,
+	
+
+
+};
+
+float knee_move_3[20]=
+{
+46.678,	48.515,	50.134,	51.558,	52.801,
+53.875,	54.792,	55.553,	56.18,	56.663,
+57.012,	57.228,	57.316,	57.276,	57.11,
+56.818,	56.401,	55.858,	55.188,	54.388,
+
+};
+
+float knee_move_4[5]=
+{
+53.456,
+52.388,
+51.179,
+49.823,
+48.312,
+
+};
+
+
 extern DriverType Driver[8];
 
 /*进行四足机器人的单腿测试，模拟主控*******************************/
@@ -706,6 +746,206 @@ void SlfTest(uint8_t motorNum)//学弟给的曲线
 //	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)status_coaxe,(int)CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE));
 }
 
+void Low_Acceleration_Test(uint8_t motorNum)//老师给的曲线
+{
+	static int status_coaxe= 0, status_knee = 0;
+	static int start_flag_coaxe = 0,start_flag_knee = 0;
+	if(start_flag_coaxe == 0 && motorNum == COAXE_MOTOR_NUM)
+	{
+		start_flag_coaxe = 1;
+		for(int i = 0; i < 0x14;i++)
+		{
+			Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((coaxe_start_1[i]- 26.914f) / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+		}
+		Driver[motorNum].ptCtrl.MP[0] = 0x14003000;
+		SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+	}
+	if(start_flag_knee == 0 && motorNum == KNEE_MOTOR_NUM)
+	{
+		for(int i = 0; i < 0x14;i++)
+		{
+			Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((knee_start_1[i]- 57.312f) / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+		}
+		Driver[motorNum].ptCtrl.MP[0] = 0x14003000;
+		SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+		start_flag_knee = 1;
+	}	
+	if(motorNum == COAXE_MOTOR_NUM)
+	{
+		switch(status_coaxe)
+		{
+			case 0:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x06;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((coaxe_start_2[i] - 26.914f) / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x06003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_coaxe= 1;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 1:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x14;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((coaxe_move_1[i] - 26.914f) / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_coaxe= 2;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 2:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x06;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((coaxe_move_2[i] - 26.914f)/ 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x06003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_coaxe= 3;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 3:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x14;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((coaxe_move_3[i] - 26.914f) / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_coaxe= 4;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}				
+				break;
+			case 4:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x05;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((coaxe_move_4[i] - 26.914f) / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x05003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_coaxe= 1;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}				
+				break;
+		}
+	}
+	
+	else if(motorNum == KNEE_MOTOR_NUM)
+	{
+		switch(status_knee)
+		{
+			case 0:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x06;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((knee_start_2[i] - 57.312f)/ 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x06003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_knee= 1;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 1:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x14;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((knee_move_1[i] - 57.312f) / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE ))
+				{
+					status_knee= 2;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 2:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x06;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((knee_move_2[i] - 57.312f) / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x06003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_knee= 3;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 3:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x14;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((knee_move_3[i] - 57.312f) / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x14003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_knee= 4;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+			case 4:
+				if(CheckPtFlag(motorNum,ACTION_READY_TO_COMPLETE))	
+				{
+					for(int i = 0; i < 0x05;i++)
+					{
+						Driver[motorNum].ptCtrl.desiredPos[POS_FIRST_BUFFER][i] = -((knee_move_4[i] - 57.312f) / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+					}
+					Driver[motorNum].ptCtrl.MP[0] = 0x05003000;
+					SetPtFlag(motorNum,EXECUTOR_LOADING_FIRST_BUFFER);
+				}			
+				if(CheckPtFlag(motorNum,ACTION_COMPLETE))
+				{
+					status_knee= 1;
+					SetPtFlag(motorNum,~ACTION_COMPLETE);
+				}
+				break;
+		}		
+	}
+
+//	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)status_coaxe,(int)status_knee);
+}
 
 
 void ResetTest(uint8_t motorNum)
@@ -745,7 +985,8 @@ void ResetInit(void)
 	Driver[COAXE_MOTOR_NUM].ptCtrl.size = 5;
 	for(int i = 0; i < Driver[0].ptCtrl.size;i++)
 	{
-		Driver[COAXE_MOTOR_NUM].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(coaxe_resetBuffer[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+//		Driver[COAXE_MOTOR_NUM].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(coaxe_resetBuffer[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
+		Driver[COAXE_MOTOR_NUM].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(coaxe_low_acc_reset_buffer[i] / 360.f * 8192.f) * COAXE_RATIO * M3508_RATIO;	
 	}
 	SetPtFlag(COAXE_MOTOR_NUM,BEGIN_MOTION);
 	SetPtFlag(COAXE_MOTOR_NUM,NEW_DATA);	
@@ -756,7 +997,7 @@ void ResetInit(void)
 	Driver[KNEE_MOTOR_NUM].ptCtrl.size = 5;
 	for(int i = 0; i < Driver[0].ptCtrl.size;i++)
 	{
-		Driver[KNEE_MOTOR_NUM].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(knee_resetBuffer[i] / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
+		Driver[KNEE_MOTOR_NUM].ptCtrl.desiredPos[POS_EXECUTOR][i] = -(knee_low_acc_reset_buffer[i] / 360.f * 8192.f) * KNEE_RATIO * M3508_RATIO;	
 	}
 	SetPtFlag(KNEE_MOTOR_NUM,BEGIN_MOTION);
 	SetPtFlag(KNEE_MOTOR_NUM,NEW_DATA);	
@@ -768,8 +1009,8 @@ void ResetInit(void)
 	SetPtFlag(COAXE_MOTOR_NUM,~BEGIN_MOTION);	
 	SetPtFlag(KNEE_MOTOR_NUM,~BEGIN_MOTION);
 	
-	Driver[COAXE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508;
-	Driver[KNEE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508;	
+	Driver[COAXE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508 ;
+	Driver[KNEE_MOTOR_NUM].ptCtrl.velLimit = VEL_MAX_3508 ;	
 	Driver[KNEE_MOTOR_NUM].posCtrl.actualPos = 0;		
 	Driver[COAXE_MOTOR_NUM].posCtrl.actualPos = 0;
 	Driver[KNEE_MOTOR_NUM].posCtrl.actualPos = 0;

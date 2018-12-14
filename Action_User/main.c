@@ -31,6 +31,7 @@ void init(void)
   TIM_Cmd(TIM2,DISABLE);	
   	
 	DriverInit();
+  PtStructInit();
   TIM_Cmd(TIM2,ENABLE);
 	
 	TIM_Delayms(TIM3,200);
@@ -41,11 +42,9 @@ void init(void)
 		Driver[i].posCtrl.actualPos = 0;
 		MotorOn(i);
 	}
+	ZeroPosInit();
 	
 }
-//int status = 0;
-
-
 
 
 int status;
@@ -56,10 +55,10 @@ int main(void)
 //	TIM_Delayms(TIM3,1000);
 //  PtStructInit();
 //	ResetTest();
-//	while(!CheckPtFlag(ACTION_COMPLETE)){};	
+//	while(!CheckPtFlag(ACT ION_COMPLETE)){};	
 //  ResetInit();
 //	PtStructInit();	
-	ResetInit();
+//	ResetInit();
 //	BufferExchangeTest(COAXE_MOTOR_NUM);
 //	BufferExchangeTest(KNEE_MOTOR_NUM);
 //	RaiseTest(0);
@@ -79,9 +78,10 @@ int main(void)
 //		Driver[	0].velCtrl.desiredVel[CMD] = 0;
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
 //		Driver[0].posCtrl.desiredPos = 0; 
-		SlfTest(COAXE_MOTOR_NUM);
-		SlfTest(KNEE_MOTOR_NUM);
-		TIM_Delayms(TIM3,10);
+//		SlfTest(COAXE_MOTOR_NUM);
+//		SlfTest(KNEE_MOTOR_NUM);
+//		Low_Acceleration_Test(COAXE_MOTOR_NUM);
+//		Low_Acceleration_Test(KNEE_MOTOR_NUM);
 //		VelCtrlTest(300.0f,200);
 //		Driver[2].velCtrl.desiredVel[CMD] = 1.0f;
 //		
