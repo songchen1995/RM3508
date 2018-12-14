@@ -96,7 +96,7 @@ void CANRespond(void)
 			case 0x40004742:
 				if(CheckPtFlag(i,RECEIVE_BEGIN))
 				{
-					PtSecondBufferHandler(i,txData);
+					PtSecondBufferHandler(i);
 				}
 				Driver[i].command.can_status = 0;
 				break;

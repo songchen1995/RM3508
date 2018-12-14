@@ -10,18 +10,21 @@
 #define M3508_RATIO  19.2f
 #define COAXE_MAX_ANGLE_PULSE  0
 #define COAXE_MIN_ANGLE_PULSE  -89000
+#define KNEE_MAX_ANGLE_PULSE		0
+#define KNEE_MIN_ANGLE_PULSE		-65536
+#define COAXE_MOTOR_NUM 0
+#define KNEE_MOTOR_NUM	1
 
-
-void PtCanHandler(int id,UnionDataType txData);
-void PtSecondBufferHandler(int id, UnionDataType txData);
-void PtFirstBufferHandler(void);
+void PtCanHandler(uint8_t motorNum,UnionDataType txData);
+void PtSecondBufferHandler(uint8_t motorNum);
+void PtFirstBufferHandler(uint8_t motorNum);
 
 void RaiseTest(uint8_t motorNum);
 void PtStructInit(void);
 void ExecutorLoadingFirstBufferTest(uint8_t motorNum);
 void BufferExchangeTest(uint8_t motorNum);
 void ResetTest(uint8_t motorNum);
-void ResetInit(uint8_t motorNum);
+void ResetInit(void);
 #endif
 
 

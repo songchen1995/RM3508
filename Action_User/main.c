@@ -52,14 +52,17 @@ int status;
 int main(void)
 {
 	init();
-	USART_OUT(USART3,(uint8_t*)"Start\r\n");
-	TIM_Delayms(TIM3,1000);
-  PtStructInit();
+//	USART_OUT(USART3,(uint8_t*)"Start\r\n");
+//	TIM_Delayms(TIM3,1000);
+//  PtStructInit();
 //	ResetTest();
 //	while(!CheckPtFlag(ACTION_COMPLETE)){};	
 //  ResetInit();
-	PtStructInit();	
-	RaiseTest();
+//	PtStructInit();	
+	ResetInit();
+	
+//	RaiseTest(0);
+//	RaiseTest(1);
 //	ExecutorLoadingFirstBufferTest();
 //	Driver[0].velCtrl.desiredVel[SOFT] = -VEL_MAX_3508 ; 
 //	TIM_Delayms(TIM3,100);
@@ -69,8 +72,9 @@ int main(void)
 	{
 		
 		CANRespond();
+	
 //		BufferExchangeTest();
-//		Driver[0].velCtrl.desiredVel[CMD] = 0;
+//		Driver[	0].velCtrl.desiredVel[CMD] = 0;
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
 //		Driver[0].posCtrl.desiredPos = 0; 
 //		TIM_Delayms(TIM3,500);

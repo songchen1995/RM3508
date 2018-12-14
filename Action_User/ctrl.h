@@ -171,6 +171,8 @@ typedef struct
 	
 	float velLimit;
 	
+	float posMec;
+	
 	uint8_t index;
 	
 	

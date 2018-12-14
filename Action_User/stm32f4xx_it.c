@@ -34,6 +34,7 @@
 #include "ctrl.h"
 #include "comm.h"
 #include "can.h"
+#include "four_leg.h"
 /******************************************************************************/
 /*            Cortex-M4 Processor Exceptions Handlers                         */
 /******************************************************************************/
@@ -137,7 +138,7 @@ void CAN2_RX0_IRQHandler(void)
 					PtCanHandler(j,Msg1); 
 					break;
 				case 0x40004742:
-					if(CheckPtFlag(RECEIVE_BEGIN))
+					if(CheckPtFlag(j,RECEIVE_BEGIN))
 					{
 						Driver[j].command.can_status = 0x40004742;	
 					}

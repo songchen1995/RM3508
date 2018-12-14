@@ -194,8 +194,8 @@ float PerCur[4] = {0.0f};
 void MotorCtrl(void)
 {
 //	CalculSpeed();
-	TLE5012B_UpateData();
-	Driver[0].encoder5012B = TLE5012B_GetPos14bit();
+//	TLE5012B_UpateData();
+//	Driver[0].encoder5012B = TLE5012B_GetPos14bit();
 	for(int i = 0; i < 8; i++)
 	{
 		if(Motor[i].type == NONE)
@@ -229,9 +229,9 @@ void MotorCtrl(void)
 				Driver[i].output = Driver[i].homingMode.output;
 				break;
 			case PT_MODE:
-			  PTCtrl(&Driver[i].ptCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
+			  PTCtrl(i,&Driver[i].ptCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
 				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].ptCtrl.output;
-				//PtVelSlope(&Driver[i].velCtrl,&Driver[i].ptCtrl);
+				//PtVelSlope(i,&Driver[i].velCtrl,&Driver[i].ptCtrl);
 				VelSlope(&Driver[i].velCtrl);
 				Driver[i].output = VelPidCtrl(&Driver[i].velCtrl);		
 						
@@ -392,7 +392,7 @@ float PtVelSlope(uint8_t motorNum,VelCtrlType *velPid, PTCtrlType *ptPid)
 		if(CheckPtFlag(motorNum,INDEX_JUMP))
 		{
 			status = 0;
-			SetPtFlag(~INDEX_JUMP);
+			SetPtFlag(motorNum,~INDEX_JUMP);
 //			USART_OUT(USART3,"JUMP\t");
 		}
 		
@@ -422,7 +422,7 @@ float PtVelSlope(uint8_t motorNum,VelCtrlType *velPid, PTCtrlType *ptPid)
 		
 
 		
-			SetPtFlag(~INDEX_JUMP);
+			SetPtFlag(motorNum,~INDEX_JUMP);
 			if(signVel == 1)
 			{
 				switch(status)
@@ -461,7 +461,7 @@ float PtVelSlope(uint8_t motorNum,VelCtrlType *velPid, PTCtrlType *ptPid)
 		else
 		{
 			velPid->desiredVel[SOFT] = velPid->desiredVel[CMD];
-			SetPtFlag(~INDEX_JUMP);
+			SetPtFlag(motorNum,~INDEX_JUMP);
 		}
 //	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)posPid->actualPos,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
 //USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\r\n",(int)Driver[0].posCtrl.actualPos,(int)(Driver[0].ptCtrl.velOutput),(int)Driver[0].velCtrl.speed,(int)Driver[0].velCtrl.desiredVel[SOFT]);				
@@ -476,9 +476,8 @@ float PtVelSlope(uint8_t motorNum,VelCtrlType *velPid, PTCtrlType *ptPid)
 
 float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
-	static float kp = 0.05,kd = 0.15,ki= 0.000010,posErr = 0,posErrLast = 0,iout = 0;
-	static int a = 0;
-	static int safety = 0;
+	static float kp[3] = {0.01,0.01,0.01},kd[3] = {0.35,0.35,0.35},ki= 0.000000,posErr[3] = {0},posErrLast[3] = {0} ,iout = 0;
+	static int safety[3] = {0};
 	if(CheckPtFlag(motorNum,BEGIN_MOTION))
 	{
 		if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] >= COAXE_MAX_ANGLE_PULSE)
@@ -500,53 +499,66 @@ float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlTy
 				else
 				{
 					ptPid->velOutput = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - ptPid->desiredPos[POS_EXECUTOR][ptPid->index-1])/ (ptPid->desiredTime);
-				}	
-				a = (ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - ptPid->desiredPos[POS_EXECUTOR][ptPid->index-1])/ptPid->desiredTime;
-				
+				}				
 				iout = MaxMinLimit(iout,VEL_MAX_3508 / 3.f);
 				ptPid->cnt++;
-				posErr = ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos;
-				iout += ki * posErr;
-				ptPid->posOutput = posErr * kp + (posErr - posErrLast) * kd + iout;  
-				posErrLast = posErr;				
+				posErr[motorNum] = ptPid->desiredPos[POS_EXECUTOR][ptPid->index] - posPid->actualPos;
+				iout += ki * posErr[motorNum];
+				ptPid->posOutput = posErr[motorNum] * kp[motorNum] + (posErr[motorNum] - posErrLast[motorNum]) * kd[motorNum] + iout;  
+				posErrLast[motorNum] = posErr[motorNum];				
 			}
 			else
 			{
 				ptPid->index++;
-				SetPtFlag(INDEX_JUMP);
+				SetPtFlag(motorNum,INDEX_JUMP);
 				ptPid->cnt = 0;
 				if(ptPid->index == ptPid->size)
 				{
-					SetPtFlag(~BEGIN_MOTION);
-					SetPtFlag(ACTION_COMPLETE); //瀹屾垚鏍囧織浣嶈缃笂
+					SetPtFlag(motorNum,~BEGIN_MOTION);
+					SetPtFlag(motorNum,ACTION_COMPLETE); //瀹屾垚鏍囧織浣嶈缃笂
 				}
 				if(ptPid->index >= ptPid->size - 1)//鍗冲皢瀹屾垚鏍囧織浣嶈缃笂
 				{
-					SetPtFlag(ACTION_READY_TO_COMPLETE);
+					SetPtFlag(motorNum,ACTION_READY_TO_COMPLETE);
 				}
 			}
 		}	
 	}
 
 //	ptPid->output = -VEL_MAX_3508;	
-//	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",ptPid->index,(int)posPid->actualPos,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
-	PtFirstBufferHandler();	
-	
-	if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] > COAXE_MAX_ANGLE_PULSE)
+	if(motorNum == COAXE_MOTOR_NUM)
+		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",ptPid->index,(int)ptPid->posMec ,(int)(ptPid->velOutput),(int)velPid->speed,(int)velPid->desiredVel[SOFT]);	
+	PtFirstBufferHandler(motorNum);	
+	if(motorNum == KNEE_MOTOR_NUM)
 	{
-		safety++;
+		if(ptPid->posMec > KNEE_MAX_ANGLE_PULSE)
+		{
+			safety[motorNum]++;
+		}
+		if(ptPid->posMec <= KNEE_MIN_ANGLE_PULSE)
+		{
+			safety[motorNum]++;
+		}	
 	}
-	if(ptPid->desiredPos[POS_EXECUTOR][ptPid->index] <= COAXE_MIN_ANGLE_PULSE)
+	else if(motorNum == COAXE_MOTOR_NUM)
 	{
-		safety++;
+		if(ptPid->posMec > COAXE_MAX_ANGLE_PULSE)
+		{
+			safety[motorNum]++;
+		}
+		if(ptPid->posMec <= COAXE_MIN_ANGLE_PULSE)
+		{
+			safety[motorNum]++;
+		}	
 	}
-	if(safety > 10)	
+
+	if(safety[motorNum] > 10)	
 	{
 		ptPid->output = 0;
 		ptPid->velOutput = 0;
 		ptPid->posOutput = 0;
-		Driver[0].status = DISABLE;
-		Driver[0].output = 0;
+		Driver[motorNum].status = DISABLE;
+		Driver[motorNum].output = 0;
 	}	
 	
 	ptPid->output = MaxMinLimit(ptPid->velOutput + ptPid->posOutput,ptPid -> velLimit * 1.0f);
@@ -720,7 +732,7 @@ float CalculSpeed_Pos(DriverType *driver,MotorType *motor)
 	if(deltaPos <-(driver->encoder.period/2)) deltaPos += driver->encoder.period;
 	
 	driver->posCtrl.actualPos += deltaPos;
-	
+//	driver->ptCtrl.posMec += deltaPos;
 	//用反馈速度输入
 	driver->velCtrl.speed = (float)(motor->vel)*0.1365333f;					//1/60*8192/1000=0.136533
 	//用位置差分出的速度输入
