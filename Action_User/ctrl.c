@@ -34,12 +34,7 @@ extern MotorType Motor[8];
 /* Private  function prototypes -----------------------------------------------*/
 /* Private  functions ---------------------------------------------------------*/
 
-#define LEFT_FORWARD_LEG 1
-#define RIGHT_FORWARD_LEG 2
-#define LEFT_BACKWARD_LEG 3
-#define RIGHT_BACKWARD_LEG 4
 
-#define BOARD LEFT_FORWARD_LEG
 /**
   * @brief  Çý¶¯Æ÷³õÊ¼»¯
   * @param  None
