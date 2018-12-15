@@ -39,7 +39,7 @@ extern MotorType Motor[8];
 #define LEFT_BACKWARD_LEG 3
 #define RIGHT_BACKWARD_LEG 4
 
-#define BOARD LEFT_BACKWARD_LEG
+#define BOARD LEFT_FORWARD_LEG
 /**
   * @brief  驱动器初始化
   * @param  None
@@ -57,20 +57,19 @@ void DriverInit(void)
 #if BOARD == LEFT_FORWARD_LEG
 	Driver[SHOULDER_MOTOR_NUM].command.canId = 1;
 	Driver[COAXE_MOTOR_NUM].command.canId = 2;
-	Driver[COAXE_MOTOR_NUM].command.canId = 3;
+	Driver[KNEE_MOTOR_NUM].command.canId = 3;
 #elif BOARD == RIGHT_FORWARD_LEG
-	Driver[0].command.canId = 4;
-	Driver[1].command.canId = 5;
-	Driver[2].command.canId = 6;
+	Driver[SHOULDER_MOTOR_NUM].command.canId = 4;
+	Driver[COAXE_MOTOR_NUM].command.canId = 5;
+	Driver[KNEE_MOTOR_NUM].command.canId = 6;
 #elif BOARD == LEFT_BACKWARD_LEG
 	Driver[SHOULDER_MOTOR_NUM].command.canId = 7;
 	Driver[COAXE_MOTOR_NUM].command.canId = 8;
 	Driver[KNEE_MOTOR_NUM].command.canId = 9;	
 #elif BOARD == RIGHT_BACKWARD_LEG
-	Driver[0].command.canId = 10;
-	Driver[1].command.canId = 11;
-	Driver[2].command.canId = 12;
-	Driver[3].command.canId = 13;
+	Driver[SHOULDER_MOTOR_NUM].command.canId = 10;
+	Driver[COAXE_MOTOR_NUM].command.canId = 11;
+	Driver[KNEE_MOTOR_NUM].command.canId = 12;
 #endif
 	
 	for(int i = 0; i < 8; i++)
@@ -128,7 +127,8 @@ void DriverInit(void)
 			break;
 		}
 	}
-	
+	Driver[SHOULDER_MOTOR_NUM].unitMode = POSITION_CONTROL_MODE;	
+		
 #if BOARD == AUTO_3508
 	//自动车俯仰正转归位
 	Driver[2].unitMode = POSITION_CONTROL_MODE;
@@ -152,10 +152,18 @@ void DriverInit(void)
   */
 void ZeroPosInit(void)
 {
-	Driver[SHOULDER_MOTOR_NUM].target5012B = 6000;
-	Driver[SHOULDER_MOTOR_NUM].encoder5012B = TLE5012B_GetPos14bit();
-	Driver[SHOULDER_MOTOR_NUM].posCtrl.actualPos =(( Driver[SHOULDER_MOTOR_NUM].encoder5012B) - Driver[SHOULDER_MOTOR_NUM].target5012B); 
-	Driver[SHOULDER_MOTOR_NUM].posCtrl.desiredPos = Driver[SHOULDER_MOTOR_NUM].posCtrl.actualPos;
+#if BOARD == LEFT_FORWARD_LEG	
+		Driver[SHOULDER_MOTOR_NUM].target5012B = 6799;
+#elif BOARD ==RIGHT_FORWARD_LEG
+		Driver[SHOULDER_MOTOR_NUM].target5012B = 0x19BE;
+#elif BOARD == LEFT_BACKWARD_LEG
+		Driver[SHOULDER_MOTOR_NUM].target5012B = 6000;
+#elif BOARD == RIGHT_BACKWARD_LEG
+		Driver[SHOULDER_MOTOR_NUM].target5012B = 7884;
+#endif
+		Driver[SHOULDER_MOTOR_NUM].encoder5012B = TLE5012B_GetPos14bit();
+		Driver[SHOULDER_MOTOR_NUM].posCtrl.actualPos = -M3508_RATIO *  (( Driver[SHOULDER_MOTOR_NUM].encoder5012B) - Driver[SHOULDER_MOTOR_NUM].target5012B); 
+		Driver[SHOULDER_MOTOR_NUM].posCtrl.desiredPos = 0;
 }
 
 void ZeroPosCtrl(DriverType* driver)

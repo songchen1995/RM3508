@@ -120,7 +120,6 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name>?榳皗&gt;	?榳皗&gt;	</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -184,9 +183,9 @@
         <Bp>
           <Number>2</Number>
           <Type>0</Type>
-          <LineNumber>184</LineNumber>
+          <LineNumber>167</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134224580</Address>
+          <Address>134234796</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -195,23 +194,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>D:\楝兼常鐨刟ction\杞欢\DJI_Driver\Action_User\ctrl.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\demo\../Action_User/ctrl.c\184</Expression>
-        </Bp>
-        <Bp>
-          <Number>3</Number>
-          <Type>0</Type>
-          <LineNumber>215</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134224910</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>D:\楝兼常鐨刟ction\杞欢\DJI_Driver\Action_User\ctrl.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\demo\../Action_User/ctrl.c\215</Expression>
+          <Expression>\\demo\../Action_User/ctrl.c\167</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -233,7 +216,7 @@
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Driver,0x10</ItemText>
+          <ItemText>Driver,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>4</count>

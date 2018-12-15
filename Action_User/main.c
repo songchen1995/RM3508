@@ -51,6 +51,7 @@ int status;
 int main(void)
 {
 	init();
+//	Driver[SHOULDER_MOTOR_NUM].status = DISABLE;
 //	USART_OUT(USART3,(uint8_t*)"Start\r\n");
 //	TIM_Delayms(TIM3,1000);
 //  PtStructInit();
