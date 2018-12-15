@@ -153,13 +153,13 @@ void DriverInit(void)
 void ZeroPosInit(void)
 {
 #if BOARD == LEFT_FORWARD_LEG	
-		Driver[SHOULDER_MOTOR_NUM].target5012B = 6799;
+		Driver[SHOULDER_MOTOR_NUM].target5012B = 6695;
 #elif BOARD ==RIGHT_FORWARD_LEG
-		Driver[SHOULDER_MOTOR_NUM].target5012B = 0x19BE;
+		Driver[SHOULDER_MOTOR_NUM].target5012B = 2633;
 #elif BOARD == LEFT_BACKWARD_LEG
-		Driver[SHOULDER_MOTOR_NUM].target5012B = 6000;
+		Driver[SHOULDER_MOTOR_NUM].target5012B = 352;
 #elif BOARD == RIGHT_BACKWARD_LEG
-		Driver[SHOULDER_MOTOR_NUM].target5012B = 7884;
+		Driver[SHOULDER_MOTOR_NUM].target5012B = 566;
 #endif
 		Driver[SHOULDER_MOTOR_NUM].encoder5012B = TLE5012B_GetPos14bit();
 		Driver[SHOULDER_MOTOR_NUM].posCtrl.actualPos = -M3508_RATIO *  (( Driver[SHOULDER_MOTOR_NUM].encoder5012B) - Driver[SHOULDER_MOTOR_NUM].target5012B); 
