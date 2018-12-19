@@ -101,10 +101,7 @@ void CANRespond(void)
 				break;
 			default: break;
 		}
-		if(CheckPtFlag(i,RECEIVE_BEGIN))
-		{
-			PtSecondBufferHandler(i);
-		}
+
 	}
 
 }

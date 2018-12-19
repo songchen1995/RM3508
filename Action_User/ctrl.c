@@ -193,6 +193,10 @@ void MotorCtrl(void)
 			Driver[i].output = 0.0f;		
 			continue;
 		}
+		if(CheckPtFlag(i,RECEIVE_BEGIN))
+		{
+			PtSecondBufferHandler(i);
+		}
 		//USART_OUT(USART3,(uint8_t*)"%d\r\n",Driver[KNEE_MOTOR_NUM].ptCtrl.executeFlag);	
 		switch(Driver[i].unitMode)
 		{
@@ -214,6 +218,10 @@ void MotorCtrl(void)
 				Driver[i].output = Driver[i].homingMode.output;
 				break;
 			case PT_MODE:
+				if(CheckPtFlag(i,RECEIVE_BEGIN))
+				{
+					PtSecondBufferHandler(i);
+				}
 			  PTCtrl(i,&Driver[i].ptCtrl,&Driver[i].posCtrl,&Driver[i].velCtrl);
 				Driver[i].velCtrl.desiredVel[CMD] = Driver[i].ptCtrl.output;
 				//PtVelSlope(i,&Driver[i].velCtrl,&Driver[i].ptCtrl);
@@ -530,9 +538,10 @@ float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlTy
 		}	
 	}
 	PtFirstBufferHandler(motorNum);	
-	if(motorNum == COAXE_MOTOR_NUM)
+	if(motorNum == KNEE_MOTOR_NUM)
+		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)ptPid->output);
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)pPid->actualPos,(int)ptPid->cnt);
-		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)(ptPid->velOutput),(int)velPid->speed,(int)ptPid->velLimit);
+//		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)(ptPid->velOutput),(int)velPid->speed,(int)ptPid->velLimit);
 	
 
 	PTSafetyCheck(motorNum,ptPid);

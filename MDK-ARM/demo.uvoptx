@@ -79,8 +79,8 @@
       </OPTFL>
       <CpuCode>18</CpuCode>
       <DebugOpt>
-        <uSim>1</uSim>
-        <uTrg>0</uTrg>
+        <uSim>0</uSim>
+        <uTrg>1</uTrg>
         <sLdApp>1</sLdApp>
         <sGomain>1</sGomain>
         <sRbreak>1</sRbreak>
@@ -125,7 +125,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name>?韛刚??韛刚?</Name>
+          <Name>?舧?Z	?舧?Z	</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -157,9 +157,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>455</LineNumber>
+          <LineNumber>357</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134227748</Address>
+          <Address>134226476</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -168,14 +168,30 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>D:\楝兼常鐨刟ction\杞欢\DJI_Driver\Action_User\four_leg.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\demo\../Action_User/four_leg.c\455</Expression>
+          <Expression>\\demo\../Action_User/four_leg.c\357</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>106</LineNumber>
+          <LineNumber>346</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134220316</Address>
+          <Address>134226406</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>D:\楝兼常鐨刟ction\杞欢\DJI_Driver\Action_User\four_leg.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\demo\../Action_User/four_leg.c\346</Expression>
+        </Bp>
+        <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>94</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134220268</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -184,7 +200,23 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>D:\楝兼常鐨刟ction\杞欢\DJI_Driver\Action_User\comm.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\demo\../Action_User/comm.c\106</Expression>
+          <Expression>\\demo\../Action_User/comm.c\94</Expression>
+        </Bp>
+        <Bp>
+          <Number>3</Number>
+          <Type>0</Type>
+          <LineNumber>358</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>..\Action_User\four_leg.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
