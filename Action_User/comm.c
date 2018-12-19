@@ -97,7 +97,9 @@ void CANRespond(void)
 				break;
 			case 0x4000534D:  //MS
 				txData.data32[0] = 0x0000534D;
-//				txData.data8[0]  = CheckPtFlag 
+				txData.data32[1] = Driver[i].ptCtrl.executeFlag;
+				CanSendData(Driver[i].command.canId,txData);
+				Driver[i].command.can_status = 0;
 				break;
 			default: break;
 		}

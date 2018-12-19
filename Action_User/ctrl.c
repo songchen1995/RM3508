@@ -152,7 +152,7 @@ void ZeroPosInit(void)
 #elif BOARD ==RIGHT_FORWARD_LEG
 		Driver[SHOULDER_MOTOR_NUM].target5012B = 2633;
 #elif BOARD == LEFT_BACKWARD_LEG
-		Driver[SHOULDER_MOTOR_NUM].target5012B = 352;
+		Driver[SHOULDER_MOTOR_NUM].target5012B = 2107;
 #elif BOARD == RIGHT_BACKWARD_LEG
 		Driver[SHOULDER_MOTOR_NUM].target5012B = 566;
 #endif
@@ -530,7 +530,7 @@ float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlTy
 					SetPtFlag(motorNum,~BEGIN_MOTION);
 					SetPtFlag(motorNum,ACTION_COMPLETE); //完成标志位被置上
 				}
-				if(ptPid->index >= ptPid->size - 1)//即将完成标志位被置上
+				if(ptPid->index >= ptPid->size - 3)//即将完成标志位被置上
 				{
 					SetPtFlag(motorNum,ACTION_READY_TO_COMPLETE);
 				}
@@ -539,7 +539,7 @@ float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlTy
 	}
 	PtFirstBufferHandler(motorNum);	
 	if(motorNum == KNEE_MOTOR_NUM)
-		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)ptPid->output);
+		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)Driver[KNEE_MOTOR_NUM].output);
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)pPid->actualPos,(int)ptPid->cnt);
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int)posPid->actualPos,(int)ptPid->desiredPos[POS_EXECUTOR][ptPid->index],(int)(ptPid->velOutput),(int)velPid->speed,(int)ptPid->velLimit);
 	

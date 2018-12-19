@@ -154,7 +154,7 @@ void CAN2_RX0_IRQHandler(void)
 					case 0x40005850:						//PX   读取位置
 						Driver[j].command.can_status = 0x40005850;
 						break;
-					case 0x4000534D:						//IQ	 讈取支路
+					case 0x4000534D:						//MS	 讈取支路
 						Driver[j].command.can_status = 0x4000534D;					
 						break;
 					default:break;

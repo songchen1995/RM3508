@@ -319,31 +319,7 @@ typedef struct
 #define  CAN_ID_NUM     5
 //�Զ�5�ų�ʼ  ����Ϊ2.5����Ϊ1.5
 
-/*PT模式下的Flag*****************************88*******/
-#define SECOND_BUFFER_LOADING_CAN_BUFFER 0x00000001
-#define FIRST_BUFFER_LOADING_SECOND_BUFFER  0x00000002
-#define EXECUTOR_LOADING_FIRST_BUFFER				0x00000004
-#define RECEIVE_START_AND_MP								0x00000008
-#define RECEIVE_QN													0x00000010
-#define RECEIVE_BEGIN												0x00000020//手动清除标志位
-#define BEGIN_MOTION												0x00000040
-#define NEW_DATA														0x00000080//新数据进入，手动清除标志位（pt斜坡中接收到新指令后第一次执行需要）
-#define ACTION_READY_TO_COMPLETE						0x00000100//即将完成一次动作
-#define ACTION_COMPLETE											0x00000200//完成一次动作,手动清除标志位（接收到一次新指令清除标志位）
-#define INDEX_JUMP													0x00000400//发生一次index跳变，手动清除标志位（PTVelSlope中清除）
-#define CAN_RECEIVING												0x00000800
-/*Author: Oliver********************************/
 
-/*PT模式下的runMode************************************/
-#define	SINGLE_MODE						0x00
-#define CIRCULAR_MODE												0x01
-#define	RUN_AND_STOP_MOTION_MODE						0x02
-
-/*PT模式下的位置信息的data buf************************************/
-#define POS_SECOND_BUFFER	0x02
-#define POS_FIRST_BUFFER 0x01
-#define POS_EXECUTOR 0x00
-/*Author: Oliver********************************/
 /* Exported functions ------------------------------------------------------- */
 float 	OutPutLim(float val);
 float   VelSlope(VelCtrlType *velPid);
