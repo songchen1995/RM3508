@@ -440,7 +440,7 @@ void MLX90393_ReadPos(void)
 	uint8_t statusByte;
 	TLE5012_CS_ENABLE();
 	SPI_TX_ON();
-	write_buffer[0] = (SM|X_AXIS|Y_AXIS|Z_AXIS);
+	write_buffer[0] = (SM|X_AXIS|Y_AXIS);
 	SPI1_ReadWriteByte(write_buffer[0]);
 	SPI_TX_OFF();
 
@@ -449,12 +449,12 @@ void MLX90393_ReadPos(void)
 	USART_OUT(USART3,(uint8_t*)"%d\t",(uint32_t)safetyWord);
 
 	TIM_Delayms(TIM3,1);
-	write_buffer[0] = (RM|X_AXIS|Y_AXIS|Z_AXIS);
+	write_buffer[0] = (RM|X_AXIS|Y_AXIS);
 	SPI_TX_ON();
 	SPI1_ReadWriteByte(write_buffer[0]);
 	SPI_TX_OFF();
 	statusByte = SPI1_ReadWriteByte(NOP);
-	for(int i = 0; i < 6; i++)
+	for(int i = 0; i < 4; i++)
 	{
 		posture[i] = SPI1_ReadWriteByte(NOP);
 		TIM_Delayms(TIM3,1);
@@ -462,7 +462,7 @@ void MLX90393_ReadPos(void)
 	
 	TLE5012_CS_DISABLE();
 	SPI_TX_ON();
-	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int16_t)(posture[0] * 256 + posture[1]),(int16_t)(posture[2] * 256 + posture[3]),(uint16_t)(posture[4] * 256 + posture[5]),(uint16_t)(posture[6] * 256 + posture[7]));
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int16_t)(posture[0] * 256 + posture[1]),(int16_t)(posture[2] * 256 + posture[3]));
 	
 }
 
