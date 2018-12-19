@@ -156,6 +156,9 @@ void TLE5012B_Init(void);
 void TLE5012B_UpateData(void);
 int32_t TLE5012B_GetPos15bit(void);
 int32_t TLE5012B_GetPos14bit(void);
+void MLX90393_Init(void);
+void MLX90393_ReadPos(void);
+
 void SpiInit(void);
 #endif
 

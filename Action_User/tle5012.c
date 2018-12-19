@@ -22,6 +22,7 @@
 //#include "motorconf.h"
 #include "stm32f4xx_spi.h"
 #include "stm32f4xx_rcc.h"
+#include "timer.h"
 /* Extern	 variables ---------------------------------------------------------*/
 extern DriverType Driver[];
 
@@ -106,10 +107,10 @@ void SpiInit(void)
 	SPI_InitTypeDef SPI_InitStruct;
 	SPI_InitStruct.SPI_Mode = SPI_Mode_Master;
 	SPI_InitStruct.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-	SPI_InitStruct.SPI_DataSize = SPI_DataSize_16b;
-	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_32;
+	SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b;
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_64;
 	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
-	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
+	SPI_InitStruct.SPI_CPOL = SPI_CPOL_High;
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_2Edge;
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
 	SPI_InitStruct.SPI_CRCPolynomial = 7;
@@ -325,4 +326,149 @@ static uint16_t TLE5012ReadRegUpdate(uint16_t command, uint16_t *reData)
 
 	return safetyWord;
 }
+
+
+
+
+
+
+
+//COMMAND_byte
+#define EX 0x80
+#define SB 0X10
+#define SWOC 0x20
+#define SM 0x30
+#define RM 0x40
+#define RR 0x50
+#define WR 0x60
+#define RT 0xF0
+#define HR 0xD0
+#define HS 0xE0
+#define NOP 0x00
+
+#define  SPI_MODE_ONLY 0x0400
+
+#define Z_AXIS 0x008
+#define Y_AXIS 0x004
+#define X_AXIS 0x002
+#define TEMPERATURE 0x01
+#define BURST_SEL_Z 0x0200
+#define BURST_SEL_Y 0x0100
+#define BURST_SEL_X 0x0080
+#define BURST_SEL_T 0x0040
+
+#define GAIN_SEL(val) ((val << 4) & 0x70) 
+#define RES(z,y,x)  ((z << 9 | y << 7 | x << 5) & 0x7E0) 
+
+//address
+#define ADDRESS0 0x00
+#define ADDRESS1 0x01
+#define ADDRESS2 0x02
+#define ADDRESS3 0x03
+#define ADDRESS4 0x04
+#define ADDRESS5 0x05
+#define ADDRESS6 0x06
+#define ADDRESS7 0x07
+#define ADDRESS8 0x08
+#define ADDRESS9 0x09
+
+void MLX90393_Init(void);
+void MLX90393_ReadPos(void);
+int32_t MLX90393_GetPosX(void);
+
+
+
+static uint8_t posture[8];//Z,Y,X,T
+// int16_t dataTest1 = 0x0000; //
+// uint16_t dataTest = 0x0000; //
+static uint8_t status  = 0;
+static uint32_t write[3] ;
+static uint32_t read[2] = {0};
+static uint8_t write_buffer[10];
+void MLX90393_Init(void)
+{
+
+//	hspi1.Instance->CR1 |= SPI_POLARITY_LOW; 
+//	hspi1.Instance->CR1 |= SPI_PHASE_2EDGE; 
+	write_buffer[0] = 0x60;
+	write_buffer[1] = (SPI_MODE_ONLY&0xFF00)>>8;
+	write_buffer[2] = SPI_MODE_ONLY&0x00FF;
+	write_buffer[3] = ADDRESS1  << 2;
+	
+	TLE5012_CS_ENABLE();
+	SPI_TX_ON();
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI1_ReadWriteByte(write_buffer[1]);
+	SPI1_ReadWriteByte(write_buffer[2]);
+	SPI1_ReadWriteByte(write_buffer[3]);
+	SPI_TX_OFF();
+	safetyWord = SPI1_ReadWriteByte(NOP);
+	
+	write_buffer[0] = 0x60;
+	write_buffer[1] = (((RES(0,0,0)))&0xFF00)>>8;
+	write_buffer[2] = (((RES(0,0,0)))&0x00FF);
+	write_buffer[3] = ADDRESS2  << 2;	
+	SPI_TX_ON();
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI1_ReadWriteByte(write_buffer[1]);
+	SPI1_ReadWriteByte(write_buffer[2]);
+	SPI1_ReadWriteByte(write_buffer[3]);
+	SPI_TX_OFF();
+	safetyWord = SPI1_ReadWriteByte(NOP);	
+	
+	write_buffer[0] = 0x60;
+	write_buffer[1] = ((0x0C|GAIN_SEL(0))&0xFF00)>>8;
+	write_buffer[2] = (0x0C|GAIN_SEL(0))&0x00FF;
+	write_buffer[3] = ADDRESS0  << 2;	
+	SPI_TX_ON();
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI1_ReadWriteByte(write_buffer[1]);
+	SPI1_ReadWriteByte(write_buffer[2]);
+	SPI1_ReadWriteByte(write_buffer[3]);
+	SPI_TX_OFF();
+	safetyWord = SPI1_ReadWriteByte(NOP);	
+
+	TLE5012_CS_DISABLE();
+	
+	SPI_TX_ON();
+
+}
+int a = 0;
+void MLX90393_ReadPos(void)
+{
+ 
+	uint8_t statusByte;
+	TLE5012_CS_ENABLE();
+	SPI_TX_ON();
+	write_buffer[0] = (SM|X_AXIS|Y_AXIS|Z_AXIS);
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI_TX_OFF();
+
+
+	safetyWord = SPI1_ReadWriteByte(NOP);
+	USART_OUT(USART3,(uint8_t*)"%d\t",(uint32_t)safetyWord);
+
+	TIM_Delayms(TIM3,1);
+	write_buffer[0] = (RM|X_AXIS|Y_AXIS|Z_AXIS);
+	SPI_TX_ON();
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI_TX_OFF();
+	statusByte = SPI1_ReadWriteByte(NOP);
+	for(int i = 0; i < 6; i++)
+	{
+		posture[i] = SPI1_ReadWriteByte(NOP);
+		TIM_Delayms(TIM3,1);
+	}
+	
+	TLE5012_CS_DISABLE();
+	SPI_TX_ON();
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\t%d\t%d\t%d\r\n",(int16_t)(posture[0] * 256 + posture[1]),(int16_t)(posture[2] * 256 + posture[3]),(uint16_t)(posture[4] * 256 + posture[5]),(uint16_t)(posture[6] * 256 + posture[7]));
+	
+}
+
+
+
+
+
+
 

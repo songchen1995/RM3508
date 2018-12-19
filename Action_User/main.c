@@ -108,8 +108,12 @@ void init(void)
 int status;
 int main(void)
 {
-
-	init();
+	SpiInit();
+	USART3_DMA_Init(921600);
+//	MLX90393_Init();
+//	init();
+	
+		
 //	Driver[0].pvtCtrl.desiredPos = track;
 //	Driver[0].pvtCtrl.desiredTime = time;
 //	MP[0][0] = track[0];
@@ -163,8 +167,9 @@ int main(void)
 //	Driver[0].pvtCtrl.flag |= 0x00001000;
 	while(1)
 	{
-		
-		CANRespond();
+			MLX90393_ReadPos();
+			TIM_Delayms(TIM3,1);
+//		CANRespond();
 
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
 //		Driver[0].posCtrl.desiredPos = 0; 
