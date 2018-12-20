@@ -452,12 +452,12 @@ void MLX90393_ReadPos(void)
  
 	uint8_t statusByte;
 
-//	TLE5012_CS_ENABLE();
-//	SPI_TX_ON();
-//	write_buffer[0] = (SM|X_AXIS|Y_AXIS);
-//	SPI1_ReadWriteByte(write_buffer[0]);
-//	SPI_TX_OFF();
-//	safetyWord = SPI1_ReadWriteByte(NOP);
+	TLE5012_CS_ENABLE();
+	SPI_TX_ON();
+	write_buffer[0] = (SM|X_AXIS|Y_AXIS);
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI_TX_OFF();
+	safetyWord = SPI1_ReadWriteByte(NOP);
 
 
 	USART_OUT(USART3,(uint8_t*)"%d\t",(uint32_t)safetyWord);
