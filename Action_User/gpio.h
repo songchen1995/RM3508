@@ -20,5 +20,5 @@ void GPIO_Init_Pins(GPIO_TypeDef * GPIOx,
 					GPIOMode_TypeDef GPIO_Mode);
 
 void KeyInit(void);
-	
+void ExtiInit(void);	
 #endif

@@ -120,7 +120,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name>蠻??舧蠻?</Name>
+          <Name>赖??舧赖?</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -309,6 +309,10 @@
       <pSingCmdsp></pSingCmdsp>
       <pMultCmdsp></pMultCmdsp>
       <SystemViewers>
+        <Entry>
+          <Name>System Viewer\EXTI</Name>
+          <WinId>35904</WinId>
+        </Entry>
         <Entry>
           <Name>System Viewer\SPI1</Name>
           <WinId>35905</WinId>

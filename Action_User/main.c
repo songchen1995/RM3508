@@ -105,11 +105,12 @@ void init(void)
 //float time[20]={
 //	5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
 //};
-int status;
+int flagging = 0;
 int main(void)
 {
 	SpiInit();
 	USART3_DMA_Init(921600);
+	ExtiInit();
 //	MLX90393_Init();
 //	init();
 	
@@ -168,6 +169,11 @@ int main(void)
 	while(1)
 	{
 			MLX90393_ReadPos();
+			if(flagging == 1)
+			{
+				USART_OUT(USART3,(uint8_t*)"In\r\n");
+				flagging = 0;
+			}
 			TIM_Delayms(TIM3,1);
 //		CANRespond();
 

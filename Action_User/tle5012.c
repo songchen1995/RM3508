@@ -333,6 +333,8 @@ static uint16_t TLE5012ReadRegUpdate(uint16_t command, uint16_t *reData)
 
 
 
+#include "stdint.h"
+
 //COMMAND_byte
 #define EX 0x80
 #define SB 0X10
@@ -346,7 +348,18 @@ static uint16_t TLE5012ReadRegUpdate(uint16_t command, uint16_t *reData)
 #define HS 0xE0
 #define NOP 0x00
 
+//MEMORY
+/*********************************
+
+**********************************/
+#define WRITE_REG_MLX(address,val)  ((WR)|((val&0xff00) << 8) | (val & 0xff) << 16| (address << 26))//((WR)|((val&0xff00) << 8) | (val & 0xff) << 16| (address << 26))
+#define READ_REG_MLX(address)        ((RR)| (address << 10))  
+//val
 #define  SPI_MODE_ONLY 0x0400
+#define GAIN_SEL(val) ((val << 4) & 0x70) 
+#define RES(z,y,x)  ((z << 9 | y << 7 | x << 5) & 0x7E0) 
+#define DIG_FILT(val) ((val << 2) & 0x1C)
+#define OSR(val)   (val)
 
 #define Z_AXIS 0x008
 #define Y_AXIS 0x004
@@ -357,9 +370,8 @@ static uint16_t TLE5012ReadRegUpdate(uint16_t command, uint16_t *reData)
 #define BURST_SEL_X 0x0080
 #define BURST_SEL_T 0x0040
 
-#define GAIN_SEL(val) ((val << 4) & 0x70) 
-#define RES(z,y,x)  ((z << 9 | y << 7 | x << 5) & 0x7E0) 
-
+#define TRIG_INT_SEL 0x80
+#define WOC_DIFF 0x10
 //address
 #define ADDRESS0 0x00
 #define ADDRESS1 0x01
@@ -391,8 +403,8 @@ void MLX90393_Init(void)
 //	hspi1.Instance->CR1 |= SPI_POLARITY_LOW; 
 //	hspi1.Instance->CR1 |= SPI_PHASE_2EDGE; 
 	write_buffer[0] = 0x60;
-	write_buffer[1] = (SPI_MODE_ONLY&0xFF00)>>8;
-	write_buffer[2] = SPI_MODE_ONLY&0x00FF;
+	write_buffer[1] = ((TRIG_INT_SEL | SPI_MODE_ONLY|WOC_DIFF|BURST_SEL_X|BURST_SEL_Y)&0xFF00)>>8;
+	write_buffer[2] = (TRIG_INT_SEL | SPI_MODE_ONLY|WOC_DIFF|BURST_SEL_X|BURST_SEL_Y)&0x00FF;
 	write_buffer[3] = ADDRESS1  << 2;
 	
 	TLE5012_CS_ENABLE();
@@ -404,33 +416,39 @@ void MLX90393_Init(void)
 	SPI_TX_OFF();
 	safetyWord = SPI1_ReadWriteByte(NOP);
 	
-	write_buffer[0] = 0x60;
-	write_buffer[1] = (((RES(0,0,0)))&0xFF00)>>8;
-	write_buffer[2] = (((RES(0,0,0)))&0x00FF);
-	write_buffer[3] = ADDRESS2  << 2;	
+	TLE5012_CS_ENABLE();
 	SPI_TX_ON();
+	write_buffer[0] = (SB|X_AXIS|Y_AXIS);
 	SPI1_ReadWriteByte(write_buffer[0]);
-	SPI1_ReadWriteByte(write_buffer[1]);
-	SPI1_ReadWriteByte(write_buffer[2]);
-	SPI1_ReadWriteByte(write_buffer[3]);
 	SPI_TX_OFF();
-	safetyWord = SPI1_ReadWriteByte(NOP);	
-	
-	write_buffer[0] = 0x60;
-	write_buffer[1] = ((0x0C|GAIN_SEL(0))&0xFF00)>>8;
-	write_buffer[2] = (0x0C|GAIN_SEL(0))&0x00FF;
-	write_buffer[3] = ADDRESS0  << 2;	
-	SPI_TX_ON();
-	SPI1_ReadWriteByte(write_buffer[0]);
-	SPI1_ReadWriteByte(write_buffer[1]);
-	SPI1_ReadWriteByte(write_buffer[2]);
-	SPI1_ReadWriteByte(write_buffer[3]);
-	SPI_TX_OFF();
-	safetyWord = SPI1_ReadWriteByte(NOP);	
+	safetyWord = SPI1_ReadWriteByte(NOP);
+//	write_buffer[0] = 0x60;
+//	write_buffer[1] = (((RES(0,0,0)))&0xFF00)>>8;
+//	write_buffer[2] = (((RES(0,0,0)))&0x00FF);
+//	write_buffer[3] = ADDRESS2  << 2;	
+//	SPI_TX_ON();
+//	SPI1_ReadWriteByte(write_buffer[0]);
+//	SPI1_ReadWriteByte(write_buffer[1]);
+//	SPI1_ReadWriteByte(write_buffer[2]);
+//	SPI1_ReadWriteByte(write_buffer[3]);
+//	SPI_TX_OFF();
+//	safetyWord = SPI1_ReadWriteByte(NOP);	
+//	
+//	write_buffer[0] = 0x60;
+//	write_buffer[1] = ((0x0C|GAIN_SEL(0))&0xFF00)>>8;
+//	write_buffer[2] = (0x0C|GAIN_SEL(0))&0x00FF;
+//	write_buffer[3] = ADDRESS0  << 2;	
+//	SPI_TX_ON();
+//	SPI1_ReadWriteByte(write_buffer[0]);
+//	SPI1_ReadWriteByte(write_buffer[1]);
+//	SPI1_ReadWriteByte(write_buffer[2]);
+//	SPI1_ReadWriteByte(write_buffer[3]);
+//	SPI_TX_OFF();
+//	safetyWord = SPI1_ReadWriteByte(NOP);	
 
-	TLE5012_CS_DISABLE();
-	
-	SPI_TX_ON();
+//	TLE5012_CS_DISABLE();
+//	
+//	SPI_TX_ON();
 
 }
 int a = 0;
@@ -438,11 +456,7 @@ void MLX90393_ReadPos(void)
 {
  
 	uint8_t statusByte;
-	TLE5012_CS_ENABLE();
-	SPI_TX_ON();
-	write_buffer[0] = (SM|X_AXIS|Y_AXIS);
-	SPI1_ReadWriteByte(write_buffer[0]);
-	SPI_TX_OFF();
+
 
 
 	safetyWord = SPI1_ReadWriteByte(NOP);

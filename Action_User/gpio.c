@@ -13,6 +13,7 @@
 #include "stm32f4xx_exti.h"
 #include "stm32f4xx_syscfg.h"
 #include "misc.h"
+#include "usart.h"
 /**
   * @brief  set the pins of a specific GPIO group to be input or output driver pin.
   * @param  GPIOx: where x can be A-I.
@@ -101,11 +102,22 @@ void KeyInit(void)
 
 void ExtiInit(void)
 {
+	GPIO_InitTypeDef GPIO_InitStructure;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN; 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;   
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	
+	
 	EXTI_InitTypeDef EXTI_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
-	
-	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource6);
-	EXTI_InitStructure.EXTI_Line = EXTI_Line6 ;
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource7);
+	EXTI_InitStructure.EXTI_Line = EXTI_Line7 ;
 	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
 	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
 	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
@@ -117,8 +129,10 @@ void ExtiInit(void)
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_Init(&NVIC_InitStructure);	
 }
-	
+extern int flagging;	
 void EXTI9_5_IRQHandler(void)
 {
-	EXTI_ClearITPendingBit(EXTI_Line6);
+	flagging = 1;
+//	EXTI_ClearFlag(EXTI_Line7);
+	EXTI_ClearITPendingBit(EXTI_Line7);
 }
