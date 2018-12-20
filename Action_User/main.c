@@ -110,7 +110,7 @@ int main(void)
 {
 	SpiInit();
 	USART3_DMA_Init(921600);
-	ExtiInit();
+//	ExtiInit();
 //	MLX90393_Init();
 //	init();
 	
