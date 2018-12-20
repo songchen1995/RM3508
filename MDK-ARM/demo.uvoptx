@@ -120,7 +120,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name>赖??舧赖?</Name>
+          <Name>HJ??舧HJ?</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -272,7 +272,7 @@
       <DebugFlag>
         <trace>0</trace>
         <periodic>1</periodic>
-        <aLwin>0</aLwin>
+        <aLwin>1</aLwin>
         <aCover>0</aCover>
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>

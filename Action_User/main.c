@@ -108,10 +108,11 @@ void init(void)
 int flagging = 0;
 int main(void)
 {
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	
 	SpiInit();
 	USART3_DMA_Init(921600);
-//	ExtiInit();
-//	MLX90393_Init();
+	ExtiInit();
+	MLX90393_Init();
 //	init();
 	
 		
@@ -174,7 +175,7 @@ int main(void)
 				USART_OUT(USART3,(uint8_t*)"In\r\n");
 				flagging = 0;
 			}
-			TIM_Delayms(TIM3,1);
+			TIM_Delayms(TIM3,3);
 //		CANRespond();
 
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	
