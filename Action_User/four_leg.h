@@ -9,7 +9,7 @@
 #define LEFT_BACKWARD_LEG 3
 #define RIGHT_BACKWARD_LEG 4
 
-#define BOARD LEFT_BACKWARD_LEG 
+#define BOARD RIGHT_FORWARD_LEG 
 
 
 /*PT模式下的Flag*****************************88*******/
