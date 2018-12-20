@@ -496,7 +496,7 @@ void PTSafetyCheck(uint8_t motorNum, PTCtrlType *ptPid)
 #define SATURATE(val,max,min)  ((val > max ? max : (val < min ? min : val)))
 float PTCtrl(uint8_t motorNum, PTCtrlType *ptPid, PosCtrlType *posPid, VelCtrlType *velPid)
 {
-	static float kp[3] = {0.01,0.01,0.01},kd[3] = {0.01,0.01,0.01},ki= 0.0000001,posErr[3] = {0},posErrLast[3] = {0} ,iout = 0;
+	static float kp[3] = {0.05,0.05,0.01},kd[3] = {0.03,0.03,0.01},ki= 0.000001,posErr[3] = {0},posErrLast[3] = {0} ,iout = 0;
 
 	if(CheckPtFlag(motorNum,BEGIN_MOTION))
 	{		
