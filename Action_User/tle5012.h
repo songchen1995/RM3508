@@ -158,7 +158,9 @@ int32_t TLE5012B_GetPos15bit(void);
 int32_t TLE5012B_GetPos14bit(void);
 void MLX90393_Init(void);
 void MLX90393_ReadPos(void);
-
+void MLX90393_ReadStaus(void);
+void MLX90393_ExitOnly(void);
+void MLX90393_SWOCOnly(void);
 void SpiInit(void);
 #endif
 

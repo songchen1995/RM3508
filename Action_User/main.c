@@ -106,13 +106,16 @@ void init(void)
 //	5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
 //};
 int flagging = 0;
+int cnt = 0;
 int main(void)
 {
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	
 	SpiInit();
 	USART3_DMA_Init(921600);
-	ExtiInit();
+	TIM_Delayms(TIM3,100);	
 	MLX90393_Init();
+//	ExtiInit();
+	static int status = 0;
 //	init();
 	
 		
@@ -167,15 +170,39 @@ int main(void)
 //	Driver[0].pvtCtrl.flag &= ~0x00001000;
 //	TIM_Delayms(TIM3,3000);	
 //	Driver[0].pvtCtrl.flag |= 0x00001000;
+//	MLX90393_ReadPos();
+
+
+//	MLX90393_Init();
 	while(1)
 	{
-			MLX90393_ReadPos();
-			if(flagging == 1)
-			{
-				USART_OUT(USART3,(uint8_t*)"In\r\n");
-				flagging = 0;
-			}
-			TIM_Delayms(TIM3,3);
+		switch(status)
+		{
+			case 0:
+				MLX90393_ReadPos();
+				if(cnt > 500)
+				{
+					status = 1;
+					ExtiInit();
+					TIM_Delayms(TIM3,3);
+					flagging = 0;
+					MLX90393_SWOCOnly();
+				}
+				break;
+			case 1:
+				
+				cnt = 0;
+				if(flagging == 1)
+				{
+					status = 0;
+					USART_OUT(USART3,(uint8_t*)"In\r\n");
+					MLX90393_ExitOnly();
+					EXTI_DeInit();
+				}
+				break;
+		}
+			cnt++;
+			TIM_Delayms(TIM3,1);
 //		CANRespond();
 
 //		USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int)Driver[0].velCtrl.speed,(int)Driver[0].posCtrl.actualPos);	

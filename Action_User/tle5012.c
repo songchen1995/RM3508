@@ -370,8 +370,9 @@ static uint16_t TLE5012ReadRegUpdate(uint16_t command, uint16_t *reData)
 #define BURST_SEL_X 0x0080
 #define BURST_SEL_T 0x0040
 
-#define TRIG_INT_SEL 0x80
-#define WOC_DIFF 0x10
+#define TRIG_INT_SEL 0x8000
+#define WOC_DIFF 0x1000
+#define EXT_TRIG 0x0800
 //address
 #define ADDRESS0 0x00
 #define ADDRESS1 0x01
@@ -400,21 +401,51 @@ static uint8_t write_buffer[10];
 void MLX90393_Init(void)
 {
 
-//	hspi1.Instance->CR1 |= SPI_POLARITY_LOW; 
-//	hspi1.Instance->CR1 |= SPI_PHASE_2EDGE; 
 	write_buffer[0] = 0x60;
-	write_buffer[1] = ((TRIG_INT_SEL | SPI_MODE_ONLY|WOC_DIFF|BURST_SEL_X|BURST_SEL_Y)&0xFF00)>>8;
-	write_buffer[2] = (TRIG_INT_SEL | SPI_MODE_ONLY|WOC_DIFF|BURST_SEL_X|BURST_SEL_Y)&0x00FF;
-	write_buffer[3] = ADDRESS1  << 2;
-	
+	write_buffer[1] = ((1000)&0xFF00)>>8;
+	write_buffer[2] = (1000)&0x00FF;	
+	write_buffer[3] = ADDRESS7  << 2;
 	TLE5012_CS_ENABLE();
 	SPI_TX_ON();
 	SPI1_ReadWriteByte(write_buffer[0]);
 	SPI1_ReadWriteByte(write_buffer[1]);
 	SPI1_ReadWriteByte(write_buffer[2]);
 	SPI1_ReadWriteByte(write_buffer[3]);
+	
 	SPI_TX_OFF();
 	safetyWord = SPI1_ReadWriteByte(NOP);
+	TLE5012_CS_DISABLE();
+	
+	
+//	write_buffer[0] = 0x60;
+//	write_buffer[1] = ((TRIG_INT_SEL|EXT_TRIG)&0xFF00)>>8;
+//	write_buffer[2] = ( TRIG_INT_SEL|EXT_TRIG)&0x00FF;
+//	write_buffer[3] = ADDRESS1  << 2;
+//	TLE5012_CS_ENABLE();
+//	SPI_TX_ON();
+//	SPI1_ReadWriteByte(write_buffer[0]);
+//	SPI1_ReadWriteByte(write_buffer[1]);
+//	SPI1_ReadWriteByte(write_buffer[2]);
+//	SPI1_ReadWriteByte(write_buffer[3]);
+//	SPI_TX_OFF();
+//	safetyWord = SPI1_ReadWriteByte(NOP);
+//	TLE5012_CS_DISABLE();
+
+//	TLE5012_CS_ENABLE();
+//	SPI_TX_ON();
+//	write_buffer[0] = (RM|X_AXIS|Y_AXIS);
+//	SPI1_ReadWriteByte(write_buffer[0]);
+//	SPI_TX_OFF();
+//	safetyWord = SPI1_ReadWriteByte(NOP);
+//	TLE5012_CS_DISABLE();		
+
+//	TLE5012_CS_ENABLE();
+//	SPI_TX_ON();
+//	write_buffer[0] = (SWOC|X_AXIS|Y_AXIS);
+//	SPI1_ReadWriteByte(write_buffer[0]);
+//	SPI_TX_OFF();
+//	safetyWord = SPI1_ReadWriteByte(NOP);
+//	TLE5012_CS_DISABLE();	
 	
 
 //	write_buffer[0] = 0x60;
@@ -449,7 +480,6 @@ void MLX90393_Init(void)
 int a = 0;
 void MLX90393_ReadPos(void)
 {
- 
 	uint8_t statusByte;
 
 	TLE5012_CS_ENABLE();
@@ -458,29 +488,82 @@ void MLX90393_ReadPos(void)
 	SPI1_ReadWriteByte(write_buffer[0]);
 	SPI_TX_OFF();
 	safetyWord = SPI1_ReadWriteByte(NOP);
-
+	TLE5012_CS_DISABLE();
 
 	USART_OUT(USART3,(uint8_t*)"%d\t",(uint32_t)safetyWord);
 
 	TIM_Delayms(TIM3,1);
+	TLE5012_CS_ENABLE();
 	write_buffer[0] = (RM|X_AXIS|Y_AXIS);
 	SPI_TX_ON();
 	SPI1_ReadWriteByte(write_buffer[0]);
 	SPI_TX_OFF();
 	statusByte = SPI1_ReadWriteByte(NOP);
+//	TLE5012_CS_DISABLE();
 	for(int i = 0; i < 4; i++)
 	{
+//		TLE5012_CS_ENABLE();
 		posture[i] = SPI1_ReadWriteByte(NOP);
 		TIM_Delayms(TIM3,1);
+//		TLE5012_CS_DISABLE();
 	}
-	
 	TLE5012_CS_DISABLE();
 	SPI_TX_ON();
-	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(int16_t)(posture[0] * 256 + posture[1]),(int16_t)(posture[2] * 256 + posture[3]));
-	
+	USART_OUT(USART3,(uint8_t*)"%d\t%d\r\n",(uint16_t)(posture[0] * 256 + posture[1]),(uint16_t)(posture[2] * 256 + posture[3]));
+}
+
+void MLX90393_RMOnly(void)
+{
+	TLE5012_CS_ENABLE();
+	SPI_TX_ON();
+	write_buffer[0] = (RM|X_AXIS|Y_AXIS);
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI_TX_OFF();
+	safetyWord = SPI1_ReadWriteByte(NOP);
+	TLE5012_CS_DISABLE();		
+}
+
+void MLX90393_ExitOnly(void)
+{
+	write_buffer[0] = EX;
+	TLE5012_CS_ENABLE();
+	SPI_TX_ON();
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI_TX_OFF();
+	safetyWord = SPI1_ReadWriteByte(NOP);
+	TLE5012_CS_DISABLE();
+}
+
+void MLX90393_SWOCOnly(void)
+{
+	write_buffer[0] = (SWOC|X_AXIS|Y_AXIS);
+	TLE5012_CS_ENABLE();
+	SPI_TX_ON();
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI_TX_OFF();
+	safetyWord = SPI1_ReadWriteByte(NOP);
+	TLE5012_CS_DISABLE();	
 }
 
 
+static int cnt = 0;
+void MLX90393_ReadStaus(void)
+{
+//	cnt++;
+//	if(cnt > 100)
+//	{
+//		MLX90393_RMOnly();
+//		cnt = 0;
+//	}
+	TLE5012_CS_ENABLE();
+	SPI_TX_ON();
+	write_buffer[0] = (NOP);
+	SPI1_ReadWriteByte(write_buffer[0]);
+	SPI_TX_OFF();
+	safetyWord = SPI1_ReadWriteByte(NOP);
+	TLE5012_CS_DISABLE();
+	USART_OUT(USART3,(uint8_t*)"%d\r\n",(int)safetyWord);
+}
 
 
 
