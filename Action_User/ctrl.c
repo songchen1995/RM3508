@@ -87,8 +87,8 @@ void DriverInit(void)
 	  if(Motor[i].type == RM_3508)
 		{
 			//Driver[i].unitMode = HOMING_MODE;
-		//  Driver[i].unitMode = POSITION_CONTROL_MODE;
-		  Driver[i].unitMode = SPEED_CONTROL_MODE;
+		  Driver[i].unitMode = POSITION_CONTROL_MODE;
+		 // Driver[i].unitMode = SPEED_CONTROL_MODE;
 			
 			Driver[i].velCtrl.kp = VEL_KP_3508;
 			Driver[i].velCtrl.ki = VEL_KI_3508;

@@ -49,20 +49,28 @@ void init(void)
 	}
 	
 }
+
+
+#define DEGREE 122.f
+#define M2006_RATIO 36.f
+#define DECREASE_RATIO 2.f
+static int degree = 0;
 int main(void)
 {
 	init();
 //	ZeroPosInit();
+	degree = -DEGREE * M2006_RATIO * DECREASE_RATIO * 8192.f;
 
 	Driver[0].velCtrl.desiredVel[CMD] = -2000.f;
-//	TIM_Delayms(TIM3,300);
-//	Driver[0].velCtrl.desiredVel[CMD] = 0.f;
 	while(1)
 	{
-		
+		if(Driver[0].posCtrl.actualPos < 2.f / 3.f * degree)
+		{
+			Driver[0].velCtrl.desiredVel[CMD] = -2000.f;
+		}
 		CANRespond();
-		
-		Driver[0].posCtrl.desiredPos = 0; 
+		Driver[0].velCtrl.desiredVel[CMD] = 0.f;
+//		Driver[0].posCtrl.desiredPos = 0; 
 //		TIM_Delayms(TIM3,500);
 //		VelCtrlTest(300.0f,200);
 //		Driver[2].velCtrl.desiredVel[CMD] = 1.0f;
