@@ -53,14 +53,14 @@ int main(void)
 {
 	init();
 	ZeroPosInit();
-
+	Driver[0].posCtrl.desiredPos = 0; 
 	
 	while(1)
 	{
 		
 		CANRespond();
 		
-		Driver[0].posCtrl.desiredPos = 0; 
+		
 //		TIM_Delayms(TIM3,500);
 //		VelCtrlTest(300.0f,200);
 //		Driver[2].velCtrl.desiredVel[CMD] = 1.0f;
