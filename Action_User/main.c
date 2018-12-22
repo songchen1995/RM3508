@@ -52,7 +52,7 @@ void init(void)
 int main(void)
 {
 	init();
-	ZeroPosInit();
+//	ZeroPosInit();
 	Driver[0].posCtrl.desiredPos = 0; 
 	
 	while(1)

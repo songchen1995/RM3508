@@ -48,37 +48,13 @@ extern MotorType Motor[8];
 void DriverInit(void)
 {
 	Motor[0].type = RM_3508;
-	Motor[1].type = NONE;
-#if BOARD == AUTO_3508
-	Motor[2].type = M_2006;
-#elif BOARD == AUTO_2006
-	Motor[2].type = M_2006;
-#else
-	Motor[2].type = NONE;
-#endif
-	Motor[3].type = M_2006;
-	Motor[4].type = NONE;
-	Motor[5].type = RM_3508;
-	Motor[6].type = M_2006;
-	Motor[7].type = M_2006;
+	Motor[1].type = M_2006;
+	Motor[2].type = M_2006;	
+	Motor[3].type = NONE;	
 	
-#if BOARD == AUTO_3508
-	Driver[0].command.canId = 5;
-	Driver[1].command.canId = 6;
-	Driver[2].command.canId = 7;
-	Driver[3].command.canId = 8;
-#elif BOARD == AUTO_2006
-	Driver[0].command.canId = 15;
-	Driver[1].command.canId = 16;
-	Driver[2].command.canId = 7;
-	Driver[3].command.canId = 8;
-#else
-	Driver[0].command.canId = 5;
-	Driver[1].command.canId = 7;
-	Driver[2].command.canId = 17;
-	Driver[3].command.canId = 18;
-#endif
-	
+	Driver[0].command.canId = 9;
+	Driver[1].command.canId = 10;
+	Driver[2].command.canId = 11;	
 	for(int i = 0; i < 8; i++)
 	{
 		Driver[i].status = DISABLE;
@@ -137,25 +113,19 @@ void DriverInit(void)
 	
 	//
 	
-  //配置初始状态
-	Driver[0].homingMode.current = 2.8f;
-	Driver[1].homingMode.current = 2.8f;
-
+	Driver[0].unitMode = HOMING_MODE;
+	Driver[1].unitMode = HOMING_MODE;
+	Driver[2].unitMode = HOMING_MODE;
+	
+	Driver[0].homingMode.current = 1.8f;
+	Driver[1].homingMode.current = 1.8f;
+	Driver[2].homingMode.current = 1.8f;
 //	Driver[1].homingMode.vel = -60.0f;
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
-#if BOARD == AUTO_3508
-	//自动车俯仰正转归位
-	Driver[0].homingMode.vel = 160.f;
-	Driver[1].homingMode.vel = 160.f;
-	
-//	Driver[0].unitMode = HOMING_MODE;
-#elif BOARD == AUTO_2006
-	Driver[0].unitMode = HOMING_MODE;
-#else
-	Driver[0].unitMode = POSITION_CONTROL_MODE;
-#endif
-	
 
+	Driver[0].homingMode.vel = 50.f;
+	Driver[1].homingMode.vel = 50.f;
+	
 }
 
 /**
@@ -392,7 +362,7 @@ void HomingMode(DriverType *driver)
 	if(driver->homingMode.cnt >= 500){									//500ms
 
 		driver->posCtrl.actualPos=0.0f;				//
-		driver->posCtrl.desiredPos = driver->posCtrl.actualPos + 8192.0f;
+		driver->posCtrl.desiredPos = driver->posCtrl.actualPos + 0.f;
 		//清除输出
 		driver->homingMode.output = 0.0f;
 		driver->velCtrl.desiredVel[CMD] = 0.0f;
