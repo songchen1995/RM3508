@@ -124,7 +124,9 @@ void DriverInit(void)
 //	Driver[1].unitMode = SPEED_CONTROL_MODE;
 
 	Driver[0].homingMode.vel = 50.f;
-	Driver[1].homingMode.vel = 50.f;
+	Driver[1].homingMode.vel = 100.f;
+	Driver[2].homingMode.vel = 100.f;
+	
 	
 }
 
