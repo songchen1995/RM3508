@@ -15,7 +15,7 @@
 #include "can.h"
 #include "ctrl.h"
 #include "rm_motor.h"
-#include "four_leg.h"
+
 extern MotorType Motor[8];
 extern DriverType Driver[8];
 
@@ -93,20 +93,10 @@ void CANRespond(void)
 				CanSendData(Driver[i].command.canId,txData);
 				Driver[i].command.can_status = 0;
 				break;
-			case 0x40004742:
-				break;
-			case 0x4000534D:  //MS
-				txData.data32[0] = 0x0000534D;
-//				txData.data8[0]  = CheckPtFlag 
-				break;
+
 			default: break;
 		}
-		if(CheckPtFlag(i,RECEIVE_BEGIN))
-		{
-			PtSecondBufferHandler(i);
-		}
 	}
-
 }
 
 /**
@@ -134,8 +124,4 @@ void CanSendData(int id,UnionDataType txData)
 	mbox= CAN_Transmit(CAN2, &TxMessage);         //1.4us	
 	while((CAN_TransmitStatus(CAN2, mbox)!= CAN_TxStatus_Ok));//µÈ´ý238us
 }
-
-
-
-
 /************************ (C) COPYRIGHT 2017 ACTION *****END OF FILE****/

@@ -49,7 +49,7 @@ __initial_sp
 ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
 
-Heap_Size       EQU     0x00000200
+Heap_Size       EQU     0x00004200
 
                 AREA    HEAP, NOINIT, READWRITE, ALIGN=3
 __heap_base
@@ -178,13 +178,8 @@ Reset_Handler    PROC
                  EXPORT  Reset_Handler             [WEAK]
         IMPORT  SystemInit
         IMPORT  __main
-                 ;FPU settings 单精度浮点单元设置
-				 LDR     R0, =0xE000ED88   ;使能浮点运算  CP10,CP11
-				 LDR     R1,[R0]           ;R1=[R0],将0xE000ED88地址下内容加载到R1内
-				 ORR     R1,R1,#(0xF<<20)  ;R1=R1|(0xF<<20)即将R1的[23:20]设置为1
-				 STR     R1,[R0]           ;将R1寄存器的内容写到R0寄存器内的数据所代表的地址下
 
-                 LDR     R0, =SystemInit
+                  LDR     R0, =SystemInit
                  BLX     R0
                  LDR     R0, =__main
                  BX      R0

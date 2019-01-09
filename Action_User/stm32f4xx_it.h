@@ -28,11 +28,23 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __STM32F4xx_IT_H
 #define __STM32F4xx_IT_H
-#include "includes.h"
-#include <app_cfg.h>
+
 #ifdef __cplusplus
-extern "C" {
-#endif
+ extern "C" {
+#endif 
+#include "stm32f4xx_tim.h"
+#include "stm32f4xx_usart.h"
+#include "math.h"
+
+#include "usart.h"
+#include "timer.h"
+#include "can.h"
+
+#include "String.h"
+#include "stm32f4xx_dma.h"
+#include "gpio.h"
+#include "stm32f4xx_exti.h"
+#include "elmo.h"
 
 /* Includes ------------------------------------------------------------------*/
 
@@ -40,23 +52,15 @@ extern "C" {
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-
+void USART3_IRQHandler(void);
 void NMI_Handler(void);
 void HardFault_Handler(void);
 void MemManage_Handler(void);
 void BusFault_Handler(void);
+void UART5_IRQHandler(void);
 void UsageFault_Handler(void);
 void SVC_Handler(void);
 void DebugMon_Handler(void);
-
-typedef struct 
-{
-	int32_t vel;
-	int32_t pos;
-}readMotor_;
-
-
-
 
 #ifdef __cplusplus
 }

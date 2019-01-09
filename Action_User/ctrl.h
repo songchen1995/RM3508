@@ -140,55 +140,6 @@ typedef struct
 	
 }PosCtrlType;
 
-
-/** 
-  * @brief  PosCtrl type structure definition  
-  * @note     
-  */
-typedef struct
-{	
-	int desiredPos[3][20];
-	
-	uint8_t desiredTime;
-	
-	uint8_t cnt;
-	
-	uint8_t runMode;
-	
-	uint8_t size;
-	
-	uint32_t MP[2];//[]
-	
-	uint32_t executeFlag; 
-
-	uint8_t motorNum;
-	
-	float output;
-	
-	float velOutput;
-	
-	float posOutput;
-	
-	float velLimit;
-	
-	float pulseMaxLimit;
-	
-	float pulseMinLimit;
-	
-	float posMec;
-	
-	float kp;
-	
-	float kd;
-	
-	float ki;
-	
-	uint8_t index;
-	
-	
-}PTCtrlType;
-
-
 /** 
   * @brief  HomingMode type structure definition  
   * @note     
@@ -222,6 +173,15 @@ typedef struct
 	float output;
 	
 }ZeroPosInitType;
+/** 
+  * @brief  find the upper limitation and lowerlimitation automatically 
+  * @note     
+  */
+typedef struct{
+	int upperLimPos;
+	int lowerLimPos;
+}posLimit;
+
 
 /** 
   * @brief  Driver type structure definition  
@@ -244,8 +204,6 @@ typedef struct
 	VelCtrlType velCtrl;
 	
 	PosCtrlType posCtrl;
-	
-	PTCtrlType ptCtrl;
 	
 	ZeroPosInitType zeroCtrl;
 	
@@ -279,25 +237,25 @@ typedef struct
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /********************FOC²ÎÊı******************************/
-#define	 VOL_AMP					12.0f				//Voltage amplitude ×÷ÓÃÓÚµçÁ÷µÄµçÑ¹·ùÖµÔ¼0.8--13.6A
+#define	 VOL_AMP					1.10f				//Voltage amplitude ×÷ÓÃÓÚµçÁ÷µÄµçÑ¹·ùÖµÔ¼0.8--13.6A
 #define  VOL_MAX 					18.00f			//µçÑ¹×î´óÖµ
 #define  VOL_BLIND_AREA		0.80f				//Êä³öÃ¤Çø£¬µç»ú²»¶¯µÄ×î´óÊ¸Á¿µçÑ¹Öµ
-#define	 EMF_CONSTANT			0.50926f		//µç¶¯ÊÆ³£Êı£¬µç»ú±¾Éí²ÎÊı = µçÑ¹Ê¸Á¿(V)/ËÙ¶È(pulse/ms)
+#define	 EMF_CONSTANT			0.020926f		//µç¶¯ÊÆ³£Êı£¬µç»ú±¾Éí²ÎÊı = µçÑ¹Ê¸Á¿(V)/ËÙ¶È(pulse/ms)
 
 #define  CURRENT_MAX_3508    20.0f
 #define  CURRENT_MAX_2006    6.0f
 
 #define  VEL_MAX_3508				 1280.0f			//×î´óËÙ¶È
-#define  VEL_KP_3508   			 0.1f			  //ËÙ¶È»·Kp
+#define  VEL_KP_3508   			 0.3f			  //ËÙ¶È»·Kp
 #define  VEL_KI_3508				 0.001f			//ËÙ¶È»·Ki
-#define  POS_KP_3508         0.11f
+#define  POS_KP_3508         0.21f
 #define  POS_KD_3508         0.0f
 
 #define  VEL_MAX_2006				 2400.0f			//×î´óËÙ¶È
 #define  VEL_KP_2006   			 0.05f			//ËÙ¶È»·Kp
 #define  VEL_KI_2006				 0.003f			//ËÙ¶È»·Ki
-#define  POS_KP_2006         0.027f
-#define  POS_KD_2006         0.05f
+#define  POS_KP_2006         0.03f //0.027f  0.030
+#define  POS_KD_2006         0.08f
 
 //Çı¶¯Æ÷¹¤×÷Ä£Ê½
 #define  SPEED_CONTROL_MODE				2
@@ -305,8 +263,9 @@ typedef struct
 #define  TORQUE_CONTROL_MODE			3
 #define  ZERO_POSITION_INIT_MODE       4
 #define  HOMING_MODE							6
-#define  PT_MODE									7
-
+//ÏŞÎ»
+#define  UPPER_LIMIT_POS   1
+#define  LOWER_LIMIT_POS   0
 //Çø±ğÊ¹ÓÃĞ±ÆÂÇ°ºóµÄËÙ¶È
 #define  CMD   0
 #define  SOFT  1
@@ -319,37 +278,12 @@ typedef struct
 #define  CAN_ID_NUM     5
 //×Ô¶¯5ºÅ³õÊ¼  µçÁ÷Îª2.5ÆäÓàÎª1.5
 
-/*PTæ¨¡å¼ä¸‹çš„Flag*****************************88*******/
-#define SECOND_BUFFER_LOADING_CAN_BUFFER 0x00000001
-#define FIRST_BUFFER_LOADING_SECOND_BUFFER  0x00000002
-#define EXECUTOR_LOADING_FIRST_BUFFER				0x00000004
-#define RECEIVE_START_AND_MP								0x00000008
-#define RECEIVE_QN													0x00000010
-#define RECEIVE_BEGIN												0x00000020//æ‰‹åŠ¨æ¸…é™¤æ ‡å¿—ä½
-#define BEGIN_MOTION												0x00000040
-#define NEW_DATA														0x00000080//æ–°æ•°æ®è¿›å…¥ï¼Œæ‰‹åŠ¨æ¸…é™¤æ ‡å¿—ä½ï¼ˆptæ–œå¡ä¸­æ¥æ”¶åˆ°æ–°æŒ‡ä»¤åç¬¬ä¸€æ¬¡æ‰§è¡Œéœ€è¦ï¼‰
-#define ACTION_READY_TO_COMPLETE						0x00000100//å³å°†å®Œæˆä¸€æ¬¡åŠ¨ä½œ
-#define ACTION_COMPLETE											0x00000200//å®Œæˆä¸€æ¬¡åŠ¨ä½œ,æ‰‹åŠ¨æ¸…é™¤æ ‡å¿—ä½ï¼ˆæ¥æ”¶åˆ°ä¸€æ¬¡æ–°æŒ‡ä»¤æ¸…é™¤æ ‡å¿—ä½ï¼‰
-#define INDEX_JUMP													0x00000400//å‘ç”Ÿä¸€æ¬¡indexè·³å˜ï¼Œæ‰‹åŠ¨æ¸…é™¤æ ‡å¿—ä½ï¼ˆPTVelSlopeä¸­æ¸…é™¤ï¼‰
-#define CAN_RECEIVING												0x00000800
-/*Author: Oliver********************************/
 
-/*PTæ¨¡å¼ä¸‹çš„runMode************************************/
-#define	SINGLE_MODE						0x00
-#define CIRCULAR_MODE												0x01
-#define	RUN_AND_STOP_MOTION_MODE						0x02
-
-/*PTæ¨¡å¼ä¸‹çš„ä½ç½®ä¿¡æ¯çš„data buf************************************/
-#define POS_SECOND_BUFFER	0x02
-#define POS_FIRST_BUFFER 0x01
-#define POS_EXECUTOR 0x00
-/*Author: Oliver********************************/
 /* Exported functions ------------------------------------------------------- */
 float 	OutPutLim(float val);
 float   VelSlope(VelCtrlType *velPid);
 float   VelPidCtrl(VelCtrlType *velPid);
 float   PosCtrl(PosCtrlType *posPid);
-float PTCtrl(uint8_t motorNum, PTCtrlType *pvtPid, PosCtrlType *posPid, VelCtrlType *velPid);
 //float 	VelCtrl(float cmdVel);
 void 		VelCtrlInit(void);
 void		PosCtrlInit(void);
@@ -367,9 +301,7 @@ void    MotorOn(int n);
 void    MotorOff(int n);
 void    VelCtrlTest(float vel,int tim);
 void 		ZeroPosInit(void);
-void 		SetPtFlag(uint8_t motorNum, uint32_t flag);
-uint8_t CheckPtFlag(uint8_t motorNum, uint32_t flag);
-float PtVelSlope(uint8_t motorNum,VelCtrlType *velPid,PTCtrlType *ptPid);
+
 #endif
 
 /****************** (C) COPYRIGHT 2016 ACTION *****END OF FILE*************/

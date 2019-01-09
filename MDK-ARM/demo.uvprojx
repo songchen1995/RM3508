@@ -437,11 +437,6 @@
               <FileType>1</FileType>
               <FilePath>..\Action_User\tle5012.c</FilePath>
             </File>
-            <File>
-              <FileName>four_leg.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Action_User\four_leg.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>

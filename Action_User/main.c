@@ -1,65 +1,98 @@
-#include  <includes.h>
-#include <app_cfg.h>
+#include "stm32f4xx.h"
 
-static  OS_STK  App_TaskStartStk[APP_TASK_START_STK_SIZE];
+#include "stm32f4xx_gpio.h"
+#include "stm32f4xx_rcc.h"
+#include "stm32f4xx_it.h"
+#include "timer.h"
+#include "gpio.h"
+#include "usart.h"
+#include "misc.h"
+#include "can.h"
+#include "elmo.h"
+#include "math.h"
+#include "stdio.h"
+#include "arm_math.h"
+#include "ctrl.h"
+#include "comm.h"
+#include "tle5012.h"
 
+extern DriverType Driver[8];
+extern MotorType Motor[8];
 
-INT32S main (void)
+void init(void)
 {
-	CPU_INT08U  os_err;
-	os_err = os_err; /* prevent warning... */
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);	
+	    
+	USART3_DMA_Init(921600);
+//	SPI
+	CAN_Config(CAN1,1000,GPIOB,GPIO_Pin_8, GPIO_Pin_9); 
+	CAN_Config(CAN2, 500,GPIOB,GPIO_Pin_5, GPIO_Pin_6);
 
-	/* Note:  由于使用UCOS, 在OS运行之前运行,注意别使能任何中断. */
-	CPU_IntDis();                     /* Disable all ints until we are ready to accept them.  */
-
-	OSInit();                        /* Initialize "uC/OS-II, The Real-Time Kernel".         */
+	SpiInit();
+	delay_ms(1);
+	TIM_Init(TIM2,999,83,0,0);					//�����ڶ�ʱ1ms	
 	
-	os_err = OSTaskCreateExt((void (*)(void *)) App_TaskStart,  /* Create the start task.                               */
-						 (void          * ) 0,
-						 (OS_STK        * )&App_TaskStartStk[APP_TASK_START_STK_SIZE - 1],
-						 (INT8U           ) APP_TASK_START_PRIO,
-						 (INT16U          ) APP_TASK_START_PRIO,
-						 (OS_STK        * )&App_TaskStartStk[0],
-						 (INT32U          ) APP_TASK_START_STK_SIZE,
-						 (void          * )0,
-						 (INT16U          )(OS_TASK_OPT_STK_CLR | OS_TASK_OPT_STK_CHK));
-
-	OSStart();                        /* Start multitasking (i.e. give control to uC/OS-II).  */
-	return (0);
-}
-
-static  void  App_TaskStart ()
-{   
-	  OS_CPU_SysTickInit(SystemCoreClock/OS_TICKS_PER_SEC);                 /* 10ms，已仿真测试     */
+  TIM_Cmd(TIM2,DISABLE);	
+  	
+	DriverInit();
+		
+  	
+  TIM_Cmd(TIM2,ENABLE);
 	
-#if (OS_TASK_STAT_EN > 0)
-    OSStatInit();                                            /* Determine CPU capacity.                              */
-#endif
-     
-     App_Task();                                        /* Create application tasks.                            */
-
-	for(;;)
-   	{
-      	OSTimeDlyHMSM(0, 1, 0, 0);							 /* Delay One minute */
-    }	
+	TIM_Delayms(TIM3,200);
+	for(int i = 0; i < 8; i++)
+	{
+		if(Motor[i].type == NONE)
+			break;
+		Driver[i].posCtrl.actualPos = 0;
+		MotorOn(i);
+	}
+	
 }
-#ifdef  USE_FULL_ASSERT
 
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *   where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t* file, uint32_t line)
-{ 
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 
-  /* Infinite loop */
-  while (1)
-  {
-  }
+#define DEGREE 0.f
+#define M2006_RATIO 36.f
+#define DECREASE_RATIO 2.f
+static int degree = 0;
+int main(void)
+{
+	extern int homeover;
+	init();
+//	ZeroPosInit();
+//	degree = DEGREE * M2006_RATIO * DECREASE_RATIO * 8192.f;
+
+//	Driver[0].velCtrl.desiredVel[CMD] = 1.f;
+//	Driver[0].unitMode =SPEED_CONTROL_MODE;
+	
+	while(1)
+	{
+		extern int riseUp;
+		extern int risePos;
+//		if(Driver[0].posCtrl.actualPos < 2.f / 3.f * degree)
+//		{
+//			Driver[0].velCtrl.desiredVel[CMD] = -2000.f;
+//		}
+		CANRespond();
+		if(riseUp==1)
+			Driver[0].posCtrl.desiredPos = risePos ; 
+//		if(fabs(Driver[0].posCtrl.actualPos)>10&&fabs(Driver[0].velCtrl.actualVel)>10)
+//		Driver[0].velCtrl.desiredVel[CMD] = 0.f;
+//		if(Time)
+//		HomingMode(DriverType *driver)
+//		Driver[0].velCtrl.desiredVel[CMD] = -1.0f;
+//		Driver[0].posCtrl.desiredPos = 0; 
+		
+//		TIM_Delayms(TIM3,500);
+//		VelCtrlTest(300.0f,200);
+//		Driver[2].velCtrl.desiredVel[CMD] = 1.0f;
+//		
+//		Driver[2].posCtrl.desiredPos = 3.0f*8192.0f;
+//		TIM_Delayms(TIM3,2000);
+//		Driver[2].posCtrl.desiredPos = -0.0f*8192.0f;
+//		TIM_Delayms(TIM3,2700);
+	}
 }
-#endif
+
+	
+

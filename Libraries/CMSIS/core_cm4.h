@@ -168,7 +168,7 @@
 #include <stdint.h>                      /* standard types definitions                      */
 #include <core_cmInstr.h>                /* Core Instruction Access                         */
 #include <core_cmFunc.h>                 /* Core Function Access                            */
-//#include <core_cm4_simd.h>               /* Compiler specific SIMD Intrinsics               */
+#include <core_cm4_simd.h>               /* Compiler specific SIMD Intrinsics               */
 
 #endif /* __CORE_CM4_H_GENERIC */
 
@@ -1222,8 +1222,8 @@ typedef struct
 #define FPU_MVFR0_FP_rounding_modes_Pos    28                                             /*!< MVFR0: FP rounding modes bits Position */
 #define FPU_MVFR0_FP_rounding_modes_Msk    (0xFUL << FPU_MVFR0_FP_rounding_modes_Pos)     /*!< MVFR0: FP rounding modes bits Mask */
 
-#define FPU_MVFR0_Short_vectors_Pos        24                                             /*!< MVFR0: Short vectors bits Position */
-#define FPU_MVFR0_Short_vectors_Msk        (0xFUL << FPU_MVFR0_Short_vectors_Pos)         /*!< MVFR0: Short vectors bits Mask */
+#define FPU_MVFR0_int_vectors_Pos        24                                             /*!< MVFR0: int vectors bits Position */
+#define FPU_MVFR0_int_vectors_Msk        (0xFUL << FPU_MVFR0_int_vectors_Pos)         /*!< MVFR0: int vectors bits Mask */
 
 #define FPU_MVFR0_Square_root_Pos          20                                             /*!< MVFR0: Square root bits Position */
 #define FPU_MVFR0_Square_root_Msk          (0xFUL << FPU_MVFR0_Square_root_Pos)           /*!< MVFR0: Square root bits Mask */

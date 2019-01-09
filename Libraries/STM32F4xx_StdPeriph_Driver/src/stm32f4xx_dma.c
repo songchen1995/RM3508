@@ -30,7 +30,7 @@
   *             Incrementation mode, FIFO mode and its Threshold (if needed), Burst mode for Source and/or 
   *             Destination (if needed) using the DMA_Init() function.
   *             To avoid filling un-nesecessary fields, you can call DMA_StructInit() function
-  *             to initialize a given structure with default values (reset values), then modify
+  *             to initialize a given structure with default values (reset values), the modify
   *             only necessary fields (ie. Source and Destination addresses, Transfer size and Data Formats).
   *
   *          4. Enable the NVIC and the corresponding interrupt(s) using the function 
